@@ -98,11 +98,11 @@ class SettingsViewController: UITableViewController {
 
 				if year == startYear {
 
-					copyrightText = "Â© \(startYear) Silver Fox. OpenTerm v\(version) (build \(build))"
+					copyrightText = "Â© \(startYear) OpenTerm contributors. OpenTerm v\(version) (build \(build))"
 
 				} else {
 
-					copyrightText = "Â© \(startYear)-\(year) Silver Fox. OpenTerm v\(version) (build \(build))"
+					copyrightText = "Â© \(startYear)-\(year) OpenTerm contributors. OpenTerm v\(version) (build \(build))"
 
 				}
 

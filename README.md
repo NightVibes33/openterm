@@ -173,7 +173,7 @@ Important:
 - [x] Add backup/export manifest for workspace metadata
 - [x] Connect app-side encrypted vault push/pull controls with AES-GCM payload encryption
 - [x] Add vault sync newer-wins conflict handling, local repair, and app-active refresh
-- [x] Disable stale StoreKit review prompting and remove the old App Store review settings action while the app is free/unsigned focused
+- [x] Disable stale StoreKit review prompting, remove the old App Store review settings action, and replace stale legacy Settings identity links while the app is free/unsigned focused
 - [x] Harden selected old utility force-cast crash paths
 - [ ] Replace legacy storyboard/XIB scripting and documentation panels with modern SwiftUI or remove them from the primary flow
 - [ ] Remove remaining legacy `fatalError` and force-cast paths from controllers
