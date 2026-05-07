@@ -254,6 +254,9 @@ private struct ServersWorkspaceView: View {
 				SSHProfileCard(profile: profile, lastSeen: store.formatLastSeen(profile.lastSeen)) {
 					store.connect(to: profile)
 					selection = .terminal
+					} installDevStack: { flavor in
+						store.queueRemoteDevStack(on: profile, flavor: flavor)
+						selection = .terminal
 				} edit: {
 					editingProfile = SSHProfileDraft(profile: profile)
 				} delete: {
@@ -868,6 +871,7 @@ private struct SSHProfileCard: View {
 	let profile: SSHProfileSummary
 	let lastSeen: String
 	let connect: () -> Void
+	let installDevStack: (String) -> Void
 	let edit: () -> Void
 	let delete: () -> Void
 
@@ -890,8 +894,20 @@ private struct SSHProfileCard: View {
 			}
 			HStack(spacing: 10) {
 				PrimaryWorkspaceButton(title: "Connect", symbol: "bolt.horizontal.circle", tint: AppColor.green, action: connect)
-				PrimaryWorkspaceButton(title: "Edit", symbol: "slider.horizontal.3", tint: AppColor.blue, action: edit)
+				Menu {
+					Button("Auto-detect Linux") { installDevStack("Auto") }
+					Button("Debian / Ubuntu") { installDevStack("Debian/Ubuntu") }
+					Button("Alpine") { installDevStack("Alpine") }
+					Button("Fedora / RHEL") { installDevStack("Fedora/RHEL") }
+				} label: {
+					Label("Dev Stack", systemImage: "shippingbox.and.arrow.backward")
+						.font(.system(.headline, design: .rounded, weight: .semibold))
+						.frame(maxWidth: .infinity)
+				}
+				.buttonStyle(.borderedProminent)
+				.tint(AppColor.amber)
 			}
+			PrimaryWorkspaceButton(title: "Edit", symbol: "slider.horizontal.3", tint: AppColor.blue, action: edit)
 		}
 		.padding(18)
 		.background(WorkspaceCardBackground(tint: AppColor.green))

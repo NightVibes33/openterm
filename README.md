@@ -32,6 +32,7 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - Terminal appearance has a modernized canvas with live font, cursor, keyboard, text color, background color, and app accent controls.
 - SSH profiles persist locally with label, host, username, port, auth type, key path, startup path, notes, and last-used timestamps.
 - SSH quick connect now builds and runs real `ssh` commands through the terminal instead of only switching screens.
+- SSH profiles include a remote Dev Stack action that queues safe package-manager commands for Git, Python 3, pip, Node.js, npm, htop, nano, vim, and tmux on Debian/Ubuntu, Alpine, Fedora/RHEL, or auto-detected Linux hosts.
 - A local SSH key vault foundation exists with protected on-device key files, metadata, import/delete actions, and attach-to-profile flow.
 - Encrypted SSH vault push/pull is wired through Supabase RPC with AES-GCM payload encryption and a user-provided vault sync secret; raw private keys are not sent as plaintext.
 - Local files are scanned from `DocumentManager.shared.activeDocumentsFolderURL`; UTF-8 files can open in an in-app syntax-highlighted editor with search/match highlighting and save back to disk.
@@ -101,7 +102,7 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 ## Runtime And Sandbox Reality
 - Sideloading does not automatically remove the iOS app sandbox. Without jailbreak-level changes or private Apple entitlements, OpenTerm still cannot behave like an unrestricted local Linux machine.
 - Package managers such as `apt`, `brew`, `pkg`, `apk`, `dnf`, and `npm` are not available locally unless their runtimes are compiled into the app, embedded as app resources, or run on a remote machine.
-- The practical product strategy is remote-first: connect to VPS/homelab/Linux servers over SSH, use snippets and AI to generate safe setup commands, and run Git/Python/Node/Docker workflows on the real server.
+- The practical product strategy is remote-first: connect to VPS/homelab/Linux servers over SSH, use snippets, SSH profile Dev Stack actions, and AI to generate safe setup commands, and run Git/Python/Node/Docker workflows on the real server.
 - Local runtimes like Git, Python, Node, Vim, Nano, Tmux, or Htop should be treated as future embedded-toolchain work, with licensing, architecture, sandbox paths, and binary size reviewed per tool.
 
 ## Commands Included
@@ -146,6 +147,7 @@ Important:
 - [x] Add unsigned IPA CI pipeline
 - [x] Add backend schema foundation
 - [x] Replace mock SSH manager with local profiles and real terminal connect flow
+- [x] Add remote SSH Dev Stack setup actions for common Linux package managers
 - [x] Add local UTF-8 text editor
 - [x] Add lightweight syntax highlighting, language detection, and editor search
 - [ ] Add language tooling, completions, and diff views
@@ -169,6 +171,7 @@ Important:
 - Harden encrypted vault sync: deploy RPC migration, test Supabase auth/RLS, add conflict resolution, recovery UX, and background refresh.
 - Replace terminal-driven Git helpers with a native Git engine only after the current terminal-based workflow stays reliable.
 - Add embedded local toolchains only where they are realistic: Git first, then Python/Node only after binary size, licensing, and sandbox behavior are validated.
+- Improve remote server onboarding with preflight checks for package manager, sudo availability, shell, disk space, and installed tool versions.
 - Expand the editor from lightweight highlighting into real developer tooling: diff view, file tree actions, completions, and optional LSP-style assistance.
 - Keep payment/subscription code deferred until the free core product is stable.
 

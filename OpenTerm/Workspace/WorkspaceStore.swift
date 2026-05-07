@@ -1042,6 +1042,27 @@ final class WorkspaceStore: ObservableObject {
 		statusMessage = "Opening SSH session for \(profile.label)"
 	}
 
+	func queueRemoteDevStack(on profile: SSHProfileSummary, flavor: String) {
+		let script = remoteDevStackScript(for: flavor)
+		openTerminal(command: sshCommand(for: profile, remoteCommand: script, batchMode: false), executeNow: true)
+		touchProfile(profile.id)
+		statusMessage = "Queued \(flavor) dev stack setup for \(profile.label)"
+	}
+
+	private func remoteDevStackScript(for flavor: String) -> String {
+		let verify = "printf '\\nInstalled versions:\\n' ; git --version 2>/dev/null ; python3 --version 2>/dev/null ; node --version 2>/dev/null ; npm --version 2>/dev/null ; tmux -V 2>/dev/null"
+		switch flavor {
+		case "Debian/Ubuntu":
+			return "set -e; sudo apt update; sudo apt install -y git python3 python3-pip nodejs npm htop nano vim tmux; \(verify)"
+		case "Alpine":
+			return "set -e; sudo apk add --no-cache git python3 py3-pip nodejs npm htop nano vim tmux; \(verify)"
+		case "Fedora/RHEL":
+			return "set -e; if command -v dnf >/dev/null 2>&1; then sudo dnf install -y git python3 python3-pip nodejs npm htop nano vim tmux; else sudo yum install -y git python3 python3-pip nodejs npm htop nano vim tmux; fi; \(verify)"
+		default:
+			return "set -e; if command -v apt-get >/dev/null 2>&1; then sudo apt update && sudo apt install -y git python3 python3-pip nodejs npm htop nano vim tmux; elif command -v apk >/dev/null 2>&1; then sudo apk add --no-cache git python3 py3-pip nodejs npm htop nano vim tmux; elif command -v dnf >/dev/null 2>&1; then sudo dnf install -y git python3 python3-pip nodejs npm htop nano vim tmux; elif command -v yum >/dev/null 2>&1; then sudo yum install -y git python3 python3-pip nodejs npm htop nano vim tmux; else echo 'No supported package manager found. Install git python3 pip node npm htop nano vim tmux manually.'; exit 1; fi; \(verify)"
+		}
+	}
+
 	private func touchProfile(_ id: UUID) {
 		guard let index = sshProfiles.firstIndex(where: { $0.id == id }) else {
 			return
