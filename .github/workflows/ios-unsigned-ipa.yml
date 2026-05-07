@@ -142,6 +142,16 @@ jobs:
             sed -i.bak 's/t |= UIAccessibilityTraitAdjustable/t.formUnion(UIAccessibilityTraitAdjustable)/g' Pods/HueKit/HueKit/View/ColorBarPicker.swift
           fi
 
+      - name: Patch BezierPathLength for modern Swift
+        shell: bash
+        run: |
+          set -euo pipefail
+          # BezierPathLength has a Swift strict-concurrency issue with escaping closures.
+          # The PathApplier closure needs @escaping in modern Swift.
+          if [ -f "Pods/BezierPathLength/Source/PathElement.swift" ]; then
+            sed -i.bak 's/func apply(with applier: PathApplier)/func apply(with applier: @escaping PathApplier)/g' Pods/BezierPathLength/Source/PathElement.swift
+          fi
+
       - name: List schemes
         shell: bash
         run: |
@@ -208,4 +218,17 @@ jobs:
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
-          name: 
+          name: OpenTerm-Unsigned-IPA
+          path: OpenTerm-Unsigned.ipa
+
+      - name: Add installability note
+        shell: bash
+        run: |
+          {
+            echo "## Unsigned IPA"
+            echo
+            echo "This artifact is for testing and inspection only."
+            echo
+            echo "Unsigned IPAs do not install on normal real iPhones by themselves."
+            echo "You still need proper signing/provisioning, sideload tooling, or a special device environment."
+          } >> "$GITHUB_STEP_SUMMARY"
