@@ -180,6 +180,24 @@ struct SSHProfileSummary: Identifiable, Codable, Hashable {
 	}
 }
 
+struct SSHVaultItem: Identifiable, Codable, Hashable {
+	var id: UUID
+	var label: String
+	var keyPath: String
+	var fingerprint: String
+	var createdAt: Date
+	var lastUsedAt: Date?
+
+	init(id: UUID = UUID(), label: String, keyPath: String, fingerprint: String = "Not scanned yet", createdAt: Date = Date(), lastUsedAt: Date? = nil) {
+		self.id = id
+		self.label = label
+		self.keyPath = keyPath
+		self.fingerprint = fingerprint
+		self.createdAt = createdAt
+		self.lastUsedAt = lastUsedAt
+	}
+}
+
 struct GitWorkspaceSummary: Identifiable, Hashable {
 	var id: String { path }
 	let name: String
@@ -378,6 +396,7 @@ final class WorkspaceStore: ObservableObject {
 	@Published var aiTools: [WorkspaceFeature] = []
 	@Published var featuredCapabilities: [WorkspaceFeature] = []
 	@Published var sshProfiles: [SSHProfileSummary] = []
+	@Published var sshVaultItems: [SSHVaultItem] = []
 	@Published var gitWorkspaces: [GitWorkspaceSummary] = []
 	@Published var serverMonitors: [ServerMonitorSummary] = []
 	@Published var serverSnapshots: [ServerSnapshotSummary] = []
@@ -452,6 +471,7 @@ final class WorkspaceStore: ObservableObject {
 
 	private func loadPersistedState() {
 		sshProfiles = load([SSHProfileSummary].self, from: stateURL(for: "ssh-profiles.json")) ?? defaultSSHProfiles()
+		sshVaultItems = load([SSHVaultItem].self, from: stateURL(for: "ssh-vault.json")) ?? []
 		snippets = load([WorkspaceSnippet].self, from: stateURL(for: "snippets.json")) ?? defaultSnippets()
 		serverMonitors = load([ServerMonitorSummary].self, from: stateURL(for: "server-monitors.json")) ?? defaultServerMonitors(from: sshProfiles)
 		serverSnapshots = load([ServerSnapshotSummary].self, from: stateURL(for: "server-snapshots.json")) ?? []
@@ -503,6 +523,14 @@ final class WorkspaceStore: ObservableObject {
 
 	private func saveSSHProfiles() {
 		save(sshProfiles, to: stateURL(for: "ssh-profiles.json"))
+	}
+
+	private func saveSSHVaultItems() {
+		save(sshVaultItems, to: stateURL(for: "ssh-vault.json"))
+	}
+
+	private var sshVaultDirectoryURL: URL {
+		workspaceSupportURL.appendingPathComponent("ssh-vault", isDirectory: true)
 	}
 
 	private func saveSnippets() {
@@ -621,6 +649,57 @@ final class WorkspaceStore: ObservableObject {
 			return "Never"
 		}
 		return dateFormatter.localizedString(for: date, relativeTo: Date())
+	}
+
+	func importSSHKeyToVault(label: String, privateKey: String) {
+		let trimmedLabel = label.trimmingCharacters(in: .whitespacesAndNewlines)
+		let trimmedKey = privateKey.trimmingCharacters(in: .whitespacesAndNewlines)
+		guard !trimmedLabel.isEmpty, !trimmedKey.isEmpty else {
+			statusMessage = "Enter a key label and private key"
+			return
+		}
+
+		do {
+			try fileManager.createDirectory(at: sshVaultDirectoryURL, withIntermediateDirectories: true, attributes: nil)
+			let id = UUID()
+			let keyURL = sshVaultDirectoryURL.appendingPathComponent("\(id.uuidString).key")
+			let data = Data((trimmedKey + "\n").utf8)
+			try data.write(to: keyURL, options: .atomic)
+			try fileManager.setAttributes([.posixPermissions: 0o600, .protectionKey: FileProtectionType.complete], ofItemAtPath: keyURL.path)
+			let item = SSHVaultItem(id: id, label: trimmedLabel, keyPath: keyURL.path, fingerprint: localFingerprint(for: trimmedKey))
+			sshVaultItems.insert(item, at: 0)
+			saveSSHVaultItems()
+			statusMessage = "Imported SSH key into local vault"
+		} catch {
+			statusMessage = "Could not import SSH key: \(error.localizedDescription)"
+		}
+	}
+
+	func deleteSSHVaultItem(_ item: SSHVaultItem) {
+		try? fileManager.removeItem(atPath: item.keyPath)
+		sshVaultItems.removeAll { $0.id == item.id }
+		saveSSHVaultItems()
+		statusMessage = "Deleted SSH key from local vault"
+	}
+
+	func attachVaultItem(_ item: SSHVaultItem, to profile: SSHProfileSummary) {
+		var updated = profile
+		updated.authKind = .key
+		updated.privateKeyPath = item.keyPath
+		upsertSSHProfile(updated)
+		if let index = sshVaultItems.firstIndex(where: { $0.id == item.id }) {
+			sshVaultItems[index].lastUsedAt = Date()
+			saveSSHVaultItems()
+		}
+		statusMessage = "Attached vault key to \(profile.label)"
+	}
+
+	private func localFingerprint(for key: String) -> String {
+		let bytes = Array(Data(key.utf8))
+		let folded = bytes.enumerated().reduce(0) { partial, item in
+			partial ^ ((Int(item.element) &+ item.offset) << (item.offset % 8))
+		}
+		return String(format: "local-%08x", folded)
 	}
 
 	func upsertSSHProfile(_ profile: SSHProfileSummary) {

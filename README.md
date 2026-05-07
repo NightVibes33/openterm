@@ -32,6 +32,7 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - Terminal appearance has a modernized canvas with live font, cursor, keyboard, text color, background color, and app accent controls.
 - SSH profiles persist locally with label, host, username, port, auth type, key path, startup path, notes, and last-used timestamps.
 - SSH quick connect now builds and runs real `ssh` commands through the terminal instead of only switching screens.
+- A local SSH key vault foundation exists with protected on-device key files, metadata, import/delete actions, and attach-to-profile flow.
 - Local files are scanned from `DocumentManager.shared.activeDocumentsFolderURL`; UTF-8 files can open in an in-app syntax-highlighted editor and save back to disk.
 - Command snippets persist locally and can run directly in the terminal.
 - Git repositories are detected by scanning for `.git` folders, and clone/status/pull/commit/push actions are terminal-driven.
@@ -44,14 +45,14 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - Vendored dependency compatibility patches have been added for modern Xcode/iOS SDK builds.
 
 ### Partially implemented
-- SSH profile storage is local only. Encrypted cloud vault sync is not connected yet.
+- SSH profile and key-vault storage are local only. Encrypted cloud vault sync is not connected yet.
 - Server monitoring works for noninteractive SSH profiles; password-based profiles still require manual terminal sessions.
 - Git actions are terminal-driven because this fork does not currently bundle a native Git engine.
 - The editor has lightweight syntax highlighting and language detection, but full language-server tooling, completions, and diff views are not finished.
 - The AI assistant supports a configurable provider endpoint, prompt shortcuts, terminal handoff, and local usage history, but production auth, rate limits, hosted usage enforcement, and billing are deferred.
 
 ### Not implemented yet
-- End-to-end encrypted SSH key vault sync.
+- End-to-end encrypted SSH key vault sync across devices.
 - Full language-server tooling, completions, and diff views in the code editor.
 - Native Git engine integration with structured conflict handling.
 - Production AI request proxy, rate limits, and server-side usage controls.
@@ -139,7 +140,8 @@ Important:
 - [ ] Add native Git engine integration
 - [x] Connect configurable AI provider endpoint, prompt shortcuts, terminal handoff, and local usage history
 - [ ] Add hosted AI proxy, rate limits, and server-side usage controls
-- [ ] Add encrypted vault and sync
+- [x] Add local protected SSH key vault foundation
+- [ ] Add encrypted vault sync across devices
 - [ ] Add signed App Store distribution when needed
 
 ## Documentation

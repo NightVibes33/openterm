@@ -243,6 +243,7 @@ private struct ServersWorkspaceView: View {
 	@Binding var selection: WorkspaceDestination
 	@State private var editingProfile: SSHProfileDraft?
 	@State private var editingMonitor: ServerMonitorDraft?
+	@State private var importingVaultKey = false
 
 	var body: some View {
 		WorkspaceScroll(title: "Servers") {
@@ -257,6 +258,15 @@ private struct ServersWorkspaceView: View {
 					editingProfile = SSHProfileDraft(profile: profile)
 				} delete: {
 					store.deleteSSHProfile(profile)
+				}
+			}
+
+			SectionHeader(title: "SSH Key Vault", subtitle: "Local protected key storage. Cloud E2E sync is still a later backend step.")
+			ForEach(store.sshVaultItems) { item in
+				SSHVaultItemCard(item: item, profiles: store.sshProfiles) { profile in
+					store.attachVaultItem(item, to: profile)
+				} delete: {
+					store.deleteSSHVaultItem(item)
 				}
 			}
 
@@ -275,6 +285,7 @@ private struct ServersWorkspaceView: View {
 		.toolbar {
 			ToolbarItemGroup(placement: .topBarTrailing) {
 				Button { editingProfile = SSHProfileDraft(profile: nil) } label: { Image(systemName: "server.rack") }
+				Button { importingVaultKey = true } label: { Image(systemName: "key") }
 				Button {
 					if let profile = store.sshProfiles.first {
 						editingMonitor = ServerMonitorDraft(profileID: profile.id)
@@ -294,6 +305,11 @@ private struct ServersWorkspaceView: View {
 			ServerMonitorEditorSheet(draft: draft, profiles: store.sshProfiles) { monitor in
 				store.upsertServerMonitor(monitor)
 				store.refreshMonitorSnapshots()
+			}
+		}
+		.sheet(isPresented: $importingVaultKey) {
+			SSHVaultImportSheet { label, key in
+				store.importSSHKeyToVault(label: label, privateKey: key)
 			}
 		}
 	}
@@ -793,6 +809,79 @@ private struct SSHProfileCard: View {
 		}
 		.padding(18)
 		.background(WorkspaceCardBackground(tint: AppColor.green))
+	}
+}
+
+private struct SSHVaultItemCard: View {
+	let item: SSHVaultItem
+	let profiles: [SSHProfileSummary]
+	let attach: (SSHProfileSummary) -> Void
+	let delete: () -> Void
+
+	var body: some View {
+		VStack(alignment: .leading, spacing: 12) {
+			HStack(alignment: .top) {
+				VStack(alignment: .leading, spacing: 5) {
+					Text(item.label)
+						.font(.system(.headline, design: .rounded, weight: .semibold))
+						.foregroundStyle(.white)
+					Text(item.fingerprint)
+						.font(.system(.footnote, design: .monospaced))
+						.foregroundStyle(.white.opacity(0.62))
+				}
+				Spacer()
+				Button(role: .destructive, action: delete) { Image(systemName: "trash") }
+			}
+			if profiles.isEmpty {
+				Text("Create an SSH profile before attaching this key.")
+					.font(.system(.footnote, design: .rounded))
+					.foregroundStyle(.white.opacity(0.64))
+			} else {
+				Menu {
+					ForEach(profiles) { profile in
+						Button(profile.label) { attach(profile) }
+					}
+				} label: {
+					Label("Attach to Profile", systemImage: "link")
+						.font(.system(.headline, design: .rounded, weight: .semibold))
+						.frame(maxWidth: .infinity)
+				}
+				.buttonStyle(.borderedProminent)
+				.tint(AppColor.green)
+			}
+		}
+		.padding(18)
+		.background(WorkspaceCardBackground(tint: AppColor.green))
+	}
+}
+
+private struct SSHVaultImportSheet: View {
+	@Environment(\.dismiss) private var dismiss
+	@State private var label = ""
+	@State private var privateKey = ""
+	let importKey: (String, String) -> Void
+
+	var body: some View {
+		NavigationStack {
+			Form {
+				TextField("Key label", text: $label)
+				TextField("Paste private key", text: $privateKey, axis: .vertical)
+					.lineLimit(8...18)
+				Text("Keys are stored locally with iOS file protection. Cloud E2E vault sync is not enabled yet.")
+					.font(.footnote)
+					.foregroundStyle(.secondary)
+			}
+			.navigationTitle("Import SSH Key")
+			.toolbar {
+				ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+				ToolbarItem(placement: .confirmationAction) {
+					Button("Import") {
+						importKey(label, privateKey)
+						dismiss()
+					}
+				}
+			}
+		}
 	}
 }
 
