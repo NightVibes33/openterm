@@ -6,6 +6,8 @@ struct DeveloperWorkspaceRootView: View {
 	@Environment(\.horizontalSizeClass) private var horizontalSizeClass
 	@StateObject private var store = WorkspaceStore.shared
 	@State private var selection: WorkspaceDestination = .home
+	@AppStorage("workspace.onboarding.completed") private var hasCompletedOnboarding = false
+	@State private var showsOnboarding = false
 
 	var body: some View {
 		Group {
@@ -24,9 +26,15 @@ struct DeveloperWorkspaceRootView: View {
 			}
 		}
 		.animation(.spring(response: 0.34, dampingFraction: 0.86), value: store.statusMessage)
+		.sheet(isPresented: $showsOnboarding) {
+			WorkspaceOnboardingView(store: store, selection: $selection, hasCompletedOnboarding: $hasCompletedOnboarding)
+		}
 		.onAppear {
 			store.refreshLocalFiles()
 			store.refreshGitWorkspaces()
+			if !hasCompletedOnboarding {
+				showsOnboarding = true
+			}
 		}
 		.onReceive(NotificationCenter.default.publisher(for: .workspaceDidRequestTerminalFocus)) { _ in
 			selection = .terminal
@@ -625,15 +633,17 @@ private struct MoreWorkspaceView: View {
 
 	@ObservedObject var store: WorkspaceStore
 	@Binding var selection: WorkspaceDestination
+	@AppStorage("workspace.onboarding.completed") private var hasCompletedOnboarding = false
+	@State private var showsOnboarding = false
 
 	var body: some View {
 		WorkspaceScroll(title: "More") {
-			WorkspaceSummaryBanner(title: "Tools & Settings", detail: "Terminal-driven Git, optional AI, appearance, backend setup, vault sync, and maintenance controls live here.", tint: store.workspaceAccentColor)
+			WorkspaceSummaryBanner(title: "Tools & Settings", detail: "Terminal-driven Git, optional AI, appearance, backend setup, vault sync, support links, and maintenance controls live here.", tint: store.workspaceAccentColor)
 
 			AdaptiveGrid {
 				ActionTile(title: "AI Assistant", subtitle: "Requires your provider or proxy", symbol: "sparkles", tint: AppColor.violet) { selection = .assistant }
 				ActionTile(title: "Git Workspace", subtitle: "Terminal-driven repo actions", symbol: "point.topleft.down.curvedto.point.bottomright.up", tint: AppColor.blue) { selection = .git }
-				ActionTile(title: "Settings", subtitle: "Theme, terminal, AI, and defaults", symbol: "slider.horizontal.3", tint: store.workspaceAccentColor) { selection = .settings }
+				ActionTile(title: "Settings", subtitle: "Theme, terminal, AI, and defaults", symbol: "slider.horizontal.3", tint: store.workspaceAccentColor) { selection = .more }
 				ActionTile(title: "Refresh", subtitle: "Files, repos, and monitors", symbol: "arrow.clockwise", tint: AppColor.green) {
 					store.refreshLocalFiles()
 					store.refreshGitWorkspaces()
@@ -641,8 +651,167 @@ private struct MoreWorkspaceView: View {
 				}
 			}
 
+			AboutSupportCard(tint: store.workspaceAccentColor) {
+				hasCompletedOnboarding = false
+				showsOnboarding = true
+			}
+
 			SettingsWorkspaceView(store: store)
 		}
+		.sheet(isPresented: $showsOnboarding) {
+			WorkspaceOnboardingView(store: store, selection: $selection, hasCompletedOnboarding: $hasCompletedOnboarding)
+		}
+	}
+}
+
+
+private struct WorkspaceOnboardingView: View {
+
+	@ObservedObject var store: WorkspaceStore
+	@Binding var selection: WorkspaceDestination
+	@Binding var hasCompletedOnboarding: Bool
+	@Environment(\.dismiss) private var dismiss
+
+	var body: some View {
+		NavigationStack {
+			ScrollView {
+				VStack(alignment: .leading, spacing: 22) {
+					VStack(alignment: .leading, spacing: 12) {
+						Text("OpenTerm")
+							.font(.system(.largeTitle, design: .default, weight: .bold))
+							.foregroundStyle(.primary)
+						Text("A clean SSH, terminal, files, Git, server-check, and optional AI workspace for iPhone and iPad.")
+							.font(.system(.body, design: .default))
+							.foregroundStyle(.secondary)
+					}
+					.padding(24)
+					.frame(maxWidth: .infinity, alignment: .leading)
+					.background(WorkspaceCardBackground(tint: store.workspaceAccentColor))
+
+					SectionHeader(title: "Start With Real Tools", subtitle: "These steps create useful workspace state instead of demo cards.")
+					VStack(spacing: 12) {
+						OnboardingStepCard(number: "1", title: "Open the terminal", detail: "Use the built-in shell for local commands and quick SSH handoff.", symbol: "terminal", tint: store.workspaceAccentColor)
+						OnboardingStepCard(number: "2", title: "Import files", detail: "Bring in real files from iOS Files, edit UTF-8 text, rename, export, or archive folders.", symbol: "folder.badge.plus", tint: AppColor.amber)
+						OnboardingStepCard(number: "3", title: "Add SSH profiles", detail: "Connect to real VPS, homelab, or Linux servers. Monitoring works best with key-based noninteractive SSH.", symbol: "server.rack", tint: AppColor.green)
+						OnboardingStepCard(number: "4", title: "Configure AI only if you want it", detail: "AI stays off until you add your own provider endpoint/key or hosted proxy settings.", symbol: "sparkles", tint: AppColor.violet)
+					}
+
+					AdaptiveGrid {
+						ActionTile(title: "Go Terminal", subtitle: "Start with the real shell", symbol: "terminal", tint: store.workspaceAccentColor) {
+							finish(.terminal)
+						}
+						ActionTile(title: "Import Files", subtitle: "Open the file workspace", symbol: "folder", tint: AppColor.amber) {
+							finish(.files)
+						}
+						ActionTile(title: "Add Server", subtitle: "Create an SSH profile", symbol: "server.rack", tint: AppColor.green) {
+							finish(.servers)
+						}
+						ActionTile(title: "Settings", subtitle: "Theme and AI setup", symbol: "slider.horizontal.3", tint: AppColor.blue) {
+							finish(.more)
+						}
+					}
+				}
+				.padding(20)
+			}
+			.background(WorkspaceBackdrop().ignoresSafeArea())
+			.navigationTitle("Welcome")
+			.toolbar {
+				ToolbarItem(placement: .cancellationAction) {
+					Button("Skip") { finish(.home) }
+				}
+			}
+		}
+	}
+
+	private func finish(_ destination: WorkspaceDestination) {
+		hasCompletedOnboarding = true
+		selection = destination
+		dismiss()
+	}
+}
+
+private struct OnboardingStepCard: View {
+	let number: String
+	let title: String
+	let detail: String
+	let symbol: String
+	let tint: Color
+
+	var body: some View {
+		HStack(alignment: .top, spacing: 14) {
+			ZStack {
+				Circle().fill(tint.opacity(0.18))
+				Text(number)
+					.font(.system(.headline, design: .default, weight: .bold))
+					.foregroundStyle(tint)
+			}
+			.frame(width: 38, height: 38)
+			VStack(alignment: .leading, spacing: 6) {
+				Label(title, systemImage: symbol)
+					.font(.system(.headline, design: .default, weight: .semibold))
+					.foregroundStyle(.primary)
+				Text(detail)
+					.font(.system(.subheadline, design: .default))
+					.foregroundStyle(.secondary)
+			}
+			Spacer(minLength: 0)
+		}
+		.padding(18)
+		.background(WorkspaceCardBackground(tint: tint))
+	}
+}
+
+private struct AboutSupportCard: View {
+	let tint: Color
+	let showOnboarding: () -> Void
+
+	var body: some View {
+		VStack(alignment: .leading, spacing: 14) {
+			SectionHeader(title: "About & Support", subtitle: "Project links, contact, and donations for the free OpenTerm fork.")
+			Text("Built by NightVibes33 as a free, real-tool-first iOS terminal workspace. Donations support continued development, not feature unlocks.")
+				.font(.system(.subheadline, design: .default))
+				.foregroundStyle(.secondary)
+			AdaptiveGrid {
+				SupportLinkTile(title: "Donate", subtitle: "Buy Me a Coffee", symbol: "heart.fill", tint: AppColor.coral, url: "https://buymeacoffee.com/ZYN3")
+				SupportLinkTile(title: "Source", subtitle: "GitHub repo", symbol: "chevron.left.forwardslash.chevron.right", tint: tint, url: "https://github.com/NightVibes33/openterm")
+				SupportLinkTile(title: "Updates", subtitle: "@NightVibes33 on X", symbol: "megaphone", tint: AppColor.blue, url: "https://twitter.com/NightVibes33")
+				SupportLinkTile(title: "Contact", subtitle: "Email support", symbol: "envelope", tint: AppColor.green, url: "mailto:nightvibes33@users.noreply.github.com?subject=OpenTerm%20Support")
+			}
+			PrimaryWorkspaceButton(title: "Show Onboarding Again", symbol: "sparkles.rectangle.stack", tint: tint, action: showOnboarding)
+		}
+		.padding(18)
+		.background(WorkspaceCardBackground(tint: tint))
+	}
+}
+
+private struct SupportLinkTile: View {
+	let title: String
+	let subtitle: String
+	let symbol: String
+	let tint: Color
+	let url: String
+
+	var body: some View {
+		Button {
+			guard let link = URL(string: url) else { return }
+			UIApplication.shared.open(link, options: [:], completionHandler: nil)
+		} label: {
+			VStack(alignment: .leading, spacing: 8) {
+				Image(systemName: symbol)
+					.font(.system(size: 20, weight: .semibold))
+					.foregroundStyle(tint)
+				Text(title)
+					.font(.system(.headline, design: .default, weight: .semibold))
+					.foregroundStyle(.primary)
+				Text(subtitle)
+					.font(.system(.subheadline, design: .default))
+					.foregroundStyle(.secondary)
+			}
+			.padding(16)
+			.frame(maxWidth: .infinity, minHeight: 108, alignment: .topLeading)
+			.background(WorkspaceCardBackground(tint: tint))
+		}
+		.buttonStyle(.plain)
 	}
 }
 

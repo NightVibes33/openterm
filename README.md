@@ -19,6 +19,8 @@ The current design target is real-tool clarity first: fewer marketing cards, lig
 
 ## Current Repo Status
 
+Donations support development only: the app is currently free, and Buy Me a Coffee is exposed as a support link rather than an entitlement or paywall.
+
 ### Implemented in this fork right now
 - Legacy OpenTerm terminal core is still present and embedded inside the SwiftUI workspace. Several older storyboard/XIB scripting and documentation panels still exist and are tracked as modernization debt rather than finished 2026-quality UI, but the Scripts panel remains functional and the bundled examples are maintained as runnable script samples.
 - `AppDelegate` launches the modern workspace shell with Home, Files, Terminal, Servers, and a custom More hub on iPhone, plus full workspace navigation on iPad. Home now shows a real capability check instead of marketing cards, and empty Home/Git/Server/AI states explicitly ask for real user data or provider configuration.
@@ -36,14 +38,14 @@ The current design target is real-tool clarity first: fewer marketing cards, lig
 - Git repositories are detected by scanning for `.git` folders, and clone/status/diff/log/pull/commit/push plus structured conflict actions are terminal-driven with a `git` availability preflight before commands run.
 - Server monitors persist locally, poll Linux CPU/memory/disk/load snapshots over noninteractive SSH, and keep a local acknowledgeable alert history when thresholds change; monitors are user-created and monitor cards appear only after real poll results.
 - The AI assistant can call a configurable OpenAI-compatible chat endpoint or hosted Supabase proxy, records local usage history, includes prompt shortcuts for errors, commands, scripts, SSH, remote dev setup, Docker, Git conflicts, and regex, and can insert assistant output back into the terminal. Live sending is disabled until a real endpoint/key or proxy/token is configured.
-- The iPhone More tab is custom now, not Apple's automatic overflow list, and contains real AI, Git, settings, theme, and terminal controls.
+- The iPhone More tab is custom now, not Apple's automatic overflow list, and contains real AI, Git, settings, theme, terminal controls, About/Support links, and a Buy Me a Coffee donation button.
 - The SwiftUI workspace now uses semantic text colors instead of hard-coded white labels, fixes the broken white-on-light card look, and removes awkward duplicate hero panel padding across the main shell.
 - Workspace status feedback is now a temporary top overlay instead of a persistent bar sitting above the bottom tab bar.
 - The home and More copy now avoids inflated âlive/command centerâ language and labels Git/AI as terminal-driven or configuration-gated where appropriate.
 - Home quick actions are configuration-aware: AI routes to setup until configured, monitors route to SSH/server setup until monitors exist, and Git starts with repo discovery.
 - Git commit action now requires a user-entered commit message instead of defaulting to generic generated text.
 - Prototype wording such as âpreview build,â âFree preview,â âlive answers,â and broad âreadyâ labels was removed from the in-app workspace copy.
-- Settings are free-app focused with real AI/provider controls, appearance controls, and clearly optional backend bootstrap fields instead of placeholder billing screens.
+- First-run onboarding now explains the real workflow: terminal, Files import/editing, SSH profiles, optional AI setup, and setup shortcuts. Settings are free-app focused with real AI/provider controls, appearance controls, and clearly optional backend bootstrap fields instead of placeholder billing screens.
 - Optional backend settings are now labeled as manual bootstrap, and remote config refresh is disabled until required Supabase fields are present.
 - Workspace backup export writes a JSON manifest for profiles, snippets, monitors, vault metadata, and AI routing metadata without raw private-key contents.
 - Backend settings store non-secret routing metadata locally, while AI provider keys, Supabase anon/access tokens, and vault sync secrets are routed through Keychain-backed local storage for hosted AI proxy routing, encrypted vault sync, and remote config refresh.
@@ -98,7 +100,7 @@ The current design target is real-tool clarity first: fewer marketing cards, lig
 
 ### Current release direction
 - Payment and entitlement work is intentionally deferred.
-- Buy Me a Coffee, Stripe, StoreKit, and hosted subscription checks should be revisited only after the core workflows are reliable.
+- Buy Me a Coffee is currently a donation/support link only. Stripe, StoreKit, hosted subscription checks, and entitlement gates should be revisited only after the core workflows are reliable.
 - No device serial-number scheme should be used for entitlement checks. Future verification should be account-based and privacy-preserving.
 
 ## Runtime And Sandbox Reality
