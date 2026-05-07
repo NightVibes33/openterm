@@ -152,6 +152,16 @@ jobs:
             sed -i.bak 's/func apply(with applier: PathApplier)/func apply(with applier: @escaping PathApplier)/g' Pods/BezierPathLength/Source/PathElement.swift
           fi
 
+      - name: Patch InputAssistant for modern iOS
+        shell: bash
+        run: |
+          set -euo pipefail
+          # InputAssistant uses deprecated UICollectionViewFlowLayoutAutomaticSize constant.
+          # It has been renamed to UICollectionViewFlowLayout.automaticSize in modern iOS.
+          if [ -f "Pods/InputAssistant/Sources/InputAssistantCollectionView.swift" ]; then
+            sed -i.bak 's/UICollectionViewFlowLayoutAutomaticSize/UICollectionViewFlowLayout.automaticSize/g' Pods/InputAssistant/Sources/InputAssistantCollectionView.swift
+          fi
+
       - name: List schemes
         shell: bash
         run: |
