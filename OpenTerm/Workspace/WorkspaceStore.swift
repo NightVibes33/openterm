@@ -531,7 +531,7 @@ final class WorkspaceStore: ObservableObject {
 	@Published var activeEditor: WorkspaceEditorDocument?
 	@Published var assistantMessages: [AssistantMessage] = []
 	@Published var assistantDraft: String = "Turn my goal into commands"
-	@Published var assistantStatus: String = "Configure an AI endpoint in Settings to enable live answers."
+	@Published var assistantStatus: String = "Configure an AI endpoint in Settings to enable configured responses."
 	@Published var isSendingAssistantPrompt: Bool = false
 	@Published var aiConfiguration: AIProviderConfiguration = .default
 	@Published var backendConfiguration: BackendConfiguration = .default
@@ -1257,7 +1257,7 @@ final class WorkspaceStore: ObservableObject {
 		)
 		saveAIConfiguration()
 		let route = aiConfiguration.usesHostedProxy ? "hosted proxy" : "direct provider"
-		assistantStatus = aiConfiguration.endpoint.isEmpty ? "Configure an AI endpoint in Settings to enable live answers." : "AI endpoint saved. Prompts will use \(aiConfiguration.model) through \(route)."
+		assistantStatus = aiConfiguration.endpoint.isEmpty ? "Configure an AI endpoint in Settings to enable configured responses." : "AI endpoint saved. Prompts will use \(aiConfiguration.model) through \(route)."
 	}
 
 	func updateBackendConfiguration(supabaseURL: String, accessToken: String, deviceLabel: String, anonKey: String, userID: String, deviceID: String, vaultSyncSecret: String) {
@@ -1649,7 +1649,7 @@ final class WorkspaceStore: ObservableObject {
 		}
 
 		if !file.isDirectory {
-			statusMessage = "Ready to export \(file.name)"
+			statusMessage = "Exporting \(file.name)"
 			return sourceURL
 		}
 

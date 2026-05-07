@@ -540,7 +540,7 @@ private struct WorkspaceAssistantView: View {
 
 			if !store.isAIConfigured {
 				VStack(alignment: .leading, spacing: 12) {
-					EmptyStateCard(title: "AI Not Configured", detail: "Prompt shortcuts can prepare drafts, but live answers require an OpenAI-compatible endpoint plus API key, or a Supabase hosted proxy plus access token.", symbol: "sparkles")
+					EmptyStateCard(title: "AI Not Configured", detail: "Prompt shortcuts can prepare drafts, but configured responses require an OpenAI-compatible endpoint plus API key, or a Supabase hosted proxy plus access token.", symbol: "sparkles")
 					PrimaryWorkspaceButton(title: "Configure AI", symbol: "slider.horizontal.3", tint: AppColor.violet) {
 						store.openSettings()
 					}
@@ -631,7 +631,7 @@ private struct SettingsWorkspaceView: View {
 			ThemeSettingsCard(store: store, appAccent: $appAccent, terminalText: $terminalText, terminalBackground: $terminalBackground)
 
 			VStack(alignment: .leading, spacing: 14) {
-				SectionHeader(title: "Terminal", subtitle: "These controls update the actual shell, not a preview.")
+				SectionHeader(title: "Terminal", subtitle: "These controls update the actual shell appearance.")
 				Slider(value: $terminalFontSize, in: 10...28, step: 1) {
 					Text("Font size")
 				} minimumValueLabel: {

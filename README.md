@@ -39,7 +39,7 @@ The current design target is real-tool clarity first: fewer marketing cards, lig
 - The iPhone More tab is custom now, not Apple's automatic overflow list, and contains real AI, Git, settings, theme, and terminal controls.
 - The SwiftUI workspace now uses semantic text colors instead of hard-coded white labels, fixing the broken white-on-light card look across the main shell.
 - The home and More copy now avoids inflated âlive/command centerâ language and labels Git/AI as terminal-driven or configuration-gated where appropriate.
-- Prototype wording such as âpreview build,â âFree preview,â and broad âreadyâ labels was removed from the in-app workspace copy.
+- Prototype wording such as âpreview build,â âFree preview,â âlive answers,â and broad âreadyâ labels was removed from the in-app workspace copy.
 - Settings are free-app focused with real AI/provider controls and appearance controls instead of placeholder billing screens.
 - Workspace backup export writes a JSON manifest for profiles, snippets, monitors, vault metadata, and AI routing metadata without raw private-key contents.
 - Backend settings store non-secret routing metadata locally, while AI provider keys, Supabase anon/access tokens, and vault sync secrets are routed through Keychain-backed local storage for hosted AI proxy routing, encrypted vault sync, and remote config refresh.

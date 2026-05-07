@@ -19,7 +19,7 @@ This fork should not pretend to be a native full IDE yet. The real product direc
 ## Previously Fake Or Misleading Areas Fixed
 
 - Hard-coded white-on-light workspace text was replaced with semantic foreground colors so the SwiftUI shell is readable across light, dark, and glass-style backgrounds.
-- Prototype labels such as preview build/free preview and broad ready-state language were removed from the in-app workspace copy.
+- Prototype labels such as preview build/free preview/live answers and broad ready-state language were removed from the in-app workspace copy.
 - Removed seeded fake SSH hosts, seeded demo monitors, and generic seeded command snippets. Blank SSH profiles and invalid monitor records are rejected before persistence.
 - Home recent activity no longer shows saved SSH profiles until they have actually been used.
 - Monitor snapshots are no longer created just because a monitor was configured.

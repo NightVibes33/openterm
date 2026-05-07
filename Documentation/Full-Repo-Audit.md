@@ -48,7 +48,7 @@ This audit covers the whole checked-in repo, not only the new SwiftUI workspace.
 - Replaced hard-coded white text on light system cards with semantic foreground colors across the SwiftUI workspace shell.
 - Reworded inflated Live Workspace/Command Center copy to describe real activity and terminal-driven/configuration-gated tools.
 - Added real file/folder rename plus folder tar archive export from the Files tab.
-- Removed prototype wording like preview build/free preview and broad ready-state labels from the in-app workspace copy.
+- Removed prototype wording like preview build/free preview/live answers and broad ready-state labels from the in-app workspace copy.
 - Disabled live AI sending until a real endpoint/key or hosted proxy/token is configured.
 - Added `git` preflight before terminal-driven Git commands.
 - Rejected blank SSH profiles and invalid monitor records before persistence.
