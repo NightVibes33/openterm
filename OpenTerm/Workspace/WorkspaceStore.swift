@@ -471,6 +471,7 @@ final class WorkspaceStore: ObservableObject {
 	@Published var lastBackupPath: String = "No backup exported yet"
 	@Published var vaultSyncStatus: String = "Vault sync not configured"
 	@Published var isSyncingVault: Bool = false
+	@Published var remoteConfigStatus: String = "Remote config not loaded"
 	@Published var freeModeSummary: String = "Free preview while SSH, Git, AI, editor, and monitoring flows are hardened."
 
 	private let fileManager = FileManager.default
@@ -482,6 +483,7 @@ final class WorkspaceStore: ObservableObject {
 	}()
 	private let commandCapture = WorkspaceCommandCapture()
 	private var monitorTimer: Timer?
+	private var vaultSyncTimer: Timer?
 
 	private init() {
 		byteCountFormatter.allowedUnits = [.useKB, .useMB]
@@ -495,6 +497,7 @@ final class WorkspaceStore: ObservableObject {
 		NotificationCenter.default.addObserver(forName: .appearanceDidChange, object: nil, queue: .main) { [weak self] _ in
 			self?.workspaceAccentColor = Color(UserDefaultsController.shared.workspaceAccentColor)
 		}
+		startVaultBackgroundRefreshIfConfigured()
 	}
 
 	private var workspaceSupportURL: URL {
@@ -883,6 +886,9 @@ final class WorkspaceStore: ObservableObject {
 				try fileManager.setAttributes([.posixPermissions: 0o600, .protectionKey: FileProtectionType.complete], ofItemAtPath: keyURL.path)
 				let item = SSHVaultItem(id: id, label: record.label, keyPath: keyURL.path, fingerprint: record.publicFingerprint ?? "Synced key", createdAt: record.createdAt ?? Date(), lastUsedAt: record.lastUsedAt)
 				if let index = sshVaultItems.firstIndex(where: { $0.id == id }) {
+					let localDate = sshVaultItems[index].lastUsedAt ?? sshVaultItems[index].createdAt
+					let remoteDate = record.updatedAt ?? record.createdAt ?? Date.distantPast
+					guard remoteDate >= localDate else { continue }
 					sshVaultItems[index] = item
 				} else {
 					sshVaultItems.insert(item, at: 0)
@@ -895,6 +901,22 @@ final class WorkspaceStore: ObservableObject {
 		saveSSHVaultItems()
 		vaultSyncStatus = "Imported \(imported) encrypted vault item(s)"
 		statusMessage = vaultSyncStatus
+	}
+
+	func repairSSHVaultMetadata() {
+		let before = sshVaultItems.count
+		sshVaultItems.removeAll { !fileManager.fileExists(atPath: $0.keyPath) }
+		saveSSHVaultItems()
+		vaultSyncStatus = "Repaired vault metadata: removed \(before - sshVaultItems.count) missing item(s)"
+		statusMessage = vaultSyncStatus
+	}
+
+	private func startVaultBackgroundRefreshIfConfigured() {
+		vaultSyncTimer?.invalidate()
+		guard vaultSyncContext(from: backendConfiguration) != nil else { return }
+		vaultSyncTimer = Timer.scheduledTimer(withTimeInterval: 900, repeats: true) { [weak self] _ in
+			self?.pullSSHVaultFromCloud()
+		}
 	}
 
 	private func localFingerprint(for key: String) -> String {
@@ -992,7 +1014,44 @@ final class WorkspaceStore: ObservableObject {
 			vaultSyncSecret: vaultSyncSecret
 		)
 		saveBackendConfiguration()
+		startVaultBackgroundRefreshIfConfigured()
 		statusMessage = "Backend settings saved"
+	}
+
+
+	func refreshRemoteConfiguration() {
+		let config = backendConfiguration
+		let baseURL = config.normalizedSupabaseURL
+		let anonKey = (config.anonKey ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+		let accessToken = config.accessToken.trimmingCharacters(in: .whitespacesAndNewlines)
+		guard !baseURL.isEmpty, !anonKey.isEmpty else {
+			remoteConfigStatus = "Add Supabase URL and anon key first"
+			statusMessage = remoteConfigStatus
+			return
+		}
+		guard let url = URL(string: "\(baseURL)/rest/v1/remote_config?select=key,value,is_enabled&is_enabled=eq.true") else { return }
+		var request = URLRequest(url: url)
+		request.setValue("application/json", forHTTPHeaderField: "Accept")
+		request.setValue(anonKey, forHTTPHeaderField: "apikey")
+		if !accessToken.isEmpty {
+			request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+		}
+		URLSession.shared.dataTask(with: request) { data, response, error in
+			DispatchQueue.main.async {
+				if let error {
+					self.remoteConfigStatus = "Remote config failed: \(error.localizedDescription)"
+					return
+				}
+				let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+				guard (200..<300).contains(status), let data else {
+					self.remoteConfigStatus = "Remote config failed with HTTP \(status)"
+					return
+				}
+				let count = (try? JSONSerialization.jsonObject(with: data) as? [[String: Any]])?.count ?? 0
+				self.remoteConfigStatus = "Loaded \(count) remote config item(s)"
+				self.statusMessage = self.remoteConfigStatus
+			}
+		}.resume()
 	}
 
 	func updateWorkspaceAccent(_ color: Color) {
@@ -1548,6 +1607,7 @@ private struct VaultSyncRemoteItem: Decodable {
 	let payloadNonce: String
 	let createdAt: Date?
 	let lastUsedAt: Date?
+	let updatedAt: Date?
 
 	private enum CodingKeys: String, CodingKey {
 		case id
@@ -1558,6 +1618,7 @@ private struct VaultSyncRemoteItem: Decodable {
 		case payloadNonce = "payload_nonce"
 		case createdAt = "created_at"
 		case lastUsedAt = "last_used_at"
+		case updatedAt = "updated_at"
 	}
 }
 

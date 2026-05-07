@@ -506,6 +506,12 @@ private struct SettingsWorkspaceView: View {
 					PrimaryWorkspaceButton(title: "Save Backend", symbol: "lock.shield", tint: AppColor.green) {
 						store.updateBackendConfiguration(supabaseURL: supabaseURL, accessToken: backendAccessToken, deviceLabel: backendDeviceLabel, anonKey: backendAnonKey, userID: backendUserID, deviceID: backendDeviceID, vaultSyncSecret: vaultSyncSecret)
 					}
+					Text(store.remoteConfigStatus)
+						.font(.system(.footnote, design: .rounded))
+						.foregroundStyle(.white.opacity(0.62))
+					PrimaryWorkspaceButton(title: "Refresh Remote Config", symbol: "icloud.and.arrow.down", tint: AppColor.blue) {
+						store.refreshRemoteConfiguration()
+					}
 				}
 				.padding(18)
 				.background(WorkspaceCardBackground(tint: AppColor.green))
@@ -525,8 +531,11 @@ private struct SettingsWorkspaceView: View {
 						}
 						.disabled(store.isSyncingVault)
 					}
+						PrimaryWorkspaceButton(title: "Repair Local Vault", symbol: "cross.case", tint: AppColor.amber) {
+							store.repairSSHVaultMetadata()
+						}
 				}
-				.padding(18)
+					.padding(18)
 				.background(WorkspaceCardBackground(tint: AppColor.blue))
 			VStack(alignment: .leading, spacing: 12) {
 				SectionHeader(title: "Backup", subtitle: "Export workspace metadata without raw private-key contents.")
@@ -641,6 +650,7 @@ private struct HeroPanel: View {
 		}
 		.padding(24)
 		.frame(maxWidth: .infinity, alignment: .leading)
+					.padding(18)
 		.background(WorkspaceCardBackground(tint: AppColor.blue))
 	}
 }
@@ -864,6 +874,20 @@ private struct GitRepoCard: View {
 				PrimaryWorkspaceButton(title: "Commit", symbol: "checkmark.circle", tint: AppColor.amber) { run("git add -A && git commit -m '\(commitMessage.replacingOccurrences(of: "'", with: "'\\''"))'") }
 				PrimaryWorkspaceButton(title: "Push", symbol: "arrow.up.circle", tint: AppColor.violet) { run("git push") }
 			}
+				Menu {
+					Button("Inspect conflicts") { run("git status --short && git diff --name-only --diff-filter=U && git diff --check") }
+					Button("Show conflict diff") { run("git diff --merge") }
+					Button("Abort merge") { run("git merge --abort") }
+					Button("Continue merge") { run("git add -A && git commit") }
+					Button("Use ours for conflicted files") { run("git diff --name-only --diff-filter=U | xargs git checkout --ours --") }
+					Button("Use theirs for conflicted files") { run("git diff --name-only --diff-filter=U | xargs git checkout --theirs --") }
+				} label: {
+					Label("Conflict Tools", systemImage: "exclamationmark.triangle")
+						.font(.system(.headline, design: .rounded, weight: .semibold))
+						.frame(maxWidth: .infinity)
+				}
+				.buttonStyle(.borderedProminent)
+				.tint(AppColor.coral)
 		}
 		.padding(18)
 		.background(WorkspaceCardBackground(tint: AppColor.violet))
@@ -1125,6 +1149,7 @@ private struct WorkspaceEditorSheet: View {
 	@ObservedObject var store: WorkspaceStore
 	@State private var text: String
 	@State private var searchQuery = ""
+	@State private var showingDiff = false
 
 	init(document: WorkspaceEditorDocument, store: WorkspaceStore) {
 		self.document = document
@@ -1147,12 +1172,27 @@ private struct WorkspaceEditorSheet: View {
 						.textInputAutocapitalization(.never)
 						.autocorrectionDisabled()
 						.textFieldStyle(.roundedBorder)
+
+						ScrollView(.horizontal, showsIndicators: false) {
+							HStack(spacing: 8) {
+								ForEach(completionSuggestions, id: \.self) { suggestion in
+									Button(suggestion) { insertCompletion(suggestion) }
+										.font(.system(.caption, design: .monospaced, weight: .semibold))
+										.buttonStyle(.borderedProminent)
+										.tint(AppColor.blue.opacity(0.85))
+								}
+							}
+						}
 				}
 				.padding(.horizontal, 16)
 				.padding(.vertical, 12)
 				.background(AppColor.ink.opacity(0.96))
 
-				HighlightedCodeEditor(text: $text, language: languageName, searchQuery: searchQuery)
+					if showingDiff {
+						EditorDiffView(lines: diffLines)
+					} else {
+						HighlightedCodeEditor(text: $text, language: languageName, searchQuery: searchQuery)
+					}
 			}
 			.background(AppColor.ink.ignoresSafeArea())
 			.navigationTitle(document.title)
@@ -1161,10 +1201,50 @@ private struct WorkspaceEditorSheet: View {
 				ToolbarItem(placement: .cancellationAction) {
 					Button("Close") { store.closeEditor() }
 				}
-				ToolbarItem(placement: .confirmationAction) {
-					Button("Save") { store.saveEditorDocument(relativePath: document.relativePath, content: text) }
-				}
+					ToolbarItem(placement: .primaryAction) {
+						Button(showingDiff ? "Editor" : "Diff") { showingDiff.toggle() }
+					}
+					ToolbarItem(placement: .confirmationAction) {
+						Button("Save") { store.saveEditorDocument(relativePath: document.relativePath, content: text) }
+					}
 			}
+		}
+	}
+
+	private var completionSuggestions: [String] {
+		switch languageName {
+		case "Swift": return ["import Foundation", "struct", "func", "guard let", "Task { }", "do { } catch { }"]
+		case "Python": return ["import", "def", "class", "if __name__ == \"__main__\":", "try:\n    ", "with open"]
+		case "JavaScript": return ["import", "async function", "await", "try { } catch", "console.log", "export default"]
+		case "Shell": return ["#!/bin/sh", "set -e", "if [ ]; then", "for item in", "grep -R", "ssh user@host"]
+		case "YAML": return ["name:", "on:", "jobs:", "steps:", "uses:", "run: |"]
+		default: return ["TODO:", "NOTE:", "FIXME:"]
+		}
+	}
+
+	private var diffLines: [EditorDiffLine] {
+		let original = document.initialContent.components(separatedBy: .newlines)
+		let current = text.components(separatedBy: .newlines)
+		let maxCount = max(original.count, current.count)
+		var output = [EditorDiffLine]()
+		for index in 0..<maxCount {
+			let old = index < original.count ? original[index] : nil
+			let new = index < current.count ? current[index] : nil
+			if old == new, let old {
+				output.append(EditorDiffLine(prefix: " ", text: old, tint: .white.opacity(0.66)))
+			} else {
+				if let old { output.append(EditorDiffLine(prefix: "-", text: old, tint: AppColor.coral)) }
+				if let new { output.append(EditorDiffLine(prefix: "+", text: new, tint: AppColor.green)) }
+			}
+		}
+		return output
+	}
+
+	private func insertCompletion(_ suggestion: String) {
+		if text.isEmpty || text.hasSuffix("\n") {
+			text += suggestion
+		} else {
+			text += " " + suggestion
 		}
 	}
 
@@ -1186,6 +1266,32 @@ private struct WorkspaceEditorSheet: View {
 		case "yml", "yaml": return "YAML"
 		default: return "Text"
 		}
+	}
+}
+
+private struct EditorDiffLine: Identifiable {
+	let id = UUID()
+	let prefix: String
+	let text: String
+	let tint: Color
+}
+
+private struct EditorDiffView: View {
+	let lines: [EditorDiffLine]
+
+	var body: some View {
+		ScrollView([.vertical, .horizontal]) {
+			LazyVStack(alignment: .leading, spacing: 3) {
+				ForEach(lines) { line in
+					Text("\(line.prefix) \(line.text)")
+						.font(.system(.footnote, design: .monospaced))
+						.foregroundStyle(line.tint)
+						.frame(maxWidth: .infinity, alignment: .leading)
+				}
+			}
+			.padding(18)
+		}
+		.background(AppColor.ink.opacity(0.98))
 	}
 }
 
