@@ -33,6 +33,7 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - SSH profiles persist locally with label, host, username, port, auth type, key path, startup path, notes, and last-used timestamps.
 - SSH quick connect now builds and runs real `ssh` commands through the terminal instead of only switching screens.
 - A local SSH key vault foundation exists with protected on-device key files, metadata, import/delete actions, and attach-to-profile flow.
+- Encrypted SSH vault push/pull is wired through Supabase RPC with AES-GCM payload encryption and a user-provided vault sync secret; raw private keys are not sent as plaintext.
 - Local files are scanned from `DocumentManager.shared.activeDocumentsFolderURL`; UTF-8 files can open in an in-app syntax-highlighted editor with search/match highlighting and save back to disk.
 - Command snippets persist locally and can run directly in the terminal.
 - Git repositories are detected by scanning for `.git` folders, and clone/status/pull/commit/push actions are terminal-driven.
@@ -47,14 +48,14 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - Vendored dependency compatibility patches have been added for modern Xcode/iOS SDK builds.
 
 ### Partially implemented
-- SSH profile and key-vault storage are local only. Encrypted cloud vault sync is not connected yet.
+- SSH profile and key-vault storage are local first. App-side encrypted vault push/pull is wired through Supabase RPC, but production deployment, conflict resolution, and migration rollout still need validation.
 - Server monitoring works for noninteractive SSH profiles; password-based profiles still require manual terminal sessions.
 - Git actions are terminal-driven because this fork does not currently bundle a native Git engine.
 - The editor has lightweight syntax highlighting, language detection, and search/match highlighting, but full language-server tooling, completions, and diff views are not finished.
 - The AI assistant supports direct provider routing or hosted Supabase proxy routing, prompt shortcuts, terminal handoff, and local usage history. Backend tables/functions and an Edge Function scaffold exist for hosted rate-limit enforcement, but deployment secrets, production auth hardening, and remote configuration still need to be completed.
 
 ### Not implemented yet
-- End-to-end encrypted SSH key vault sync across devices.
+- Automatic conflict-resolved SSH vault sync with background refresh and recovery UX.
 - Full language-server tooling, completions, and diff views in the code editor.
 - Native Git engine integration with structured conflict handling.
 - Production AI proxy deployment secrets, remote configuration, and hosted auth hardening.
@@ -72,6 +73,7 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 ### Backend foundation
 - `supabase/migrations/20260506_workspace_foundation.sql` creates the initial hosted-data shape.
 - `supabase/migrations/20260507_ai_vault_limits.sql` adds AI rate-limit windows, encrypted vault sync storage, monitor alert records, and rate-limit helper functions.
+- `supabase/migrations/20260507_vault_sync_rpc.sql` adds RPC helpers for encrypted vault push/pull using base64 ciphertext over Supabase REST.
 - `supabase/functions/ai-proxy/index.ts` is a deployable Edge Function scaffold for authenticated AI requests, rate-limit checks, OpenAI forwarding, and usage recording. It still needs hosted environment secrets, deployment, and production policy hardening before it should be treated as live infrastructure.
 - Tables currently defined: `users`, `subscriptions`, `devices`, `ssh_profiles_metadata`, `snippets`, `ai_usage`, `server_monitors`, `audit_logs`, `ai_rate_limits`, `vault_sync_items`, `server_monitor_alerts`.
 - Sensitive SSH material should remain end-to-end encrypted before upload. Raw private keys should not be stored server-side in plaintext.
@@ -151,12 +153,13 @@ Important:
 - [x] Add local protected SSH key vault foundation
 - [x] Add backend encrypted vault sync tables
 - [x] Add backup/export manifest for workspace metadata
-- [ ] Connect app-side encrypted vault sync across devices
+- [x] Connect app-side encrypted vault push/pull controls with AES-GCM payload encryption
+- [ ] Add vault sync conflict resolution, recovery UX, and background refresh
 - [ ] Add signed App Store distribution when needed
 
 ## Next Engineering Priorities
 - Stabilize hosted AI proxy deployment: Supabase function secrets, auth validation, rate-limit policy tests, and remote feature flags.
-- Connect app-side encrypted vault sync using client-side encryption before upload and metadata-only server visibility.
+- Harden encrypted vault sync: deploy RPC migration, test Supabase auth/RLS, add conflict resolution, recovery UX, and background refresh.
 - Replace terminal-driven Git helpers with a native Git engine only after the current terminal-based workflow stays reliable.
 - Expand the editor from lightweight highlighting into real developer tooling: diff view, file tree actions, completions, and optional LSP-style assistance.
 - Keep payment/subscription code deferred until the free core product is stable.

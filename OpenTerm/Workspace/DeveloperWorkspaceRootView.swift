@@ -388,7 +388,11 @@ private struct SettingsWorkspaceView: View {
 	@State private var useHostedProxy = false
 	@State private var supabaseURL = ""
 	@State private var backendAccessToken = ""
+	@State private var backendAnonKey = ""
+	@State private var backendUserID = ""
+	@State private var backendDeviceID = ""
 	@State private var backendDeviceLabel = ""
+	@State private var vaultSyncSecret = ""
 	@State private var appAccent = Color(UserDefaultsController.shared.workspaceAccentColor)
 	@State private var terminalText = Color(UserDefaultsController.shared.terminalTextColor)
 	@State private var terminalBackground = Color(UserDefaultsController.shared.terminalBackgroundColor)
@@ -468,23 +472,56 @@ private struct SettingsWorkspaceView: View {
 			.padding(18)
 			.background(WorkspaceCardBackground(tint: AppColor.violet))
 
-			VStack(alignment: .leading, spacing: 12) {
-				SectionHeader(title: "Backend", subtitle: "Supabase auth bootstrap for hosted AI proxy and future sync.")
-				TextField("Supabase project URL", text: $supabaseURL)
-					.textInputAutocapitalization(.never)
-					.autocorrectionDisabled()
-					.textFieldStyle(.roundedBorder)
-				SecureField("Access token", text: $backendAccessToken)
-					.textFieldStyle(.roundedBorder)
-				TextField("Device label", text: $backendDeviceLabel)
-					.textFieldStyle(.roundedBorder)
-				PrimaryWorkspaceButton(title: "Save Backend", symbol: "lock.shield", tint: AppColor.green) {
-					store.updateBackendConfiguration(supabaseURL: supabaseURL, accessToken: backendAccessToken, deviceLabel: backendDeviceLabel)
+				VStack(alignment: .leading, spacing: 12) {
+					SectionHeader(title: "Backend", subtitle: "Supabase auth bootstrap for hosted AI proxy and encrypted vault sync.")
+					TextField("Supabase project URL", text: $supabaseURL)
+						.textInputAutocapitalization(.never)
+						.autocorrectionDisabled()
+						.textFieldStyle(.roundedBorder)
+					SecureField("Supabase anon key", text: $backendAnonKey)
+						.textFieldStyle(.roundedBorder)
+					SecureField("User access token", text: $backendAccessToken)
+						.textFieldStyle(.roundedBorder)
+					TextField("Authenticated user id", text: $backendUserID)
+						.textInputAutocapitalization(.never)
+						.autocorrectionDisabled()
+						.textFieldStyle(.roundedBorder)
+					TextField("Device id", text: $backendDeviceID)
+						.textInputAutocapitalization(.never)
+						.autocorrectionDisabled()
+						.textFieldStyle(.roundedBorder)
+					TextField("Device label", text: $backendDeviceLabel)
+						.textFieldStyle(.roundedBorder)
+					SecureField("Vault sync secret", text: $vaultSyncSecret)
+						.textFieldStyle(.roundedBorder)
+					Text("Vault payloads are AES-GCM encrypted on device before upload. The server only receives ciphertext, nonce, labels, and fingerprints.")
+						.font(.system(.footnote, design: .rounded))
+						.foregroundStyle(.white.opacity(0.62))
+					PrimaryWorkspaceButton(title: "Save Backend", symbol: "lock.shield", tint: AppColor.green) {
+						store.updateBackendConfiguration(supabaseURL: supabaseURL, accessToken: backendAccessToken, deviceLabel: backendDeviceLabel, anonKey: backendAnonKey, userID: backendUserID, deviceID: backendDeviceID, vaultSyncSecret: vaultSyncSecret)
+					}
 				}
-			}
-			.padding(18)
-			.background(WorkspaceCardBackground(tint: AppColor.green))
+				.padding(18)
+				.background(WorkspaceCardBackground(tint: AppColor.green))
 
+				VStack(alignment: .leading, spacing: 12) {
+					SectionHeader(title: "Encrypted Vault Sync", subtitle: "Push or pull SSH key vault records through Supabase without plaintext private keys leaving this device.")
+					Text(store.vaultSyncStatus)
+						.font(.system(.footnote, design: .rounded, weight: .semibold))
+						.foregroundStyle(.white.opacity(0.72))
+					HStack(spacing: 12) {
+						PrimaryWorkspaceButton(title: store.isSyncingVault ? "Syncingâ¦" : "Push Vault", symbol: "arrow.up.doc", tint: AppColor.green) {
+							store.pushSSHVaultToCloud()
+						}
+						.disabled(store.isSyncingVault)
+						PrimaryWorkspaceButton(title: "Pull Vault", symbol: "arrow.down.doc", tint: AppColor.blue) {
+							store.pullSSHVaultFromCloud()
+						}
+						.disabled(store.isSyncingVault)
+					}
+				}
+				.padding(18)
+				.background(WorkspaceCardBackground(tint: AppColor.blue))
 			VStack(alignment: .leading, spacing: 12) {
 				SectionHeader(title: "Backup", subtitle: "Export workspace metadata without raw private-key contents.")
 				Text(store.lastBackupPath)
@@ -512,7 +549,11 @@ private struct SettingsWorkspaceView: View {
 			useHostedProxy = store.aiConfiguration.usesHostedProxy
 			supabaseURL = store.backendConfiguration.supabaseURL
 			backendAccessToken = store.backendConfiguration.accessToken
+				backendAnonKey = store.backendConfiguration.anonKey ?? ""
+				backendUserID = store.backendConfiguration.userID ?? ""
+				backendDeviceID = store.backendConfiguration.deviceID ?? ""
 			backendDeviceLabel = store.backendConfiguration.deviceLabel
+				vaultSyncSecret = store.backendConfiguration.vaultSyncSecret ?? ""
 			appAccent = store.workspaceAccentColor
 			terminalText = Color(UserDefaultsController.shared.terminalTextColor)
 			terminalBackground = Color(UserDefaultsController.shared.terminalBackgroundColor)
@@ -910,7 +951,7 @@ private struct SSHVaultImportSheet: View {
 				TextField("Key label", text: $label)
 				TextField("Paste private key", text: $privateKey, axis: .vertical)
 					.lineLimit(8...18)
-				Text("Keys are stored locally with iOS file protection. Cloud E2E vault sync is not enabled yet.")
+				Text("Keys are stored locally with iOS file protection. Cloud sync uses AES-GCM encryption when configured in Settings.")
 					.font(.footnote)
 					.foregroundStyle(.secondary)
 			}

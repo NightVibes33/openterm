@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import UIKit
+import CryptoKit
 
 enum WorkspaceDestination: String, CaseIterable, Hashable, Identifiable {
 	case home
@@ -308,13 +309,35 @@ struct BackendConfiguration: Codable, Equatable {
 	var supabaseURL: String
 	var accessToken: String
 	var deviceLabel: String
+	var anonKey: String?
+	var userID: String?
+	var deviceID: String?
+	var vaultSyncSecret: String?
 
-	static let `default` = BackendConfiguration(supabaseURL: "", accessToken: "", deviceLabel: UIDevice.current.name)
+	static let `default` = BackendConfiguration(
+		supabaseURL: "",
+		accessToken: "",
+		deviceLabel: UIDevice.current.name,
+		anonKey: nil,
+		userID: nil,
+		deviceID: UIDevice.current.identifierForVendor?.uuidString,
+		vaultSyncSecret: nil
+	)
+
+	var normalizedSupabaseURL: String {
+		supabaseURL.trimmingCharacters(in: .whitespacesAndNewlines).trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+	}
 
 	var aiProxyEndpoint: String {
-		let trimmed = supabaseURL.trimmingCharacters(in: .whitespacesAndNewlines).trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+		let trimmed = normalizedSupabaseURL
 		guard !trimmed.isEmpty else { return "" }
 		return "\(trimmed)/functions/v1/ai-proxy"
+	}
+
+	var vaultRPCBaseURL: String {
+		let trimmed = normalizedSupabaseURL
+		guard !trimmed.isEmpty else { return "" }
+		return "\(trimmed)/rest/v1/rpc"
 	}
 }
 
@@ -446,6 +469,8 @@ final class WorkspaceStore: ObservableObject {
 	@Published var activeThemeName: String = "Glass Slate"
 	@Published var workspaceAccentColor: Color = Color(UserDefaultsController.shared.workspaceAccentColor)
 	@Published var lastBackupPath: String = "No backup exported yet"
+	@Published var vaultSyncStatus: String = "Vault sync not configured"
+	@Published var isSyncingVault: Bool = false
 	@Published var freeModeSummary: String = "Free preview while SSH, Git, AI, editor, and monitoring flows are hardened."
 
 	private let fileManager = FileManager.default
@@ -760,6 +785,112 @@ final class WorkspaceStore: ObservableObject {
 		statusMessage = "Attached vault key to \(profile.label)"
 	}
 
+	func pushSSHVaultToCloud() {
+		let config = backendConfiguration
+		guard let syncContext = vaultSyncContext(from: config) else { return }
+		guard !sshVaultItems.isEmpty else {
+			vaultSyncStatus = "No local vault keys to sync"
+			return
+		}
+
+		isSyncingVault = true
+		vaultSyncStatus = "Encrypting \(sshVaultItems.count) vault item(s)â¦"
+		let group = DispatchGroup()
+		var completed = 0
+		var failed = 0
+
+		for item in sshVaultItems {
+			guard let keyData = try? Data(contentsOf: URL(fileURLWithPath: item.keyPath)), let encrypted = encryptVaultPayload(keyData, secret: syncContext.secret) else {
+				failed += 1
+				continue
+			}
+			let requestBody = VaultSyncUpsertRequest(
+				id: item.id.uuidString,
+				userID: syncContext.userID,
+				deviceID: syncContext.deviceID,
+				itemKind: "ssh_private_key",
+				label: item.label,
+				publicFingerprint: item.fingerprint,
+				encryptedPayloadBase64: encrypted.payloadBase64,
+				payloadNonce: encrypted.nonceBase64,
+				keyVersion: 1,
+				syncVersion: Int(Date().timeIntervalSince1970),
+				isDeleted: false,
+				lastUsedAt: item.lastUsedAt
+			)
+			group.enter()
+			sendVaultRPC(function: "upsert_vault_sync_item", body: requestBody, context: syncContext) { success in
+				DispatchQueue.main.async {
+					if success { completed += 1 } else { failed += 1 }
+					group.leave()
+				}
+			}
+		}
+
+		group.notify(queue: .main) {
+			self.isSyncingVault = false
+			self.vaultSyncStatus = failed == 0 ? "Synced \(completed) encrypted vault item(s)" : "Synced \(completed), failed \(failed)"
+			self.statusMessage = self.vaultSyncStatus
+		}
+	}
+
+	func pullSSHVaultFromCloud() {
+		let config = backendConfiguration
+		guard let syncContext = vaultSyncContext(from: config) else { return }
+		guard let url = URL(string: "\(syncContext.rpcBaseURL)/list_vault_sync_items") else { return }
+		isSyncingVault = true
+		vaultSyncStatus = "Fetching encrypted vault itemsâ¦"
+
+		var request = URLRequest(url: url)
+		request.httpMethod = "POST"
+		applySupabaseHeaders(to: &request, context: syncContext)
+		request.httpBody = Data("{}".utf8)
+
+		URLSession.shared.dataTask(with: request) { data, response, _ in
+			DispatchQueue.main.async {
+				self.isSyncingVault = false
+				guard let httpResponse = response as? HTTPURLResponse, (200..<300).contains(httpResponse.statusCode), let data else {
+					self.vaultSyncStatus = "Vault pull failed"
+					self.statusMessage = self.vaultSyncStatus
+					return
+				}
+				let decoder = JSONDecoder()
+				decoder.dateDecodingStrategy = .iso8601
+				guard let records = try? decoder.decode([VaultSyncRemoteItem].self, from: data) else {
+					self.vaultSyncStatus = "Vault pull failed: bad response"
+					return
+				}
+				self.importVaultSyncRecords(records, secret: syncContext.secret)
+			}
+		}.resume()
+	}
+
+	private func importVaultSyncRecords(_ records: [VaultSyncRemoteItem], secret: String) {
+		var imported = 0
+		try? fileManager.createDirectory(at: sshVaultDirectoryURL, withIntermediateDirectories: true, attributes: nil)
+		for record in records where record.itemKind == "ssh_private_key" {
+			guard let payload = Data(base64Encoded: record.encryptedPayloadBase64), let keyData = decryptVaultPayload(payload, secret: secret) else { continue }
+			let id = UUID(uuidString: record.id) ?? UUID()
+			let keyURL = sshVaultDirectoryURL.appendingPathComponent("\(id.uuidString).key")
+			do {
+				try keyData.write(to: keyURL, options: .atomic)
+				try fileManager.setAttributes([.posixPermissions: 0o600, .protectionKey: FileProtectionType.complete], ofItemAtPath: keyURL.path)
+				let item = SSHVaultItem(id: id, label: record.label, keyPath: keyURL.path, fingerprint: record.publicFingerprint ?? "Synced key", createdAt: record.createdAt ?? Date(), lastUsedAt: record.lastUsedAt)
+				if let index = sshVaultItems.firstIndex(where: { $0.id == id }) {
+					sshVaultItems[index] = item
+				} else {
+					sshVaultItems.insert(item, at: 0)
+				}
+				imported += 1
+			} catch {
+				continue
+			}
+		}
+		saveSSHVaultItems()
+		vaultSyncStatus = "Imported \(imported) encrypted vault item(s)"
+		statusMessage = vaultSyncStatus
+	}
+
 	private func localFingerprint(for key: String) -> String {
 		let bytes = Array(Data(key.utf8))
 		let folded = bytes.enumerated().reduce(0) { partial, item in
@@ -844,11 +975,15 @@ final class WorkspaceStore: ObservableObject {
 		assistantStatus = aiConfiguration.endpoint.isEmpty ? "Configure an AI endpoint in Settings to enable live answers." : "AI endpoint saved. Prompts will use \(aiConfiguration.model) through \(route)."
 	}
 
-	func updateBackendConfiguration(supabaseURL: String, accessToken: String, deviceLabel: String) {
+	func updateBackendConfiguration(supabaseURL: String, accessToken: String, deviceLabel: String, anonKey: String, userID: String, deviceID: String, vaultSyncSecret: String) {
 		backendConfiguration = BackendConfiguration(
 			supabaseURL: supabaseURL.trimmingCharacters(in: .whitespacesAndNewlines),
 			accessToken: accessToken.trimmingCharacters(in: .whitespacesAndNewlines),
-			deviceLabel: deviceLabel.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? UIDevice.current.name : deviceLabel.trimmingCharacters(in: .whitespacesAndNewlines)
+			deviceLabel: deviceLabel.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? UIDevice.current.name : deviceLabel.trimmingCharacters(in: .whitespacesAndNewlines),
+			anonKey: anonKey.trimmingCharacters(in: .whitespacesAndNewlines),
+			userID: userID.trimmingCharacters(in: .whitespacesAndNewlines),
+			deviceID: deviceID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? UIDevice.current.identifierForVendor?.uuidString : deviceID.trimmingCharacters(in: .whitespacesAndNewlines),
+			vaultSyncSecret: vaultSyncSecret
 		)
 		saveBackendConfiguration()
 		statusMessage = "Backend settings saved"
@@ -1260,6 +1395,129 @@ final class WorkspaceStore: ObservableObject {
 	func queueGitCommand(_ command: String, in repositoryPath: String) {
 		openTerminal(command: "cd \(shellQuote(repositoryPath)) && \(command)", executeNow: true)
 		statusMessage = "Queued git command in terminal"
+	}
+
+	private func vaultSyncContext(from config: BackendConfiguration) -> VaultSyncContext? {
+		let rpcBaseURL = config.vaultRPCBaseURL
+		let anonKey = (config.anonKey ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+		let accessToken = config.accessToken.trimmingCharacters(in: .whitespacesAndNewlines)
+		let userID = (config.userID ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+		let deviceID = (config.deviceID ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+		let secret = (config.vaultSyncSecret ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+		guard !rpcBaseURL.isEmpty, !anonKey.isEmpty, !accessToken.isEmpty, !userID.isEmpty, !secret.isEmpty else {
+			vaultSyncStatus = "Add Supabase URL, anon key, access token, user id, and vault sync secret first"
+			statusMessage = vaultSyncStatus
+			return nil
+		}
+		return VaultSyncContext(rpcBaseURL: rpcBaseURL, anonKey: anonKey, accessToken: accessToken, userID: userID, deviceID: deviceID.isEmpty ? nil : deviceID, secret: secret)
+	}
+
+	private func applySupabaseHeaders(to request: inout URLRequest, context: VaultSyncContext) {
+		request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+		request.setValue("application/json", forHTTPHeaderField: "Accept")
+		request.setValue(context.anonKey, forHTTPHeaderField: "apikey")
+		request.setValue("Bearer \(context.accessToken)", forHTTPHeaderField: "Authorization")
+	}
+
+	private func sendVaultRPC<T: Encodable>(function: String, body: T, context: VaultSyncContext, completion: @escaping (Bool) -> Void) {
+		guard let url = URL(string: "\(context.rpcBaseURL)/\(function)") else {
+			completion(false)
+			return
+		}
+		var request = URLRequest(url: url)
+		request.httpMethod = "POST"
+		applySupabaseHeaders(to: &request, context: context)
+		let encoder = JSONEncoder()
+		encoder.dateEncodingStrategy = .iso8601
+		request.httpBody = try? encoder.encode(body)
+		URLSession.shared.dataTask(with: request) { _, response, error in
+			let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+			completion(error == nil && (200..<300).contains(status))
+		}.resume()
+	}
+
+	private func vaultSymmetricKey(from secret: String) -> SymmetricKey {
+		let digest = SHA256.hash(data: Data(secret.utf8))
+		return SymmetricKey(data: Data(digest))
+	}
+
+	private func encryptVaultPayload(_ data: Data, secret: String) -> VaultEncryptionResult? {
+		guard let sealed = try? AES.GCM.seal(data, using: vaultSymmetricKey(from: secret)), let combined = sealed.combined else {
+			return nil
+		}
+		let nonce = sealed.nonce.withUnsafeBytes { Data($0).base64EncodedString() }
+		return VaultEncryptionResult(payloadBase64: combined.base64EncodedString(), nonceBase64: nonce)
+	}
+
+	private func decryptVaultPayload(_ data: Data, secret: String) -> Data? {
+		guard let box = try? AES.GCM.SealedBox(combined: data) else { return nil }
+		return try? AES.GCM.open(box, using: vaultSymmetricKey(from: secret))
+	}
+}
+
+private struct VaultSyncContext {
+	let rpcBaseURL: String
+	let anonKey: String
+	let accessToken: String
+	let userID: String
+	let deviceID: String?
+	let secret: String
+}
+
+private struct VaultEncryptionResult {
+	let payloadBase64: String
+	let nonceBase64: String
+}
+
+private struct VaultSyncUpsertRequest: Encodable {
+	let id: String
+	let userID: String
+	let deviceID: String?
+	let itemKind: String
+	let label: String
+	let publicFingerprint: String
+	let encryptedPayloadBase64: String
+	let payloadNonce: String
+	let keyVersion: Int
+	let syncVersion: Int
+	let isDeleted: Bool
+	let lastUsedAt: Date?
+
+	private enum CodingKeys: String, CodingKey {
+		case id = "p_id"
+		case userID = "p_user_id"
+		case deviceID = "p_device_id"
+		case itemKind = "p_item_kind"
+		case label = "p_label"
+		case publicFingerprint = "p_public_fingerprint"
+		case encryptedPayloadBase64 = "p_encrypted_payload_base64"
+		case payloadNonce = "p_payload_nonce"
+		case keyVersion = "p_key_version"
+		case syncVersion = "p_sync_version"
+		case isDeleted = "p_is_deleted"
+		case lastUsedAt = "p_last_used_at"
+	}
+}
+
+private struct VaultSyncRemoteItem: Decodable {
+	let id: String
+	let itemKind: String
+	let label: String
+	let publicFingerprint: String?
+	let encryptedPayloadBase64: String
+	let payloadNonce: String
+	let createdAt: Date?
+	let lastUsedAt: Date?
+
+	private enum CodingKeys: String, CodingKey {
+		case id
+		case itemKind = "item_kind"
+		case label
+		case publicFingerprint = "public_fingerprint"
+		case encryptedPayloadBase64 = "encrypted_payload_base64"
+		case payloadNonce = "payload_nonce"
+		case createdAt = "created_at"
+		case lastUsedAt = "last_used_at"
 	}
 }
 
