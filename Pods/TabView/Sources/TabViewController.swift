@@ -26,18 +26,18 @@ open class TabViewController: UIViewController {
     /// The current tab shown in the tab view controller's content view
     public var visibleViewController: UIViewController? {
         didSet {
-            oldValue?.removeFromParent()
+            oldValue?.removeFromParentViewController()
             oldValue?.view.removeFromSuperview()
 
             if let visibleViewController = visibleViewController {
-                addChild(visibleViewController)
+                addChildViewController(visibleViewController)
                 visibleViewController.view.frame = contentView.bounds
                 contentView.addSubview(visibleViewController.view)
                 visibleViewController.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-                visibleViewController.didMove(toParent: self)
+                visibleViewController.didMove(toParentViewController: self)
             }
             updateVisibleViewControllerInsets()
-            
+
             if let visibleViewController = visibleViewController {
                 visibleNavigationItemObserver = NavigationItemObserver.init(navigationItem: visibleViewController.navigationItem, { [weak self] in
                     self?.refreshTabBar()
@@ -184,7 +184,7 @@ open class TabViewController: UIViewController {
         // If this is the secondary vc in a container, and there are none left,
         // close this vc by setting the state to single
         if _viewControllers.isEmpty, let container = container {
-            if container.state == .split && container.secondaryTabViewController == self {
+            if container.state == .split && container.secondaryTabController == self {
                 container.state = .single
             }
         }
@@ -236,8 +236,4 @@ open class TabViewController: UIViewController {
             }
         }
     }
-}
-
-// Define these conformances, to make sure we expose the proper methods to the tab view bar.
-extension TabViewController: TabViewBarDataSource, TabViewBarDelegate {
 }

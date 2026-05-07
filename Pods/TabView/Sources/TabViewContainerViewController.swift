@@ -25,10 +25,10 @@ internal protocol TabViewContainer: AnyObject {
     var state: TabViewContainerState { get set }
 
     /// Get the primary tab view controller
-    var primaryTabViewController: TabViewController { get }
+    var primaryTabController: TabViewController { get }
 
     /// Get the secondary tab view controller, if there is one
-    var secondaryTabViewController: TabViewController? { get }
+    var secondaryTabController: TabViewController? { get }
 
     /// When a tab collection view starts dragging in either side, the container is alerted.
     /// This is done so the container can potentially enable a drop area to enter split view.
@@ -51,7 +51,7 @@ open class TabViewContainerViewController<TabViewType: TabViewController>: UIVie
             switch state {
             case .single:
                 secondaryTabViewController = nil
-                setOverrideTraitCollection(nil, forChild: primaryTabViewController)
+                setOverrideTraitCollection(nil, forChildViewController: primaryTabViewController)
             case .split:
                 let secondaryVC = TabViewType.init(theme: self.theme)
                 // Override trait collection to be always compact horizontally, while in split mode
@@ -59,8 +59,8 @@ open class TabViewContainerViewController<TabViewType: TabViewController>: UIVie
                     self.traitCollection,
                     UITraitCollection.init(horizontalSizeClass: .compact)
                 ])
-                setOverrideTraitCollection(overriddenTraitCollection, forChild: primaryTabViewController)
-                setOverrideTraitCollection(overriddenTraitCollection, forChild: secondaryVC)
+                setOverrideTraitCollection(overriddenTraitCollection, forChildViewController: primaryTabViewController)
+                setOverrideTraitCollection(overriddenTraitCollection, forChildViewController: secondaryVC)
                 self.secondaryTabViewController = secondaryVC
             }
         }
@@ -86,13 +86,13 @@ open class TabViewContainerViewController<TabViewType: TabViewController>: UIVie
     public private(set) var secondaryTabViewController: TabViewType? {
         didSet {
             oldValue?.view.removeFromSuperview()
-            oldValue?.removeFromParent()
+            oldValue?.removeFromParentViewController()
 
             if let newValue = secondaryTabViewController {
                 newValue.container = self
-                addChild(newValue)
+                addChildViewController(newValue)
                 stackView.addArrangedSubview(newValue.view)
-                newValue.didMove(toParent: self)
+                newValue.didMove(toParentViewController: self)
             }
         }
     }
@@ -119,7 +119,7 @@ open class TabViewContainerViewController<TabViewType: TabViewController>: UIVie
 
         dropView.container = self
         primaryTabViewController.container = self
-        addChild(primaryTabViewController)
+        addChildViewController(primaryTabViewController)
     }
 
     public required init?(coder aDecoder: NSCoder) { fatalError("init(coder:) has not been implemented") }
@@ -148,7 +148,7 @@ open class TabViewContainerViewController<TabViewType: TabViewController>: UIVie
         stackView.alignment = .fill
         stackView.spacing = 0.5
         stackView.insertArrangedSubview(primaryTabViewController.view, at: 0)
-        primaryTabViewController.didMove(toParent: self)
+        primaryTabViewController.didMove(toParentViewController: self)
 
         applyTheme(theme)
     }
@@ -166,7 +166,6 @@ open class TabViewContainerViewController<TabViewType: TabViewController>: UIVie
     open override var preferredStatusBarStyle: UIStatusBarStyle {
         return theme.statusBarStyle
     }
-    
 }
 
 /// This transparent view is displayed on the trailing side of the container, only when a drag and drop session is active.
@@ -201,6 +200,7 @@ class TabViewContainerDropView: UIView, UIDropInteractionDelegate {
     func dropInteraction(_ interaction: UIDropInteraction, sessionDidExit session: UIDropSession) {
         container?.contentViewRightInset = 0
     }
+
     func dropInteraction(_ interaction: UIDropInteraction, sessionDidEnd session: UIDropSession) {
         container?.contentViewRightInset = 0
     }
@@ -219,13 +219,21 @@ class TabViewContainerDropView: UIView, UIDropInteractionDelegate {
         // Move the dropped view controller into a new secondary tab view controller.
         container.contentViewRightInset = 0
         container.state = .split
-        container.primaryTabViewController.closeTab(viewController)
-        container.secondaryTabViewController?.viewControllers = [viewController]
+        container.primaryTabController.closeTab(viewController)
+        container.secondaryTabController?.viewControllers = [viewController]
     }
 }
 
 /// Conform to the TabViewContainer protocol, which other objects (such as TabViewContainerDropView and TabViewController) talk to.
 extension TabViewContainerViewController: TabViewContainer {
+
+    var primaryTabController: TabViewController {
+        return primaryTabViewController
+    }
+
+    var secondaryTabController: TabViewController? {
+        return secondaryTabViewController
+    }
 
     var contentViewRightInset: CGFloat {
         get { return -(stackViewRightConstraint?.constant ?? 0) }
@@ -236,7 +244,6 @@ extension TabViewContainerViewController: TabViewContainer {
             }
         }
     }
-    
 
     func dragStateChanged(in tabViewController: TabViewController, to newDragState: Bool) {
         // If the given tab is the primary, there is no secondary, and started dragging, then show the drop view.
