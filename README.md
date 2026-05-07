@@ -36,7 +36,7 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - Command snippets persist locally and can run directly in the terminal.
 - Git repositories are detected by scanning for `.git` folders, and clone/status/pull/commit/push actions are terminal-driven.
 - Server monitors persist locally and can poll Linux CPU, memory, disk, and load snapshots over noninteractive SSH.
-- The AI assistant can call a configurable OpenAI-compatible chat endpoint and records local usage history.
+- The AI assistant can call a configurable OpenAI-compatible chat endpoint, records local usage history, includes prompt shortcuts, and can insert assistant output back into the terminal.
 - The iPhone More tab is custom now, not Apple's automatic overflow list, and contains real AI, Git, settings, theme, and terminal controls.
 - Settings are free-preview focused with real AI/provider controls and live appearance controls instead of placeholder billing screens.
 - A Supabase schema foundation exists for users, subscriptions, devices, snippet sync, AI usage, monitors, and audit logs.
@@ -48,7 +48,7 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - Server monitoring works for noninteractive SSH profiles; password-based profiles still require manual terminal sessions.
 - Git actions are terminal-driven because this fork does not currently bundle a native Git engine.
 - The editor has lightweight syntax highlighting and language detection, but full language-server tooling, completions, and diff views are not finished.
-- The AI assistant supports a configurable provider endpoint, but production auth, rate limits, hosted usage enforcement, and billing are deferred.
+- The AI assistant supports a configurable provider endpoint, prompt shortcuts, terminal handoff, and local usage history, but production auth, rate limits, hosted usage enforcement, and billing are deferred.
 
 ### Not implemented yet
 - End-to-end encrypted SSH key vault sync.
@@ -137,7 +137,7 @@ Important:
 - [ ] Add language tooling, completions, and diff views
 - [x] Add terminal-driven Git clone/status/pull/commit/push actions
 - [ ] Add native Git engine integration
-- [x] Connect configurable AI provider endpoint and local usage history
+- [x] Connect configurable AI provider endpoint, prompt shortcuts, terminal handoff, and local usage history
 - [ ] Add hosted AI proxy, rate limits, and server-side usage controls
 - [ ] Add encrypted vault and sync
 - [ ] Add signed App Store distribution when needed

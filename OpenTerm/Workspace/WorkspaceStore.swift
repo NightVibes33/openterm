@@ -954,6 +954,34 @@ final class WorkspaceStore: ObservableObject {
 		activeEditor = nil
 	}
 
+
+	func prepareAssistantPrompt(for tool: WorkspaceFeature) {
+		switch tool.title {
+		case "Explain Error":
+			assistantDraft = "Explain this terminal error and give me the safest next command to try:\n\n"
+		case "Generate Command":
+			assistantDraft = "Turn this goal into a safe shell command. Explain any destructive risk first:\n\nGoal: "
+		case "Fix Shell Script":
+			assistantDraft = "Fix this shell script, explain what was broken, and return the corrected script:\n\n```sh\n\n```"
+		case "SSH Troubleshooting":
+			assistantDraft = "Troubleshoot this SSH issue. Ask for missing details only if required:\n\nHost:\nUser:\nPort:\nError:\n"
+		case "Regex Generator":
+			assistantDraft = "Generate a regex for this pattern, include test examples, and explain the groups:\n\nPattern goal: "
+		default:
+			assistantDraft = "Help me with this developer task: "
+		}
+		assistantStatus = "Loaded \(tool.title) prompt"
+	}
+
+	func insertAssistantMessageInTerminal(_ message: AssistantMessage) {
+		guard message.role == "assistant" else {
+			return
+		}
+		openTerminal(command: message.content, executeNow: false)
+		statusMessage = "Inserted AI response into terminal"
+	}
+
+
 	func submitAssistantPrompt() {
 		let prompt = assistantDraft.trimmingCharacters(in: .whitespacesAndNewlines)
 		guard !prompt.isEmpty else {

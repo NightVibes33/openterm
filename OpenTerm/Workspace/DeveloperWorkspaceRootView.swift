@@ -320,13 +320,17 @@ private struct WorkspaceAssistantView: View {
 			.background(WorkspaceCardBackground(tint: AppColor.violet))
 
 			ForEach(store.assistantMessages) { message in
-				AssistantBubble(message: message)
+				AssistantBubble(message: message) {
+					store.insertAssistantMessageInTerminal(message)
+				}
 			}
 
 			SectionHeader(title: "Tools", subtitle: "Prompt shortcuts for terminal, SSH, Docker, Git, regex, and code help.")
 			AdaptiveGrid {
 				ForEach(store.aiTools) { tool in
-					WorkspaceFeatureCard(feature: tool)
+					AssistantToolCard(feature: tool) {
+						store.prepareAssistantPrompt(for: tool)
+					}
 				}
 			}
 		}
@@ -828,12 +832,23 @@ private struct ServerSnapshotCard: View {
 
 private struct AssistantBubble: View {
 	let message: AssistantMessage
+	let insertInTerminal: () -> Void
 
 	var body: some View {
-		VStack(alignment: .leading, spacing: 8) {
-			Text(message.role.uppercased())
-				.font(.system(.caption, design: .rounded, weight: .bold))
-				.foregroundStyle(message.role == "assistant" ? AppColor.violet : AppColor.green)
+		VStack(alignment: .leading, spacing: 10) {
+			HStack {
+				Text(message.role.uppercased())
+					.font(.system(.caption, design: .rounded, weight: .bold))
+					.foregroundStyle(message.role == "assistant" ? AppColor.violet : AppColor.green)
+				Spacer()
+				if message.role == "assistant" {
+					Button(action: insertInTerminal) {
+						Label("Terminal", systemImage: "terminal")
+							.font(.system(.caption, design: .rounded, weight: .semibold))
+					}
+					.buttonStyle(.bordered)
+				}
+			}
 			Text(message.content)
 				.font(.system(.body, design: message.content.contains("$") ? .monospaced : .rounded))
 				.foregroundStyle(.white.opacity(0.82))
@@ -841,6 +856,18 @@ private struct AssistantBubble: View {
 		.padding(16)
 		.frame(maxWidth: .infinity, alignment: .leading)
 		.background(WorkspaceCardBackground(tint: message.role == "assistant" ? AppColor.violet : AppColor.green))
+	}
+}
+
+private struct AssistantToolCard: View {
+	let feature: WorkspaceFeature
+	let action: () -> Void
+
+	var body: some View {
+		Button(action: action) {
+			WorkspaceFeatureCard(feature: feature)
+		}
+		.buttonStyle(.plain)
 	}
 }
 
