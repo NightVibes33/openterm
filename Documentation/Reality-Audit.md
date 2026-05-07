@@ -35,7 +35,7 @@ This fork should not pretend to be a native full IDE yet. The real product direc
 - Native embedded Git engine with structured status/diff/conflict APIs.
 - Full language server protocol runtime, completions, diagnostics, and refactors.
 - Production hosted AI proxy deployment secrets, remote policy hardening, and hosted auth tests.
-- Real multi-device encrypted vault sync validation against deployed Supabase RLS.
+- Real multi-device encrypted vault sync validation against deployed Supabase RLS. The app now blocks push/pull UI until required backend settings are present, but deployed RLS still needs validation.
 - Embedded local Python/Node/Vim/Nano/Tmux/Htop toolchains.
 
 ## Next Anti-Fake Work

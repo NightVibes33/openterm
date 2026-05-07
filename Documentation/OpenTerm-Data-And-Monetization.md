@@ -1,186 +1,63 @@
-# OpenTerm Data And Monetization
+# OpenTerm Data Notes
+
+## Active Product Decision
+
+OpenTerm is currently a free app while the real terminal, file, SSH, Git, AI, monitor, and sync workflows are stabilized. There is no active payment system, no active StoreKit entitlement layer, and no production subscription verification in the app.
+
+This file used to describe monetization ideas. Those ideas are archived as future notes only and should not be treated as implemented product behavior.
 
 ## Verified Current Persistence
 
-The current app does not have a structured application database.
-
 Current storage is split across:
 
-- `UserDefaults`
-  - terminal colors
-  - font size
-  - caret style
-  - keyboard preference
-  - store review prompt timing
-- document files in the app sandbox
-  - command history via `.history`
-  - bookmarks in `.bookmarks`
-  - scripts and script packages in the active documents folder
-- iCloud documents
-  - script syncing through `DocumentManager`
+- `UserDefaults` for terminal colors, font size, caret style, keyboard preference, status/review timing, and lightweight workspace settings.
+- Document files in the active app documents folder for command history, bookmarks, scripts, user files, workspace JSON state, SSH vault metadata, and backups.
+- Optional iCloud documents through `DocumentManager` when the configured iCloud container is available.
+- Supabase REST/RPC only when the user configures URL, anon key, access token, user id, device id, and vault sync secret.
 
-This is workable for a simple terminal app, but it is not enough for:
+## Current Local Workspace State
 
-- SSH vaults
-- multi-session restoration
-- AI history
-- premium entitlements
-- server monitoring snapshots
-- cloud sync conflict resolution
-- team/shared workspace metadata
+The current fork persists these JSON records under `.openterm-workspace`:
 
-## Recommended Database
+- `ssh-profiles.json`
+- `ssh-vault.json`
+- `snippets.json`
+- `server-monitors.json`
+- `server-snapshots.json`
+- `server-alerts.json`
+- `ai-configuration.json`
+- `backend-configuration.json`
+- `ai-usage-history.json`
 
-Use SwiftData as the primary app database for iOS 18+.
+## Security Boundaries
 
-Recommended model groups:
+Do not store private keys, provider tokens, Supabase tokens, or raw secrets in plaintext database rows.
 
-- `WorkspaceProfile`
-  - workspace name
-  - last opened section
-  - active theme
-  - pinned sessions
-- `TerminalSessionRecord`
-  - session id
-  - local vs remote kind
-  - host metadata
-  - cwd
-  - last command summary
-  - restoration state
-- `SSHProfile`
-  - display name
-  - host
-  - port
-  - username
-  - auth type
-  - key reference
-  - last successful connection
-- `GitWorkspaceRecord`
-  - repo path
-  - branch
-  - last fetch time
-  - dirty state snapshot
-- `ServerSnapshot`
-  - cpu
-  - memory
-  - disk
-  - uptime
-  - latency
-  - alert state
-- `AIConversationRecord`
-  - feature kind
-  - prompt
-  - response summary
-  - token usage
-  - created at
-- `PremiumEntitlementRecord`
-  - product id
-  - source
-  - active state
-  - renewal / expiration metadata
+Current app behavior:
 
-## Security-Sensitive Data
+- Pasted SSH keys are written to protected local files in the app documents workspace.
+- Vault sync encrypts private-key payload bytes with AES-GCM before upload.
+- Supabase receives metadata, fingerprints, nonce, and ciphertext for vault sync.
+- AI provider keys and backend tokens are currently local app settings and still need Keychain migration before production use.
 
-Do not store private keys, tokens, or raw secrets directly in SwiftData.
+## Recommended Data Roadmap
 
-Use:
+1. Keep the current JSON files until the core product stabilizes.
+2. Move secrets and provider tokens into Keychain.
+3. Add SwiftData only after the object model stops changing every build.
+4. Add migration code from JSON state into SwiftData.
+5. Validate Supabase RLS and Edge Function auth against a real deployed project.
+6. Add encrypted export/import recovery for SSH vault and workspace metadata.
 
-- Keychain for API keys and tokens
-- Secure Enclave-backed flows where practical
-- encrypted export/import for SSH vault backup
+## Deferred Monetization Notes
 
-## Monetization Recommendation
+Payments are intentionally deferred. If monetization returns later, it must be designed after the core is real.
 
-For App Store-distributed digital unlocks, premium features should use StoreKit 2.
+Potential future paid capabilities:
 
-Best premium candidates:
+- Hosted AI usage beyond a free local/configured provider mode.
+- Cloud sync after vault, snippets, and profiles are proven reliable.
+- Monitoring alert delivery after live monitors are dependable.
+- Team/shared workspaces after single-user flows are solid.
 
-- unlimited AI requests
-- advanced AI coding tools
-- SSH vault
-- encrypted cloud sync
-- team/server sync
-- premium widgets
-- server monitoring alerts
-- premium themes and workspace customization packs
-
-## Suggested Tiers
-
-### Free
-
-- local terminal
-- basic tabs
-- basic SSH
-- basic file browsing
-- limited AI credits
-
-### Pro
-
-- unlimited local sessions
-- advanced themes
-- AI assistant bundle
-- git tools
-- file manager power features
-- session restore
-
-### Infra
-
-- SSH vault
-- server dashboards
-- monitoring history
-- alert rules
-- premium widgets
-
-### Team
-
-- shared server profiles
-- shared snippets
-- shared AI prompt templates
-- audit trail / activity feed
-
-## Payment Architecture
-
-### In-App
-
-Use StoreKit 2 for:
-
-- subscriptions
-- feature unlocks
-- premium theme packs
-- AI request tiers
-
-### Optional Web Billing
-
-If there is a companion web service later, that service can manage:
-
-- team billing
-- hosted AI credits
-- shared cloud infrastructure
-
-But app-side digital unlocks should still be modeled around App Store-compliant flows for the iOS app.
-
-## Migration Plan
-
-### Stage 1
-
-- keep existing file-based command history and scripts
-- add SwiftData for new workspace/session/server/AI entities
-
-### Stage 2
-
-- mirror legacy settings into modern settings records
-- add import/migration helpers
-
-### Stage 3
-
-- unify sync around SwiftData-backed domain models plus file attachments
-
-## Decision Summary
-
-The current app has no true database to preserve.
-
-That is a good thing for this redesign:
-
-- there is very little legacy database migration risk
-- the team can adopt SwiftData cleanly
-- security boundaries can be designed correctly from the start
+App Store builds should use App Store-compliant purchase mechanisms for digital features. Web checkout or donations should not be used to bypass App Store rules inside an App Store build.

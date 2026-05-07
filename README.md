@@ -26,7 +26,7 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 
 ### Implemented in this fork right now
 - Legacy OpenTerm terminal core is still present and embedded inside the SwiftUI workspace.
-- `AppDelegate` launches the modern workspace shell with Home, Files, Terminal, Servers, and a custom More hub on iPhone, plus full workspace navigation on iPad. Empty Home/Git/Server/AI states now explicitly ask for real user data or provider configuration instead of implying demo content exists.
+- `AppDelegate` launches the modern workspace shell with Home, Files, Terminal, Servers, and a custom More hub on iPhone, plus full workspace navigation on iPad. Home now shows a real capability check instead of marketing cards, and empty Home/Git/Server/AI states explicitly ask for real user data or provider configuration.
 - iOS 18.0 is the deployment floor, with Liquid Glass-style SwiftUI surfaces enabled conditionally when the SDK/runtime supports them instead of pretending unsupported devices have native iOS 26 materials.
 - Terminal commands can now be queued or executed from workspace actions, so SSH, Git, snippets, and generated commands can jump into the active terminal tab.
 - Terminal appearance has a modernized canvas with live font, cursor, keyboard, text color, background color, and app accent controls.
@@ -34,7 +34,7 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - SSH quick connect now builds and runs real `ssh` commands through the terminal instead of only switching screens.
 - SSH profiles include remote Tool Audit and Dev Stack actions that verify package managers/tool versions, then queue safe package-manager commands for Git, Python 3, pip, Node.js, npm, htop, nano, vim, and tmux on Debian/Ubuntu, Alpine, Fedora/RHEL, or auto-detected Linux hosts.
 - A local SSH key vault foundation exists with protected on-device key files, metadata, import/delete actions, and attach-to-profile flow.
-- Encrypted SSH vault push/pull is wired through Supabase RPC with AES-GCM payload encryption, a user-provided vault sync secret, newer-wins conflict handling, local metadata repair, and app-active background refresh; raw private keys are not sent as plaintext.
+- Encrypted SSH vault push/pull is wired through Supabase RPC with AES-GCM payload encryption, a user-provided vault sync secret, newer-wins conflict handling, local metadata repair, and app-active background refresh; raw private keys are not sent as plaintext. The UI now blocks push/pull until the required Supabase/auth/secret configuration exists.
 - The Files tab now works as a real iOS document workspace: folder navigation, Files app import, create file/folder, delete, share/export, UTF-8 editing, syntax highlighting, search/match highlighting, lightweight completion chips, diff view against the opened version, and save back to disk.
 - Command snippets persist locally and can be created, edited, deleted, and run directly in the terminal. New installs no longer seed generic fake deploy/server snippets.
 - Git repositories are detected by scanning for `.git` folders, and clone/status/diff/log/pull/commit/push plus structured conflict actions are terminal-driven with a `git` availability preflight before commands run.
@@ -154,6 +154,8 @@ Important:
 - [x] Remove seeded fake snippets and add real snippet create/edit/delete flow
 - [x] Add terminal Git availability preflight before Git commands
 - [x] Reject blank SSH profiles and invalid monitor records before they create broken cards
+- [x] Make encrypted vault sync visibly unavailable until required backend settings are configured
+- [x] Replace Home marketing capability cards with a real configured/missing capability dashboard
 - [x] Add repo reality audit documentation
 - [x] Add remote SSH Tool Audit and Dev Stack setup actions for common Linux package managers
 - [x] Add local server monitor alert history and acknowledgement
@@ -191,6 +193,7 @@ Important:
 - `Documentation/OpenTerm-Data-And-Monetization.md`
 - `Documentation/OpenTerm-Backend-Architecture.md`
 - `Documentation/Reality-Audit.md`
+- `Documentation/Full-Repo-Audit.md`
 
 ## License
 OpenTerm is available under the GPLv2 (or later) and the MPLv2 license.

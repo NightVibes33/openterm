@@ -1,67 +1,55 @@
 # OpenTerm Backend Architecture
 
-## Verified Direction
+## Active Product Decision
 
-For this app shape, Supabase is the better first backend than Firebase:
+The backend is not production-live yet. Supabase migrations and the AI proxy function are scaffolding for future hosted behavior. The app must work honestly without a backend unless the user configures one.
 
-- PostgreSQL gives cleaner subscription, audit, and server-monitoring data models.
-- Row Level Security is a better fit for per-user workspace records.
-- SQL migrations make pricing, entitlement, and audit changes easier to review.
-- Edge Functions are a reasonable place to verify Stripe webhooks and mint remote feature flags.
+## Current Backend Pieces In Repo
 
-## Billing Model
+- `supabase/migrations/20260506_workspace_foundation.sql`
+- `supabase/migrations/20260507_ai_vault_limits.sql`
+- `supabase/migrations/20260507_vault_sync_rpc.sql`
+- `supabase/migrations/20260507_remote_config.sql`
+- `supabase/functions/ai-proxy/index.ts`
 
-Use a hybrid billing architecture:
+## Config Required Before Backend Features Work
 
-- App Store builds: StoreKit 2 for digital entitlements inside the iOS app.
-- Web companion or unsigned enterprise-style builds: Stripe Checkout for account billing.
-- Backend source of truth: normalized entitlement records in Supabase.
+The app requires these user-provided values before hosted features can work:
 
-Do not make the iOS app depend on direct Stripe-only digital unlock logic for App Store distribution.
+- Supabase project URL
+- Supabase anon key
+- Supabase user access token
+- authenticated user id
+- optional device id/device label
+- vault sync secret for local AES-GCM encryption
+- AI provider secret if direct provider routing is used
 
-## Security Boundaries
+The UI should not present hosted AI or vault sync as ready until these exist.
 
-- Supabase Auth stores the user identity.
-- Subscription state is server-authoritative.
-- Stripe webhooks are verified server-side before entitlements change.
-- Sensitive SSH material stays local unless end-to-end encrypted first.
-- Uploaded vault records should only store metadata and encrypted references, not raw private keys.
-- AI usage metering is append-only and auditable.
+## Real Hosted Capabilities Intended
 
-## Required Server Checks
+- AI proxy request forwarding with usage records and rate-limit checks.
+- Encrypted vault item push/pull through RPC helpers.
+- Remote config fetch for feature policy.
+- Monitor alert records after real monitor delivery exists.
 
-Every premium endpoint should verify:
+## Not Production Validated Yet
 
-1. authenticated user id
-2. device registration status
-3. active subscription or feature entitlement
-4. rate-limit window
-5. request audit trail
+- Supabase project deployment.
+- RLS policies against real authenticated users.
+- Edge Function secrets and auth hardening.
+- Rate-limit bypass resistance.
+- Multi-device vault conflict behavior under real network races.
+- Alert delivery channels.
 
-## Suggested Edge Functions
+## Security Rules
 
-- `create-checkout-session`
-- `stripe-webhook`
-- `resolve-entitlements`
-- `record-ai-usage`
-- `issue-device-token`
-- `store-vault-reference`
-- `send-monitor-alert`
+- Never upload plaintext private keys.
+- Never trust device-submitted subscription or entitlement state.
+- Treat access tokens as secrets and move them to Keychain before production.
+- Verify webhook signatures if payments are ever reintroduced.
+- Keep audit logs append-only for hosted actions.
 
-## Remote Config
+## Deferred Billing
 
-Premium and rollout flags should be remote-configurable:
-
-- AI request limits
-- enabled model providers
-- premium theme packs
-- GitHub assistant availability
-- monitoring alert thresholds
-- staged feature rollouts
-
-## Backup And Export
-
-- nightly Postgres backups
-- encrypted user export for snippets and SSH metadata
-- periodic audit log export to cold storage
-- webhook replay support for subscription recovery
+Billing is not active. Previous Stripe/StoreKit planning is archived as future consideration only. No current app screen should claim paid entitlements, premium unlocks, or subscription status.

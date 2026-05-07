@@ -1,212 +1,93 @@
 # OpenTerm AI Workspace Blueprint
 
+## Current Reality
+
+OpenTerm is not a native IDE yet. It is currently a legacy UIKit/ios_system terminal wrapped by a newer SwiftUI workspace shell.
+
+Real today:
+
+- terminal execution through `ios_system`
+- terminal tabs through `TerminalTabViewController`
+- local app document browsing/editing/import/export
+- local SSH profile records that queue real `ssh` commands
+- terminal-driven Git commands with a `git` preflight
+- optional AI request routing after endpoint/provider configuration
+- optional Supabase-backed vault sync after backend configuration
+
+Not real yet:
+
+- native Git engine
+- embedded Python/Node/Vim/Nano/Tmux/Htop toolchains
+- full LSP language tooling
+- production hosted AI proxy deployment
+- production account/payment/entitlement system
+- real multi-device sync validation
+
 ## Positioning
 
-OpenTerm should evolve from a sandboxed terminal app into a modern mobile developer workspace for iPhone and iPad:
+The credible positioning is:
 
-"The modern AI-powered terminal for iPhone and iPad."
+"A beautiful SSH + terminal workspace for iPhone and iPad, with optional AI command assistance."
 
-The app should feel closer to Linear, Raycast, and modern IDE surfaces than to an old-school hacker novelty app. That means:
-
-- calm information density
-- strong typography
-- generous spacing
-- layered depth and motion
-- clear onboarding for non-expert users
-- advanced power for expert users without making the first-run experience hostile
-
-## Verified Current State
-
-The current repo is a legacy UIKit app built around:
-
-- `AppDelegate` + storyboard-instantiated panels
-- `TabView` for tabs
-- `PanelKit` for side panels
-- `ios_system` for terminal execution
-- `libssh2-for-iOS` legacy dependencies
-- deployment target `iOS 11.0`
-- Swift `4.0`
-- CocoaPods-based dependency management
-
-This means the modernization should preserve the terminal engine where useful, while replacing almost all app shell/UI architecture.
+Do not market it as a local unrestricted Linux distro. iOS sandboxing still applies unless the user is in a special/jailbroken environment, and this app does not currently embed full local developer toolchains.
 
 ## Product Pillars
 
-### 1. Terminal Workspace
+### 1. Terminal Core
 
-- tabbed terminal sessions
-- pinned/favorite sessions
-- split context model: local, SSH, container, git repo
-- session restore
-- reusable command snippets
+- keep terminal execution reliable
+- improve tab UX
+- make terminal settings modern and readable
+- keep command availability honest
 
-### 2. Remote Infrastructure
+### 2. Files And Editing
 
-- SSH profiles
-- quick connect
-- key management
-- connection health
-- server monitoring dashboard
-- alert summaries
+- real iOS Files import/export
+- folder navigation
+- create/edit/delete/share files
+- syntax highlighting and lightweight search
+- future rename/move/binary preview/folder zip export
 
-### 3. Coding Workspace
+### 3. Remote Infrastructure
 
-- local file manager
-- code editor with syntax highlighting
-- command palette
-- git status / branch / commit / diff / stash
-- project-aware AI actions
+- real SSH profiles
+- real key vault storage
+- remote tool audit over SSH
+- remote dev setup commands over SSH
+- monitor snapshots only after real SSH poll results
 
-### 4. AI Copilot
+### 4. Git
 
-- explain terminal errors
-- generate shell commands
-- fix shell scripts
-- explain Linux commands
-- convert bash to zsh
-- SSH troubleshooting
-- Docker helper
-- regex generation
-- code assistant
+- terminal-driven Git first
+- preflight whether `git` exists
+- make local-vs-remote command context obvious
+- native Git engine later only after a deliberate dependency choice
 
-### 5. Premium Personalization
+### 5. AI
 
-- visual themes
-- layout customization
-- saved workspaces
-- widgets
-- sync and vault features
-
-## Recommended Technical Direction
-
-## Platform Baseline
-
-- minimum iOS: `18.0`
-- build toolchain target: `Xcode 26.4`
-- SDK target: `iOS 26.4`
-- design target: `iOS 26.4` with Liquid Glass polish
-- architecture: SwiftUI-first
-- persistence: SwiftData
-- purchase stack: StoreKit 2
-- networking: `URLSession`, `NWPathMonitor`, structured async/await APIs
-
-## App Shell
-
-Replace the current UIKit-first shell with:
-
-- `OpenTermApp` SwiftUI app entry
-- `NavigationSplitView` for iPad workspace layout
-- `TabView` or custom workspace switcher for high-level sections
-- feature modules for:
-  - Workspace
-  - Sessions
-  - Files
-  - Editor
-  - Git
-  - Servers
-  - AI
-  - Settings
-
-The existing terminal core can be bridged into SwiftUI initially through `UIViewControllerRepresentable` or `UIViewRepresentable`.
-
-## Liquid Glass on iOS 26.x
-
-Adopt Liquid Glass selectively:
-
-- command palette
-- floating action surfaces
-- session switcher
-- server detail overlays
-- AI composer
-- inspector panels
-
-Avoid using glass everywhere. The terminal output surface itself should prioritize readability and low distraction.
-
-## Information Architecture
-
-Top-level sections should become:
-
-- Home
-- Sessions
-- Files
-- Git
-- Servers
-- AI
-- Settings
-
-The current app mixes terminal actions, scripts, bookmarks, and settings around one terminal screen. The new app should separate browse, edit, run, and assist flows more clearly.
-
-## Roadmap
-
-### Phase 1: Foundation
-
-- move target baseline to iOS 18+
-- upgrade Swift / Xcode project settings
-- remove iOS 11 era assumptions like `armv7`
-- add unsigned IPA CI
-- define SwiftData schema
-- define StoreKit product model
-
-### Phase 2: Modern Shell
-
-- build new SwiftUI app shell
-- wrap existing terminal engine
-- add modern tab/session model
-- add theme system and design tokens
-
-### Phase 3: Developer Workspace
-
-- SSH profile manager
-- local file browser
-- code editor
-- git dashboard
-- server monitor cards
-
-### Phase 4: AI Layer
-
-- inline AI chat
-- terminal-aware assistant actions
-- error explanation pipeline
-- command generation
-- repo-aware code help
-
-### Phase 5: Premium Layer
-
-- subscriptions
-- entitlement-gated features
-- sync
-- vault
-- widgets
-- alerts
-
-## First Buildable Milestones
-
-The fastest path to a credible vNext is:
-
-1. keep terminal execution working
-2. replace the outer app shell
-3. add session persistence
-4. add SSH profiles
-5. add AI actions
-6. add git/files
-7. add premium tier
+- prompt shortcuts can exist without a provider
+- live requests must be disabled until provider/proxy config exists
+- responses can insert into terminal as drafts
+- hosted proxy needs production auth and rate-limit validation before it is called production
 
 ## Design Direction
 
-The design should not market itself as "dark terminal for hackers only".
+The app should stop looking like a generic AI dashboard. The design should be calmer, more concrete, and more tool-like:
 
-The visual direction should be:
+- fewer marketing cards
+- more explicit empty states
+- fewer huge gradients
+- clearer local/remote labels
+- status feedback for every action
+- honest disabled states when configuration is missing
+- terminal readability over decorative glass
 
-- editorial
-- modern
-- tactile
-- premium
-- approachable
+## Immediate Engineering Priorities
 
-Practical design rules:
-
-- use a neutral foundation with one strong accent family
-- reserve monospaced text for terminal, code, diffs, and structured values
-- prefer cards, sidebars, and layered panes over crowded toolbar-heavy UI
-- keep onboarding narrative and visual
-- let power features reveal progressively
+1. Keep CI green.
+2. Finish anti-fake cleanup: remove claims and controls that imply unimplemented behavior.
+3. Add capability checks before actions that depend on local/remote binaries.
+4. Move secrets into Keychain.
+5. Add file rename/move and folder export.
+6. Add monitor profile validation and remote preflight output.
+7. Simplify the Home screen so it shows real state, not product marketing.

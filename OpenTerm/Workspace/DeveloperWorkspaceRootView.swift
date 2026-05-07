@@ -112,10 +112,10 @@ private struct WorkspaceHomeView: View {
 					SessionCard(session: session)
 				}
 			}
-			SectionHeader(title: "Built In", subtitle: "Useful now, designed to grow into a complete mobile developer workspace.")
-			AdaptiveGrid {
-				ForEach(store.featuredCapabilities) { feature in
-					WorkspaceFeatureCard(feature: feature)
+			SectionHeader(title: "Capability Check", subtitle: "What is actually ready on this device right now.")
+			VStack(spacing: 10) {
+				ForEach(capabilityStatuses) { status in
+					CapabilityStatusRow(status: status)
 				}
 			}
 		}
@@ -125,6 +125,60 @@ private struct WorkspaceHomeView: View {
 				Button { selection = .terminal } label: { Image(systemName: "terminal") }
 			}
 		}
+	}
+
+	private var capabilityStatuses: [CapabilityStatus] {
+		[
+			CapabilityStatus(title: "Terminal", detail: "Built-in ios_system command runner is available.", state: "Ready", symbol: "terminal", tint: store.workspaceAccentColor),
+			CapabilityStatus(title: "Files", detail: "Browse/import/edit/export app documents.", state: "Ready", symbol: "folder", tint: AppColor.amber),
+			CapabilityStatus(title: "SSH", detail: store.sshProfiles.isEmpty ? "Add a real profile before connecting." : "\(store.sshProfiles.count) saved profile(s).", state: store.sshProfiles.isEmpty ? "Setup" : "Ready", symbol: "server.rack", tint: AppColor.green),
+			CapabilityStatus(title: "Git", detail: store.gitWorkspaces.isEmpty ? "No repositories found. Commands require git in the terminal environment." : "\(store.gitWorkspaces.count) detected repo(s).", state: store.gitWorkspaces.isEmpty ? "No repos" : "Terminal", symbol: "point.topleft.down.curvedto.point.bottomright.up", tint: AppColor.blue),
+			CapabilityStatus(title: "AI", detail: store.isAIConfigured ? "Provider/proxy configured." : "Endpoint/key or proxy/token missing.", state: store.isAIConfigured ? "Ready" : "Config", symbol: "sparkles", tint: AppColor.violet),
+			CapabilityStatus(title: "Vault Sync", detail: store.isVaultSyncConfigured ? "Backend settings present." : "Supabase/auth/secret missing.", state: store.isVaultSyncConfigured ? "Ready" : "Config", symbol: "lock.shield", tint: AppColor.coral),
+			CapabilityStatus(title: "Monitoring", detail: store.serverSnapshots.isEmpty ? "No live SSH poll result yet." : "Latest SSH monitor data available.", state: store.serverSnapshots.isEmpty ? "No data" : "Live", symbol: "waveform.path.ecg", tint: AppColor.green)
+		]
+	}
+
+}
+
+
+private struct CapabilityStatus: Identifiable {
+	let id = UUID()
+	let title: String
+	let detail: String
+	let state: String
+	let symbol: String
+	let tint: Color
+}
+
+private struct CapabilityStatusRow: View {
+	let status: CapabilityStatus
+
+	var body: some View {
+		HStack(spacing: 12) {
+			Image(systemName: status.symbol)
+				.font(.system(size: 18, weight: .semibold))
+				.foregroundStyle(status.tint)
+				.frame(width: 36, height: 36)
+				.background(status.tint.opacity(0.16), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+			VStack(alignment: .leading, spacing: 3) {
+				Text(status.title)
+					.font(.system(.headline, design: .rounded, weight: .semibold))
+					.foregroundStyle(.white)
+				Text(status.detail)
+					.font(.system(.footnote, design: .rounded))
+					.foregroundStyle(.white.opacity(0.66))
+			}
+			Spacer()
+			Text(status.state)
+				.font(.system(.caption, design: .rounded, weight: .bold))
+				.foregroundStyle(status.tint)
+				.padding(.horizontal, 10)
+				.padding(.vertical, 6)
+				.background(status.tint.opacity(0.14), in: Capsule())
+		}
+		.padding(14)
+		.background(WorkspaceCardBackground(tint: status.tint))
 	}
 }
 
@@ -367,7 +421,7 @@ private struct ServersWorkspaceView: View {
 					}
 				}
 
-			SectionHeader(title: "SSH Key Vault", subtitle: "Local protected key storage. Cloud E2E sync is still a later backend step.")
+			SectionHeader(title: "SSH Key Vault", subtitle: "Local protected key storage. Optional Supabase encrypted sync requires backend settings.")
 			if store.sshVaultItems.isEmpty {
 				EmptyStateCard(title: "No Keys Imported", detail: "Import SSH keys into the protected local vault, then attach them to profiles when needed.", symbol: "key")
 			}
@@ -650,6 +704,9 @@ private struct SettingsWorkspaceView: View {
 
 				VStack(alignment: .leading, spacing: 12) {
 					SectionHeader(title: "Encrypted Vault Sync", subtitle: "Push or pull SSH key vault records through Supabase without plaintext private keys leaving this device.")
+					if !store.isVaultSyncConfigured {
+						EmptyStateCard(title: "Vault Sync Not Configured", detail: "Add Supabase URL, anon key, user access token, user id, and a vault sync secret before push/pull can work.", symbol: "icloud.slash")
+					}
 					Text(store.vaultSyncStatus)
 						.font(.system(.footnote, design: .rounded, weight: .semibold))
 						.foregroundStyle(.white.opacity(0.72))
@@ -657,11 +714,11 @@ private struct SettingsWorkspaceView: View {
 						PrimaryWorkspaceButton(title: store.isSyncingVault ? "Syncingâ¦" : "Push Vault", symbol: "arrow.up.doc", tint: AppColor.green) {
 							store.pushSSHVaultToCloud()
 						}
-						.disabled(store.isSyncingVault)
+						.disabled(store.isSyncingVault || !store.isVaultSyncConfigured)
 						PrimaryWorkspaceButton(title: "Pull Vault", symbol: "arrow.down.doc", tint: AppColor.blue) {
 							store.pullSSHVaultFromCloud()
 						}
-						.disabled(store.isSyncingVault)
+						.disabled(store.isSyncingVault || !store.isVaultSyncConfigured)
 					}
 						PrimaryWorkspaceButton(title: "Repair Local Vault", symbol: "cross.case", tint: AppColor.amber) {
 							store.repairSSHVaultMetadata()

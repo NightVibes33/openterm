@@ -1151,6 +1151,10 @@ final class WorkspaceStore: ObservableObject {
 		NotificationCenter.default.post(name: .workspaceDidRequestSettingsFocus, object: nil)
 	}
 
+	var isVaultSyncConfigured: Bool {
+		vaultSyncContext(from: backendConfiguration, updateStatus: false) != nil
+	}
+
 	func updateAIConfiguration(endpoint: String, model: String, apiKey: String, systemPrompt: String, useHostedProxy: Bool) {
 		aiConfiguration = AIProviderConfiguration(
 			endpoint: endpoint.trimmingCharacters(in: .whitespacesAndNewlines),
