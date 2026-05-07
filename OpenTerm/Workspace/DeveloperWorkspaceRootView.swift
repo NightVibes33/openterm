@@ -251,18 +251,21 @@ private struct ServersWorkspaceView: View {
 
 			SectionHeader(title: "SSH Profiles", subtitle: "Manage hosts, ports, auth type, key path, and startup folder.")
 			ForEach(store.sshProfiles) { profile in
-				SSHProfileCard(profile: profile, lastSeen: store.formatLastSeen(profile.lastSeen)) {
-					store.connect(to: profile)
-					selection = .terminal
+					SSHProfileCard(profile: profile, lastSeen: store.formatLastSeen(profile.lastSeen)) {
+						store.connect(to: profile)
+						selection = .terminal
 					} installDevStack: { flavor in
 						store.queueRemoteDevStack(on: profile, flavor: flavor)
 						selection = .terminal
-				} edit: {
-					editingProfile = SSHProfileDraft(profile: profile)
-				} delete: {
-					store.deleteSSHProfile(profile)
+					} auditTools: {
+						store.queueRemoteToolAudit(on: profile)
+						selection = .terminal
+					} edit: {
+						editingProfile = SSHProfileDraft(profile: profile)
+					} delete: {
+						store.deleteSSHProfile(profile)
+					}
 				}
-			}
 
 			SectionHeader(title: "SSH Key Vault", subtitle: "Local protected key storage. Cloud E2E sync is still a later backend step.")
 			ForEach(store.sshVaultItems) { item in
@@ -872,6 +875,7 @@ private struct SSHProfileCard: View {
 	let lastSeen: String
 	let connect: () -> Void
 	let installDevStack: (String) -> Void
+	let auditTools: () -> Void
 	let edit: () -> Void
 	let delete: () -> Void
 
@@ -907,7 +911,10 @@ private struct SSHProfileCard: View {
 				.buttonStyle(.borderedProminent)
 				.tint(AppColor.amber)
 			}
-			PrimaryWorkspaceButton(title: "Edit", symbol: "slider.horizontal.3", tint: AppColor.blue, action: edit)
+			HStack(spacing: 10) {
+				PrimaryWorkspaceButton(title: "Audit Tools", symbol: "checklist", tint: AppColor.violet, action: auditTools)
+				PrimaryWorkspaceButton(title: "Edit", symbol: "slider.horizontal.3", tint: AppColor.blue, action: edit)
+			}
 		}
 		.padding(18)
 		.background(WorkspaceCardBackground(tint: AppColor.green))

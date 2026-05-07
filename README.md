@@ -32,7 +32,7 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - Terminal appearance has a modernized canvas with live font, cursor, keyboard, text color, background color, and app accent controls.
 - SSH profiles persist locally with label, host, username, port, auth type, key path, startup path, notes, and last-used timestamps.
 - SSH quick connect now builds and runs real `ssh` commands through the terminal instead of only switching screens.
-- SSH profiles include a remote Dev Stack action that queues safe package-manager commands for Git, Python 3, pip, Node.js, npm, htop, nano, vim, and tmux on Debian/Ubuntu, Alpine, Fedora/RHEL, or auto-detected Linux hosts.
+- SSH profiles include remote Tool Audit and Dev Stack actions that verify package managers/tool versions, then queue safe package-manager commands for Git, Python 3, pip, Node.js, npm, htop, nano, vim, and tmux on Debian/Ubuntu, Alpine, Fedora/RHEL, or auto-detected Linux hosts.
 - A local SSH key vault foundation exists with protected on-device key files, metadata, import/delete actions, and attach-to-profile flow.
 - Encrypted SSH vault push/pull is wired through Supabase RPC with AES-GCM payload encryption and a user-provided vault sync secret; raw private keys are not sent as plaintext.
 - Local files are scanned from `DocumentManager.shared.activeDocumentsFolderURL`; UTF-8 files can open in an in-app syntax-highlighted editor with search/match highlighting and save back to disk.
@@ -61,7 +61,6 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - Native Git engine integration with structured conflict handling.
 - Production AI proxy deployment secrets, remote configuration, and hosted auth hardening.
 - StoreKit/subscription entitlements and server-side purchase verification.
-- Signed App Store distribution workflow.
 
 ## Architecture Notes
 
@@ -137,7 +136,7 @@ The CI workflow at `.github/workflows/ios-unsigned-ipa.yml` produces an unsigned
 
 Important:
 - Unsigned IPAs do not install on normal real iPhones without signing/provisioning, sideload tooling, or a special device environment.
-- Signed App Store distribution can be added later with Apple certificate and provisioning profile secrets when distribution is needed.
+- Signed TestFlight/App Store distribution is intentionally not part of the active roadmap right now; this fork is focused on unsigned/sideload-style testing and SSH-first product quality.
 
 ## Roadmap
 - [x] Preserve terminal core
@@ -147,7 +146,7 @@ Important:
 - [x] Add unsigned IPA CI pipeline
 - [x] Add backend schema foundation
 - [x] Replace mock SSH manager with local profiles and real terminal connect flow
-- [x] Add remote SSH Dev Stack setup actions for common Linux package managers
+- [x] Add remote SSH Tool Audit and Dev Stack setup actions for common Linux package managers
 - [x] Add local UTF-8 text editor
 - [x] Add lightweight syntax highlighting, language detection, and editor search
 - [ ] Add language tooling, completions, and diff views
@@ -164,14 +163,13 @@ Important:
 - [x] Add backup/export manifest for workspace metadata
 - [x] Connect app-side encrypted vault push/pull controls with AES-GCM payload encryption
 - [ ] Add vault sync conflict resolution, recovery UX, and background refresh
-- [ ] Add signed App Store distribution when needed
 
 ## Next Engineering Priorities
 - Stabilize hosted AI proxy deployment: Supabase function secrets, auth validation, rate-limit policy tests, and remote feature flags.
 - Harden encrypted vault sync: deploy RPC migration, test Supabase auth/RLS, add conflict resolution, recovery UX, and background refresh.
 - Replace terminal-driven Git helpers with a native Git engine only after the current terminal-based workflow stays reliable.
 - Add embedded local toolchains only where they are realistic: Git first, then Python/Node only after binary size, licensing, and sandbox behavior are validated.
-- Improve remote server onboarding with preflight checks for package manager, sudo availability, shell, disk space, and installed tool versions.
+- Improve remote server onboarding with deeper preflight checks for sudo availability, shell, disk space, and installed tool versions.
 - Expand the editor from lightweight highlighting into real developer tooling: diff view, file tree actions, completions, and optional LSP-style assistance.
 - Keep payment/subscription code deferred until the free core product is stable.
 

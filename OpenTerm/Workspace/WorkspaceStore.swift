@@ -1049,6 +1049,13 @@ final class WorkspaceStore: ObservableObject {
 		statusMessage = "Queued \(flavor) dev stack setup for \(profile.label)"
 	}
 
+	func queueRemoteToolAudit(on profile: SSHProfileSummary) {
+		let script = #"printf 'OpenTerm remote tool audit\n'; uname -a 2>/dev/null; printf '\nPackage managers:\n'; for tool in apt apt-get apk dnf yum brew pkg; do command -v $tool >/dev/null 2>&1 && echo "$tool: $(command -v $tool)"; done; printf '\nDeveloper tools:\n'; for tool in git python3 pip3 node npm htop nano vim tmux docker; do if command -v $tool >/dev/null 2>&1; then printf '%s: ' $tool; $tool --version 2>&1 | head -n 1; else echo "$tool: missing"; fi; done"#
+		openTerminal(command: sshCommand(for: profile, remoteCommand: script, batchMode: false), executeNow: true)
+		touchProfile(profile.id)
+		statusMessage = "Queued remote tool audit for \(profile.label)"
+	}
+
 	private func remoteDevStackScript(for flavor: String) -> String {
 		let verify = "printf '\\nInstalled versions:\\n' ; git --version 2>/dev/null ; python3 --version 2>/dev/null ; node --version 2>/dev/null ; npm --version 2>/dev/null ; tmux -V 2>/dev/null"
 		switch flavor {
