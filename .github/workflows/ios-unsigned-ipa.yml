@@ -162,6 +162,37 @@ jobs:
             sed -i.bak 's/UICollectionViewFlowLayoutAutomaticSize/UICollectionViewFlowLayout.automaticSize/g' Pods/InputAssistant/Sources/InputAssistantCollectionView.swift
           fi
 
+      - name: Patch TabView for modern iOS
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -d "Pods/TabView" ]; then
+            # API renames in modern iOS/Swift
+            find Pods/TabView/Sources -name "*.swift" -exec sed -i.bak               -e 's/setOverrideTraitCollection(_:forChildViewController:)/setOverrideTraitCollection(_:forChild:)/g'               -e 's/removeFromParentViewController()/removeFromParent()/g'               -e 's/addChildViewController/addChild/g'               -e 's/didMove(toParentViewController:)/didMove(toParent:)/g'               -e 's/UIScrollViewDecelerationRateFast/UIScrollView.DecelerationRate.fast/g'               -e 's/UIBlurEffectStyle/UIBlurEffect.Style/g'               {} +
+
+            # Remove invalid self-referencing computed properties that cause infinite recursion
+            # and invalid redeclarations in modern Swift.
+            python3 -c "
+import re
+path = 'Pods/TabView/Sources/TabViewContainerViewController.swift'
+with open(path, 'r') as f:
+    content = f.read()
+# Remove the two invalid computed properties
+content = re.sub(
+    r'    var primaryTabViewController: TabViewController \{[^}]+\}',
+    '    // Removed invalid primaryTabViewController redeclaration',
+    content
+)
+content = re.sub(
+    r'    var secondaryTabViewController: TabViewController\? \{[^}]+\}',
+    '    // Removed invalid secondaryTabViewController redeclaration',
+    content
+)
+with open(path, 'w') as f:
+    f.write(content)
+"
+          fi
+
       - name: List schemes
         shell: bash
         run: |
