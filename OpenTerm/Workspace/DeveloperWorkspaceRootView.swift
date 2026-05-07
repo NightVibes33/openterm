@@ -81,10 +81,13 @@ struct DeveloperWorkspaceRootView: View {
 
 	private var regularLayout: some View {
 		NavigationSplitView {
-			List(selection: $selection) {
+			List {
 				ForEach(WorkspaceDestination.allCases) { destination in
-					Label(destination.title, systemImage: destination.systemImage)
-						.tag(destination)
+					Button {
+						selection = destination
+					} label: {
+						Label(destination.title, systemImage: destination.systemImage)
+					}
 				}
 			}
 			.navigationTitle("OpenTerm")
