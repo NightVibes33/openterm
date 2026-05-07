@@ -53,7 +53,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 				attributeSet.title = command
 				attributeSet.contentDescription = CommandManager.shared.description(for: command)
 
-				let item = CSSearchableItem(uniqueIdentifier: "\(command)", domainIdentifier: "com.silverfox.Terminal", attributeSet: attributeSet)
+				let item = CSSearchableItem(uniqueIdentifier: "\(command)", domainIdentifier: "com.nightvibes33.openterm", attributeSet: attributeSet)
 				CSSearchableIndex.default().indexSearchableItems([item]) { error in
 					if let error = error {
 						print("Indexing error: \(error.localizedDescription)")

@@ -48,7 +48,7 @@ class CubDocumentationItemViewController: UIViewController {
 		
 		let attributedString = NSMutableAttributedString(string: "", attributes: [.foregroundColor: UIColor.white, .font: font])
 		
-		let definitionAttrString = NSAttributedString(string: item.definition + "\n", attributes: [.font: UIFont(name: "Menlo-Regular", size: 17.0)!])
+		let definitionAttrString = NSAttributedString(string: item.definition + "\n", attributes: [.font: UIFont(name: "Menlo-Regular", size: 17.0) ?? UIFont.monospacedSystemFont(ofSize: 17.0, weight: .regular)])
 		
 		let declarationTitle = NSMutableAttributedString(string: "Declaration\n", attributes: titleAttributes)
 		

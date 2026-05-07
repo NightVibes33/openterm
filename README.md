@@ -59,7 +59,7 @@ The current design target is real-tool clarity first: fewer marketing cards, lig
 ## Architecture Notes
 
 ### App shell
-- `OpenTerm/AppDelegate.swift` launches the SwiftUI workspace shell. Some project identity values still use legacy `com.silverfox.*` identifiers and need a deliberate signing/iCloud migration before production distribution.
+- `OpenTerm/AppDelegate.swift` launches the SwiftUI workspace shell. Some signing/iCloud/UTI identity values still use legacy `com.silverfox.*` identifiers and need a deliberate entitlements migration before production distribution. Spotlight indexing has been moved to the fork identity.
 - `OpenTerm/Workspace/DeveloperWorkspaceRootView.swift` drives the main multi-surface experience.
 - `OpenTerm/Workspace/LegacyTerminalContainerView.swift` wraps the legacy terminal controller.
 - `OpenTerm/Workspace/WorkspaceStore.swift` owns local workspace state, persistence, terminal actions, SSH profile commands, protected local vault metadata, monitor refresh, Git command queuing, file editing, snippets, backup export, backend bootstrap settings, app accent state, and AI provider/proxy configuration. The SwiftUI workspace owns the lightweight highlighted editor surface.
@@ -179,7 +179,9 @@ Important:
 - [x] Harden legacy scripting/examples/documentation panels against missing resources and bad cell casts
 - [x] Replace the darkest generic AI-card backdrop with lighter system-native workspace surfaces
 - [x] Harden legacy terminal storyboard panel loading against bad casts
-- [ ] Remove remaining legacy `fatalError` and force-cast paths from controllers
+- [x] Replace safe legacy coder fatal errors with failable initializers
+- [x] Move Spotlight indexing identity off the old `com.silverfox.Terminal` domain
+- [ ] Remove remaining legacy `fatalError` and force-cast paths from storyboard factory/controllers
 
 ## Next Engineering Priorities
 - Stabilize hosted AI proxy deployment: Supabase function secrets, auth validation, and rate-limit policy tests.
