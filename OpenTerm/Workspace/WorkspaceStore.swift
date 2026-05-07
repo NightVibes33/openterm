@@ -507,6 +507,9 @@ final class WorkspaceStore: ObservableObject {
 			WorkspaceFeature(title: "Generate Command", detail: "Turn a goal into a safe, shell-ready command.", symbol: "wand.and.stars", tint: Color(red: 0.55, green: 0.47, blue: 0.96)),
 			WorkspaceFeature(title: "Fix Shell Script", detail: "Repair broken bash and zsh scripts inline.", symbol: "wrench.and.screwdriver", tint: Color(red: 0.29, green: 0.57, blue: 0.95)),
 			WorkspaceFeature(title: "SSH Troubleshooting", detail: "Walk through auth, keys, ports, and host issues.", symbol: "network.badge.shield.half.filled", tint: Color(red: 0.31, green: 0.72, blue: 0.57)),
+			WorkspaceFeature(title: "Remote Dev Setup", detail: "Generate safe VPS setup commands for Git, Python, Node, and shell tools.", symbol: "shippingbox.and.arrow.backward", tint: Color(red: 0.18, green: 0.74, blue: 0.78)),
+			WorkspaceFeature(title: "Docker Helper", detail: "Create Docker, Compose, and reverse-proxy command plans.", symbol: "cube.transparent", tint: Color(red: 0.29, green: 0.57, blue: 0.95)),
+			WorkspaceFeature(title: "Git Conflict Helper", detail: "Explain conflicts and generate a cautious merge/rebase plan.", symbol: "point.topleft.down.curvedto.point.bottomright.up", tint: Color(red: 0.55, green: 0.47, blue: 0.96)),
 			WorkspaceFeature(title: "Regex Generator", detail: "Build and explain regular expressions from plain English.", symbol: "textformat.abc.dottedunderline", tint: Color(red: 0.98, green: 0.67, blue: 0.24))
 		]
 
@@ -571,7 +574,10 @@ final class WorkspaceStore: ObservableObject {
 			WorkspaceSnippet(title: "Zero-downtime deploy", body: "git pull && docker compose pull && docker compose up -d", category: "Deploy"),
 			WorkspaceSnippet(title: "Top offenders", body: "ps aux --sort=-%mem | head -n 15", category: "Ops"),
 			WorkspaceSnippet(title: "Find big files", body: "du -ah . | sort -rh | head -n 20", category: "Storage"),
-			WorkspaceSnippet(title: "Tail recent errors", body: "journalctl -u nginx -n 200 --no-pager", category: "Logs")
+			WorkspaceSnippet(title: "Tail recent errors", body: "journalctl -u nginx -n 200 --no-pager", category: "Logs"),
+			WorkspaceSnippet(title: "Debian dev stack", body: "sudo apt update && sudo apt install -y git python3 python3-pip nodejs npm htop nano vim tmux", category: "Remote Setup"),
+			WorkspaceSnippet(title: "Alpine dev stack", body: "sudo apk add --no-cache git python3 py3-pip nodejs npm htop nano vim tmux", category: "Remote Setup"),
+			WorkspaceSnippet(title: "Fedora dev stack", body: "sudo dnf install -y git python3 python3-pip nodejs npm htop nano vim tmux", category: "Remote Setup")
 		]
 	}
 
@@ -1262,6 +1268,12 @@ final class WorkspaceStore: ObservableObject {
 			assistantDraft = "Fix this shell script, explain what was broken, and return the corrected script:\n\n```sh\n\n```"
 		case "SSH Troubleshooting":
 			assistantDraft = "Troubleshoot this SSH issue. Ask for missing details only if required:\n\nHost:\nUser:\nPort:\nError:\n"
+		case "Remote Dev Setup":
+			assistantDraft = "Build a safe remote Linux setup plan for this VPS. Detect the package manager first, avoid destructive changes, and include verification commands.\n\nGoal: install Git, Python 3 + pip, Node.js + npm, htop, nano, vim, and tmux.\n\nServer OS or clues:\n"
+		case "Docker Helper":
+			assistantDraft = "Turn this Docker/server goal into safe commands and files. Explain ports, volumes, secrets, and rollback steps before the commands.\n\nGoal: "
+		case "Git Conflict Helper":
+			assistantDraft = "Help resolve this Git issue. Explain what happened, list safe inspection commands first, then provide a cautious fix plan.\n\nGit output:\n"
 		case "Regex Generator":
 			assistantDraft = "Generate a regex for this pattern, include test examples, and explain the groups:\n\nPattern goal: "
 		default:

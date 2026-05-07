@@ -35,10 +35,10 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - A local SSH key vault foundation exists with protected on-device key files, metadata, import/delete actions, and attach-to-profile flow.
 - Encrypted SSH vault push/pull is wired through Supabase RPC with AES-GCM payload encryption and a user-provided vault sync secret; raw private keys are not sent as plaintext.
 - Local files are scanned from `DocumentManager.shared.activeDocumentsFolderURL`; UTF-8 files can open in an in-app syntax-highlighted editor with search/match highlighting and save back to disk.
-- Command snippets persist locally and can run directly in the terminal.
-- Git repositories are detected by scanning for `.git` folders, and clone/status/pull/commit/push actions are terminal-driven.
+- Command snippets persist locally and can run directly in the terminal, including remote Linux dev-stack setup snippets for Debian, Alpine, and Fedora servers.
+- Git repositories are detected by scanning for `.git` folders, and clone/status/diff/log/pull/commit/push actions are terminal-driven.
 - Server monitors persist locally and can poll Linux CPU, memory, disk, and load snapshots over noninteractive SSH.
-- The AI assistant can call a configurable OpenAI-compatible chat endpoint, records local usage history, includes prompt shortcuts, and can insert assistant output back into the terminal.
+- The AI assistant can call a configurable OpenAI-compatible chat endpoint, records local usage history, includes prompt shortcuts for errors, commands, scripts, SSH, remote dev setup, Docker, Git conflicts, and regex, and can insert assistant output back into the terminal.
 - The iPhone More tab is custom now, not Apple's automatic overflow list, and contains real AI, Git, settings, theme, and terminal controls.
 - Settings are free-preview focused with real AI/provider controls and live appearance controls instead of placeholder billing screens.
 - Workspace backup export writes a JSON manifest for profiles, snippets, monitors, vault metadata, and AI routing metadata without raw private-key contents.
@@ -89,6 +89,7 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 ### Core product goals
 - Modernize the UX with SwiftUI while preserving terminal reliability.
 - Build a tabbed mobile workspace for terminal, files, Git, servers, SSH, snippets, and AI.
+- Position OpenTerm as a beautiful SSH + AI frontend for real Linux systems, not as a fake unrestricted Linux distro running locally on iPhone.
 - Keep the app friendly to both advanced users and newer developers.
 - Keep future paid features possible, but keep the current release free until product quality is stable.
 
@@ -96,6 +97,12 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - Payment and entitlement work is intentionally deferred.
 - Buy Me a Coffee, Stripe, StoreKit, and hosted subscription checks should be revisited only after the core workflows are reliable.
 - No device serial-number scheme should be used for entitlement checks. Future verification should be account-based and privacy-preserving.
+
+## Runtime And Sandbox Reality
+- Sideloading does not automatically remove the iOS app sandbox. Without jailbreak-level changes or private Apple entitlements, OpenTerm still cannot behave like an unrestricted local Linux machine.
+- Package managers such as `apt`, `brew`, `pkg`, `apk`, `dnf`, and `npm` are not available locally unless their runtimes are compiled into the app, embedded as app resources, or run on a remote machine.
+- The practical product strategy is remote-first: connect to VPS/homelab/Linux servers over SSH, use snippets and AI to generate safe setup commands, and run Git/Python/Node/Docker workflows on the real server.
+- Local runtimes like Git, Python, Node, Vim, Nano, Tmux, or Htop should be treated as future embedded-toolchain work, with licensing, architecture, sandbox paths, and binary size reviewed per tool.
 
 ## Commands Included
 
@@ -142,9 +149,9 @@ Important:
 - [x] Add local UTF-8 text editor
 - [x] Add lightweight syntax highlighting, language detection, and editor search
 - [ ] Add language tooling, completions, and diff views
-- [x] Add terminal-driven Git clone/status/pull/commit/push actions
+- [x] Add terminal-driven Git clone/status/diff/log/pull/commit/push actions
 - [ ] Add native Git engine integration
-- [x] Connect configurable AI provider endpoint, prompt shortcuts, terminal handoff, and local usage history
+- [x] Connect configurable AI provider endpoint, expanded command-layer prompt shortcuts, terminal handoff, and local usage history
 - [x] Add backend AI rate-limit and usage-control schema
 - [x] Add hosted AI proxy scaffold
 - [x] Add app-side hosted proxy routing toggle
@@ -161,6 +168,7 @@ Important:
 - Stabilize hosted AI proxy deployment: Supabase function secrets, auth validation, rate-limit policy tests, and remote feature flags.
 - Harden encrypted vault sync: deploy RPC migration, test Supabase auth/RLS, add conflict resolution, recovery UX, and background refresh.
 - Replace terminal-driven Git helpers with a native Git engine only after the current terminal-based workflow stays reliable.
+- Add embedded local toolchains only where they are realistic: Git first, then Python/Node only after binary size, licensing, and sandbox behavior are validated.
 - Expand the editor from lightweight highlighting into real developer tooling: diff view, file tree actions, completions, and optional LSP-style assistance.
 - Keep payment/subscription code deferred until the free core product is stable.
 
