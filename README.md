@@ -43,7 +43,8 @@ The current design target is real-tool clarity first: fewer marketing cards, lig
 - Home quick actions are configuration-aware: AI routes to setup until configured, monitors route to SSH/server setup until monitors exist, and Git starts with repo discovery.
 - Git commit action now requires a user-entered commit message instead of defaulting to generic generated text.
 - Prototype wording such as âpreview build,â âFree preview,â âlive answers,â and broad âreadyâ labels was removed from the in-app workspace copy.
-- Settings are free-app focused with real AI/provider controls and appearance controls instead of placeholder billing screens.
+- Settings are free-app focused with real AI/provider controls, appearance controls, and clearly optional backend bootstrap fields instead of placeholder billing screens.
+- Optional backend settings are now labeled as manual bootstrap, and remote config refresh is disabled until required Supabase fields are present.
 - Workspace backup export writes a JSON manifest for profiles, snippets, monitors, vault metadata, and AI routing metadata without raw private-key contents.
 - Backend settings store non-secret routing metadata locally, while AI provider keys, Supabase anon/access tokens, and vault sync secrets are routed through Keychain-backed local storage for hosted AI proxy routing, encrypted vault sync, and remote config refresh.
 - A Supabase schema foundation exists for users, subscriptions, devices, snippet sync, AI usage, monitors, audit logs, AI rate-limit windows, encrypted vault sync items, and monitor alerts.

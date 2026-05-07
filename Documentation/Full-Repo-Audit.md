@@ -49,7 +49,7 @@ This audit covers the whole checked-in repo, not only the new SwiftUI workspace.
 - Moved workspace status feedback out of the bottom tab area and into a hidden-when-idle top overlay.
 - Reworded inflated Live Workspace/Command Center copy to describe real activity and terminal-driven/configuration-gated tools. Home quick actions are now configuration-aware instead of opening unconfigured feature panels as if they were ready.
 - Added real file/folder rename plus folder tar archive export from the Files tab.
-- Removed prototype wording like preview build/free preview/live answers and broad ready-state labels from the in-app workspace copy.
+- Removed prototype wording like preview build/free preview/live answers and broad ready-state labels from the in-app workspace copy. Optional backend bootstrap controls now read as manual setup rather than a finished account system.
 - Disabled live AI sending until a real endpoint/key or hosted proxy/token is configured.
 - Added `git` preflight before terminal-driven Git commands and removed the default generated commit message from the Git UI.
 - Rejected blank SSH profiles and invalid monitor records before persistence.

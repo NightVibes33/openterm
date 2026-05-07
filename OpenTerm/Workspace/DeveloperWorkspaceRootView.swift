@@ -741,7 +741,7 @@ private struct SettingsWorkspaceView: View {
 			.background(WorkspaceCardBackground(tint: AppColor.violet))
 
 				VStack(alignment: .leading, spacing: 12) {
-					SectionHeader(title: "Backend", subtitle: "Supabase auth bootstrap for hosted AI proxy and encrypted vault sync.")
+					SectionHeader(title: "Optional Backend Bootstrap", subtitle: "Manual Supabase settings for hosted AI proxy and encrypted vault sync. Leave empty if you only use local terminal/SSH/files.")
 					TextField("Supabase project URL", text: $supabaseURL)
 						.textInputAutocapitalization(.never)
 						.autocorrectionDisabled()
@@ -765,7 +765,7 @@ private struct SettingsWorkspaceView: View {
 					Text("Vault payloads are AES-GCM encrypted on device before upload. The server only receives ciphertext, nonce, labels, and fingerprints.")
 						.font(.system(.footnote, design: .default))
 						.foregroundStyle(.secondary)
-					PrimaryWorkspaceButton(title: "Save Backend", symbol: "lock.shield", tint: AppColor.green) {
+					PrimaryWorkspaceButton(title: "Save Backend Bootstrap", symbol: "lock.shield", tint: AppColor.green) {
 						store.updateBackendConfiguration(supabaseURL: supabaseURL, accessToken: backendAccessToken, deviceLabel: backendDeviceLabel, anonKey: backendAnonKey, userID: backendUserID, deviceID: backendDeviceID, vaultSyncSecret: vaultSyncSecret)
 					}
 					Text(store.remoteConfigStatus)
@@ -774,6 +774,7 @@ private struct SettingsWorkspaceView: View {
 					PrimaryWorkspaceButton(title: "Refresh Remote Config", symbol: "icloud.and.arrow.down", tint: AppColor.blue) {
 						store.refreshRemoteConfiguration()
 					}
+					.disabled(supabaseURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || backendAnonKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
 				}
 				.padding(18)
 				.background(WorkspaceCardBackground(tint: AppColor.green))
@@ -816,7 +817,7 @@ private struct SettingsWorkspaceView: View {
 
 			AdaptiveGrid {
 				MetricCard(title: "Theme", value: store.activeThemeName, symbol: "paintpalette", tint: store.workspaceAccentColor)
-				MetricCard(title: "AI Requests", value: "\(store.aiUsageHistory.count)", symbol: "chart.bar", tint: AppColor.violet)
+				MetricCard(title: "AI History", value: "\(store.aiUsageHistory.count)", symbol: "chart.bar", tint: AppColor.violet)
 				MetricCard(title: "SSH Profiles", value: "\(store.sshProfiles.count)", symbol: "server.rack", tint: AppColor.green)
 				MetricCard(title: "Git Repos", value: "\(store.gitWorkspaces.count)", symbol: "point.topleft.down.curvedto.point.bottomright.up", tint: AppColor.blue)
 			}

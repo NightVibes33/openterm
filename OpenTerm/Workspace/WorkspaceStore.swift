@@ -1804,7 +1804,7 @@ final class WorkspaceStore: ObservableObject {
 
 		let resolvedEndpoint = aiConfiguration.usesHostedProxy && aiConfiguration.endpoint.isEmpty ? backendConfiguration.aiProxyEndpoint : aiConfiguration.endpoint
 		guard isAIConfigured, let url = URL(string: resolvedEndpoint), !resolvedEndpoint.isEmpty else {
-			assistantStatus = aiConfiguration.usesHostedProxy ? "Add Supabase URL and access token in Settings before using hosted AI." : "Add an AI endpoint and API key in Settings before using live AI."
+			assistantStatus = aiConfiguration.usesHostedProxy ? "Add Supabase URL and access token in Settings before using the hosted AI route." : "Add an AI endpoint and API key in Settings before sending configured prompts."
 			return
 		}
 
