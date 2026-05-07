@@ -162,13 +162,7 @@ jobs:
             sed -i.bak 's/internal protocol TabViewContainer: class/internal protocol TabViewContainer: AnyObject/' Pods/TabView/Sources/TabViewContainerViewController.swift
           fi
           if [ -f "Dependencies/ios_system/bsd_find/find.c" ]; then
-            python3 - <<'PY'
-from pathlib import Path
-p = Path("Dependencies/ios_system/bsd_find/find.c")
-text = p.read_text()
-text = text.replace("const FTSENT *const *", "const FTSENT **")
-p.write_text(text)
-PY
+            python3 -c "from pathlib import Path; p = Path("Dependencies/ios_system/bsd_find/find.c"); p.write_text(p.read_text().replace("const FTSENT *const *", "const FTSENT **"))"
           fi
           if [ -f "Pods/Cub/Sources/Cub/Compiler/BytecodeCompiler.swift" ]; then
             sed -i.bak -e 's/public let rawValue: Int/public typealias RawValue = Int\n    public let rawValue: RawValue/' -e 's/public init(rawValue: BytecodeCompilerOptions.RawValue)/public init(rawValue: RawValue)/' Pods/Cub/Sources/Cub/Compiler/BytecodeCompiler.swift
