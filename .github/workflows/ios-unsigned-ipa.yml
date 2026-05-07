@@ -128,9 +128,6 @@ jobs:
             sed -i.bak 's/func apply(with applier: PathApplier)/func apply(with applier: @escaping PathApplier)/g' Pods/BezierPathLength/Source/PathElement.swift
             sed -i.bak 's/func apply(with applier:  PathApplier)/func apply(with applier: @escaping PathApplier)/g' Pods/BezierPathLength/Source/PathElement.swift
           fi
-          if [ -f "Pods/InputAssistant/Sources/InputAssistantCollectionView.swift" ]; then
-            sed -i.bak 's/UICollectionViewFlowLayoutAutomaticSize/UICollectionViewFlowLayout.automaticSize/g' Pods/InputAssistant/Sources/InputAssistantCollectionView.swift
-          fi
           if [ -f "Pods/PanelKit/PanelKit/Controller/PanelViewController.swift" ]; then
             sed -i.bak 's/: class/: AnyObject/g' Pods/PanelKit/PanelKit/PanelContentDelegate/PanelContentDelegate.swift Pods/PanelKit/PanelKit/PanelManager/PanelManager.swift
             sed -i.bak 's/addChildViewController(/addChild(/g' Pods/PanelKit/PanelKit/Controller/PanelViewController.swift
