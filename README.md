@@ -33,7 +33,7 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - SSH profiles persist locally with label, host, username, port, auth type, key path, startup path, notes, and last-used timestamps.
 - SSH quick connect now builds and runs real `ssh` commands through the terminal instead of only switching screens.
 - A local SSH key vault foundation exists with protected on-device key files, metadata, import/delete actions, and attach-to-profile flow.
-- Local files are scanned from `DocumentManager.shared.activeDocumentsFolderURL`; UTF-8 files can open in an in-app syntax-highlighted editor and save back to disk.
+- Local files are scanned from `DocumentManager.shared.activeDocumentsFolderURL`; UTF-8 files can open in an in-app syntax-highlighted editor with search/match highlighting and save back to disk.
 - Command snippets persist locally and can run directly in the terminal.
 - Git repositories are detected by scanning for `.git` folders, and clone/status/pull/commit/push actions are terminal-driven.
 - Server monitors persist locally and can poll Linux CPU, memory, disk, and load snapshots over noninteractive SSH.
@@ -48,7 +48,7 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - SSH profile and key-vault storage are local only. Encrypted cloud vault sync is not connected yet.
 - Server monitoring works for noninteractive SSH profiles; password-based profiles still require manual terminal sessions.
 - Git actions are terminal-driven because this fork does not currently bundle a native Git engine.
-- The editor has lightweight syntax highlighting and language detection, but full language-server tooling, completions, and diff views are not finished.
+- The editor has lightweight syntax highlighting, language detection, and search/match highlighting, but full language-server tooling, completions, and diff views are not finished.
 - The AI assistant supports a configurable provider endpoint, prompt shortcuts, terminal handoff, and local usage history. Backend tables/functions and an Edge Function scaffold exist for hosted rate-limit enforcement, but the app still calls the configured endpoint directly until proxy routing is enabled in-app.
 
 ### Not implemented yet
@@ -136,7 +136,7 @@ Important:
 - [x] Add backend schema foundation
 - [x] Replace mock SSH manager with local profiles and real terminal connect flow
 - [x] Add local UTF-8 text editor
-- [x] Add lightweight syntax highlighting and language detection
+- [x] Add lightweight syntax highlighting, language detection, and editor search
 - [ ] Add language tooling, completions, and diff views
 - [x] Add terminal-driven Git clone/status/pull/commit/push actions
 - [ ] Add native Git engine integration

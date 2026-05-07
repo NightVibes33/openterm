@@ -1015,6 +1015,7 @@ private struct WorkspaceEditorSheet: View {
 	let document: WorkspaceEditorDocument
 	@ObservedObject var store: WorkspaceStore
 	@State private var text: String
+	@State private var searchQuery = ""
 
 	init(document: WorkspaceEditorDocument, store: WorkspaceStore) {
 		self.document = document
@@ -1025,17 +1026,24 @@ private struct WorkspaceEditorSheet: View {
 	var body: some View {
 		NavigationStack {
 			VStack(spacing: 0) {
-				HStack(spacing: 10) {
-					MetricPill(title: "Language", value: languageName)
-					MetricPill(title: "Lines", value: "\(text.components(separatedBy: .newlines).count)")
-					MetricPill(title: "File", value: document.relativePath)
-					Spacer()
+				VStack(alignment: .leading, spacing: 12) {
+					HStack(spacing: 10) {
+						MetricPill(title: "Language", value: languageName)
+						MetricPill(title: "Lines", value: "\(text.components(separatedBy: .newlines).count)")
+						MetricPill(title: "Matches", value: "\(matchCount)")
+						Spacer()
+					}
+
+					TextField("Search in \(document.title)", text: $searchQuery)
+						.textInputAutocapitalization(.never)
+						.autocorrectionDisabled()
+						.textFieldStyle(.roundedBorder)
 				}
 				.padding(.horizontal, 16)
 				.padding(.vertical, 12)
 				.background(AppColor.ink.opacity(0.96))
 
-				HighlightedCodeEditor(text: $text, language: languageName)
+				HighlightedCodeEditor(text: $text, language: languageName, searchQuery: searchQuery)
 			}
 			.background(AppColor.ink.ignoresSafeArea())
 			.navigationTitle(document.title)
@@ -1049,6 +1057,12 @@ private struct WorkspaceEditorSheet: View {
 				}
 			}
 		}
+	}
+
+	private var matchCount: Int {
+		let query = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+		guard !query.isEmpty else { return 0 }
+		return text.lowercased().components(separatedBy: query.lowercased()).count - 1
 	}
 
 	private var languageName: String {
@@ -1069,6 +1083,7 @@ private struct WorkspaceEditorSheet: View {
 private struct HighlightedCodeEditor: UIViewRepresentable {
 	@Binding var text: String
 	let language: String
+	let searchQuery: String
 
 	func makeCoordinator() -> Coordinator {
 		Coordinator(self)
@@ -1086,36 +1101,39 @@ private struct HighlightedCodeEditor: UIViewRepresentable {
 		textView.textContainerInset = UIEdgeInsets(top: 18, left: 16, bottom: 28, right: 16)
 		textView.font = UIFont.monospacedSystemFont(ofSize: 15, weight: .regular)
 		textView.alwaysBounceVertical = true
-		context.coordinator.applyHighlighting(to: textView, text: text, language: language)
+		context.coordinator.applyHighlighting(to: textView, text: text, language: language, searchQuery: searchQuery)
 		return textView
 	}
 
 	func updateUIView(_ textView: UITextView, context: Context) {
-		guard textView.text != text || context.coordinator.language != language else {
+		guard textView.text != text || context.coordinator.language != language || context.coordinator.searchQuery != searchQuery else {
 			return
 		}
-		context.coordinator.applyHighlighting(to: textView, text: text, language: language)
+		context.coordinator.applyHighlighting(to: textView, text: text, language: language, searchQuery: searchQuery)
 	}
 
 	final class Coordinator: NSObject, UITextViewDelegate {
 		private let parent: HighlightedCodeEditor
 		var language: String
+		var searchQuery: String
 		private var isApplyingHighlighting = false
 
 		init(_ parent: HighlightedCodeEditor) {
 			self.parent = parent
 			self.language = parent.language
+			self.searchQuery = parent.searchQuery
 		}
 
 		func textViewDidChange(_ textView: UITextView) {
 			parent.text = textView.text
-			applyHighlighting(to: textView, text: textView.text, language: parent.language)
+			applyHighlighting(to: textView, text: textView.text, language: parent.language, searchQuery: parent.searchQuery)
 		}
 
-		func applyHighlighting(to textView: UITextView, text: String, language: String) {
+		func applyHighlighting(to textView: UITextView, text: String, language: String, searchQuery: String) {
 			guard !isApplyingHighlighting else { return }
 			isApplyingHighlighting = true
 			self.language = language
+			self.searchQuery = searchQuery
 
 			let selectedRange = textView.selectedRange
 			let attributed = NSMutableAttributedString(string: text)
@@ -1132,10 +1150,30 @@ private struct HighlightedCodeEditor: UIViewRepresentable {
 			apply(pattern: "(?m)#.*$|//.*$", color: UIColor(white: 0.52, alpha: 1), to: attributed)
 			apply(pattern: "\\b[0-9]+(?:\\.[0-9]+)?\\b", color: UIColor(red: 0.98, green: 0.72, blue: 0.42, alpha: 1), to: attributed)
 			apply(pattern: "(?m)^\\s*[-*#]+.*$", color: UIColor(red: 0.76, green: 0.66, blue: 1.0, alpha: 1), to: attributed)
+			applySearchHighlight(searchQuery, to: attributed)
 
 			textView.attributedText = attributed
-			textView.selectedRange = NSRange(location: min(selectedRange.location, attributed.length), length: min(selectedRange.length, max(0, attributed.length - min(selectedRange.location, attributed.length))))
+			let location = min(selectedRange.location, attributed.length)
+			textView.selectedRange = NSRange(location: location, length: min(selectedRange.length, max(0, attributed.length - location)))
 			isApplyingHighlighting = false
+		}
+
+		private func applySearchHighlight(_ query: String, to attributed: NSMutableAttributedString) {
+			let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+			guard !trimmed.isEmpty else { return }
+			let nsString = attributed.string as NSString
+			var searchRange = NSRange(location: 0, length: nsString.length)
+			while true {
+				let found = nsString.range(of: trimmed, options: [.caseInsensitive], range: searchRange)
+				guard found.location != NSNotFound else { break }
+				attributed.addAttributes([
+					.backgroundColor: UIColor(red: 1.0, green: 0.82, blue: 0.24, alpha: 0.32),
+					.foregroundColor: UIColor.white
+				], range: found)
+				let nextLocation = found.location + max(found.length, 1)
+				guard nextLocation < nsString.length else { break }
+				searchRange = NSRange(location: nextLocation, length: nsString.length - nextLocation)
+			}
 		}
 
 		private func apply(pattern: String, color: UIColor, to attributed: NSMutableAttributedString) {
