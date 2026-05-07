@@ -3,7 +3,7 @@
 //  PanelKit
 //
 //  Created by Louis D'hauwe on 09/03/2017.
-//  Copyright © 2017 Silver Fox. All rights reserved.
+//  Copyright Â© 2017 Silver Fox. All rights reserved.
 //
 
 import Foundation
@@ -24,7 +24,7 @@ extension PanelViewController {
 		if animated {
 
 			let anim = CABasicAnimation(keyPath: #keyPath(CALayer.shadowOpacity))
-			anim.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionLinear)
+			anim.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.linear)
 			anim.fromValue = shadowLayer.shadowOpacity
 			anim.toValue = 0.0
 			anim.duration = duration
@@ -42,7 +42,7 @@ extension PanelViewController {
 		if animated {
 
 			let anim = CABasicAnimation(keyPath: #keyPath(CALayer.shadowOpacity))
-			anim.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionLinear)
+			anim.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.linear)
 			anim.fromValue = shadowLayer.shadowOpacity
 			anim.toValue = shadowOpacity
 			anim.duration = duration
@@ -61,7 +61,7 @@ extension PanelViewController {
 		if animated {
 
 			let anim = CABasicAnimation(keyPath: #keyPath(CALayer.cornerRadius))
-			anim.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionLinear)
+			anim.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.linear)
 			anim.fromValue = panelNavigationController.view.layer.cornerRadius
 			anim.toValue = 0.0
 			anim.duration = duration
@@ -80,7 +80,7 @@ extension PanelViewController {
 		if animated {
 
 			let anim = CABasicAnimation(keyPath: #keyPath(CALayer.cornerRadius))
-			anim.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionLinear)
+			anim.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.linear)
 			anim.fromValue = panelNavigationController.view.layer.cornerRadius
 			anim.toValue = cornerRadius
 			anim.duration = duration

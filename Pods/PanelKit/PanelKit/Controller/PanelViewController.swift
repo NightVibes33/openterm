@@ -155,10 +155,10 @@ import UIKit
 			print("\(self) viewDidLoad")
 		}
 
-		NotificationCenter.default.addObserver(self, selector: #selector(willShowKeyboard(_ :)), name: .UIKeyboardWillShow, object: nil)
-		NotificationCenter.default.addObserver(self, selector: #selector(willShowKeyboard(_ :)), name: .UIKeyboardWillChangeFrame, object: nil)
+		NotificationCenter.default.addObserver(self, selector: #selector(willShowKeyboard(_ :)), name: UIResponder.keyboardWillShowNotification, object: nil)
+		NotificationCenter.default.addObserver(self, selector: #selector(willShowKeyboard(_ :)), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
 
-		NotificationCenter.default.addObserver(self, selector: #selector(willHideKeyboard(_ :)), name: .UIKeyboardWillHide, object: nil)
+		NotificationCenter.default.addObserver(self, selector: #selector(willHideKeyboard(_ :)), name: UIResponder.keyboardWillHideNotification, object: nil)
 
     }
 
@@ -269,8 +269,8 @@ import UIKit
 			return
 		}
 
-		superview.bringSubview(toFront: self.resizeCornerHandle)
-		superview.bringSubview(toFront: viewToMove)
+		superview.bringSubviewToFront(self.resizeCornerHandle)
+		superview.bringSubviewToFront(viewToMove)
 
 	}
 
