@@ -38,6 +38,9 @@
 		3CE5764820226A1500760E43 /* ANSITextState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CE5764720226A1500760E43 /* ANSITextState.swift */; };
 		3CE57680202A529200760E43 /* TerminalTabViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C905FC42025CAEC0084BA63 /* TerminalTabViewController.swift */; };
 		3CE57681202A52ED00760E43 /* TerminalViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE3808571FD9BFB600393EB8 /* TerminalViewController.swift */; };
+		7A1F22012650300000A1B2C3 /* DeveloperWorkspaceRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1F22032650300000A1B2C3 /* DeveloperWorkspaceRootView.swift */; };
+		7A1F22022650300000A1B2C3 /* LegacyTerminalContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1F22042650300000A1B2C3 /* LegacyTerminalContainerView.swift */; };
+		7A1F22062650300000A1B2C3 /* WorkspaceStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1F22072650300000A1B2C3 /* WorkspaceStore.swift */; };
 		3CE5769E202A7EC500760E43 /* Parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CE5769D202A7EC500760E43 /* Parser.swift */; };
 		3CE576A0202A874C00760E43 /* OutputSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CE5769F202A874C00760E43 /* OutputSanitizer.swift */; };
 		AEF20A4A223775F9F5101BF5 /* Pods_OpenTerm.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 064CE91D25CE0DA967737711 /* Pods_OpenTerm.framework */; };
@@ -177,6 +180,9 @@
 		3CE5764720226A1500760E43 /* ANSITextState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ANSITextState.swift; sourceTree = "<group>"; };
 		3CE5769D202A7EC500760E43 /* Parser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Parser.swift; sourceTree = "<group>"; };
 		3CE5769F202A874C00760E43 /* OutputSanitizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutputSanitizer.swift; sourceTree = "<group>"; };
+		7A1F22032650300000A1B2C3 /* DeveloperWorkspaceRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeveloperWorkspaceRootView.swift; sourceTree = "<group>"; };
+		7A1F22042650300000A1B2C3 /* LegacyTerminalContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyTerminalContainerView.swift; sourceTree = "<group>"; };
+		7A1F22072650300000A1B2C3 /* WorkspaceStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceStore.swift; sourceTree = "<group>"; };
 		BE0146EA2083B2F90072AAB5 /* ManualWebViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManualWebViewController.swift; sourceTree = "<group>"; };
 		BE0146EC2083BA000072AAB5 /* cub-guide.htmlcontainer */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "cub-guide.htmlcontainer"; sourceTree = "<group>"; };
 		BE102814207A372C005E965F /* String+C.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+C.swift"; sourceTree = "<group>"; };
@@ -486,6 +492,7 @@
 				BE102813207A36A5005E965F /* Data */,
 				BEA8E28E2001345700002475 /* View */,
 				BEA8E28D2001344400002475 /* Controller */,
+				7A1F22052650300000A1B2C3 /* Workspace */,
 				BEA499241FD9C46C001B9B9D /* OpenTerm.entitlements */,
 				BE3808551FD9BFB600393EB8 /* AppDelegate.swift */,
 				BE3808591FD9BFB600393EB8 /* Main.storyboard */,
@@ -586,6 +593,16 @@
 				BEC75BFE202B716600216462 /* Info.plist */,
 			);
 			path = OpenTermTests;
+			sourceTree = "<group>";
+		};
+		7A1F22052650300000A1B2C3 /* Workspace */ = {
+			isa = PBXGroup;
+			children = (
+				7A1F22032650300000A1B2C3 /* DeveloperWorkspaceRootView.swift */,
+				7A1F22042650300000A1B2C3 /* LegacyTerminalContainerView.swift */,
+				7A1F22072650300000A1B2C3 /* WorkspaceStore.swift */,
+			);
+			path = Workspace;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -792,6 +809,7 @@
 				BE5F510220B34AB500A0B470 /* PridelandOverview.swift in Sources */,
 				3CE57681202A52ED00760E43 /* TerminalViewController.swift in Sources */,
 				BEA8E2912001348C00002475 /* UIColor+AssetCatalog.swift in Sources */,
+				7A1F22012650300000A1B2C3 /* DeveloperWorkspaceRootView.swift in Sources */,
 				28CDA4292024B3510055206D /* BookmarkManager.swift in Sources */,
 				BEB7752220714E2C00201EBB /* UIViewController+Alerts.swift in Sources */,
 				BE3A62E7208B54D00014A498 /* CubDocumentationItemTableViewCell.swift in Sources */,
@@ -838,6 +856,8 @@
 				F4602B41200A08D0009D0547 /* ColorPickerViewController.swift in Sources */,
 				BE57BDCF207BE0CD00A60950 /* CommandManager.swift in Sources */,
 				BE9275062013961D00BD2761 /* UserDefaultsController.swift in Sources */,
+				7A1F22022650300000A1B2C3 /* LegacyTerminalContainerView.swift in Sources */,
+				7A1F22062650300000A1B2C3 /* WorkspaceStore.swift in Sources */,
 				3CA3210920211D5600974B5F /* ScriptExecutorCommand.swift in Sources */,
 				3C406E1D2020988B005F97C4 /* AutoCompleteManager+InputAssistant.swift in Sources */,
 				1C81BE5720225C3800D07301 /* Clipboard.swift in Sources */,
@@ -943,7 +963,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -994,7 +1014,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
@@ -1018,13 +1038,13 @@
 					"$(PROJECT_DIR)/Dependencies/ios_system/Frameworks",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/OpenTerm/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.silverfox.Terminal;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRIP_STYLE = "non-global";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -1045,13 +1065,13 @@
 					"$(PROJECT_DIR)/Dependencies/ios_system/Frameworks",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/OpenTerm/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.silverfox.Terminal;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRIP_STYLE = "non-global";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -1063,11 +1083,11 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 6G5LMQ72D8;
 				INFOPLIST_FILE = OpenTermTests/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.silverfox.OpenTermTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/OpenTerm.app/OpenTerm";
 			};
@@ -1080,11 +1100,11 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 6G5LMQ72D8;
 				INFOPLIST_FILE = OpenTermTests/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.silverfox.OpenTermTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/OpenTerm.app/OpenTerm";
 			};

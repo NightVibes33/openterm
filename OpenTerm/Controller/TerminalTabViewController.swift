@@ -11,6 +11,9 @@ import TabView
 
 class TerminalTabViewController: TabViewController {
 
+	static weak var activeController: TerminalTabViewController?
+	private static var pendingCommand: String?
+
 	required init(theme: TabViewTheme) {
 		super.init(theme: theme)
 
@@ -32,6 +35,12 @@ class TerminalTabViewController: TabViewController {
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
+	}
+
+	override func viewDidAppear(_ animated: Bool) {
+		super.viewDidAppear(animated)
+		TerminalTabViewController.activeController = self
+		TerminalTabViewController.consumePendingCommandIfNeeded()
 	}
 
 	@objc private func showSettings() {
@@ -66,6 +75,35 @@ class TerminalTabViewController: TabViewController {
 			terminalVC.terminalView.executor.closeSession()
 		}
 		
+	}
+
+	static func focusOrQueue(command: String) {
+		pendingCommand = command
+		consumePendingCommandIfNeeded()
+	}
+
+	static func consumePendingCommandIfNeeded() {
+		guard
+			let command = pendingCommand,
+			let controller = activeController
+		else {
+			return
+		}
+
+		pendingCommand = nil
+		controller.focus(command: command)
+	}
+
+	private func focus(command: String) {
+		guard let viewController = visibleViewController as? TerminalViewController else {
+			return
+		}
+
+		viewController.terminalView.currentCommand = command
+
+		if viewController.presentedViewController == nil {
+			viewController.terminalView.becomeFirstResponder()
+		}
 	}
 
 }

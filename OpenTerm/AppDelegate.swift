@@ -11,6 +11,7 @@ import TabView
 import CoreSpotlight
 import MobileCoreServices
 import ios_system
+import SwiftUI
 
 #if canImport(SimulatorStatusMagic)
 	import SimulatorStatusMagic
@@ -25,7 +26,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 		// Override point for customization after application launch.
 
 		window = UIWindow(frame: UIScreen.main.bounds)
-		window?.rootViewController = TabViewContainerViewController<TerminalTabViewController>(theme: TabViewThemeDark())
+		window?.rootViewController = UIHostingController(rootView: DeveloperWorkspaceRootView())
 		window?.tintColor = .defaultMainTintColor
 		window?.makeKeyAndVisible()
 
@@ -79,20 +80,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 			guard let command = userActivity.userInfo?[CSSearchableItemActivityIdentifier] as? String else {
 				return false
 			}
-		
-			guard let navigationController = window?.rootViewController as? TabViewContainerViewController<TerminalTabViewController> else {
-				return false
-			}
-			
-			guard let viewController = navigationController.primaryTabViewController.visibleViewController as? TerminalViewController else {
-				return false
-			}
-				
-			viewController.terminalView.currentCommand = command
-			
-			if viewController.presentedViewController == nil {
-				viewController.terminalView.becomeFirstResponder()
-			}
+
+			TerminalTabViewController.focusOrQueue(command: command)
+			NotificationCenter.default.post(name: .workspaceDidRequestTerminalFocus, object: nil)
 			
 		}
 		
