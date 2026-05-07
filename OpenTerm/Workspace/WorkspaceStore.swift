@@ -1273,6 +1273,13 @@ private struct AIChatRequest: Encodable {
 	let messages: [Message]
 }
 
+private func estimateTokenCount(for messages: [AIChatRequest.Message]) -> Int {
+	let characterCount = messages.reduce(0) { partial, message in
+		partial + message.role.count + message.content.count
+	}
+	return max(1, Int(ceil(Double(characterCount) / 4.0)))
+}
+
 private struct AIProxyRequest: Encodable {
 	let featureCode: String
 	let model: String

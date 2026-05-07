@@ -51,13 +51,13 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - Server monitoring works for noninteractive SSH profiles; password-based profiles still require manual terminal sessions.
 - Git actions are terminal-driven because this fork does not currently bundle a native Git engine.
 - The editor has lightweight syntax highlighting, language detection, and search/match highlighting, but full language-server tooling, completions, and diff views are not finished.
-- The AI assistant supports direct provider routing or hosted Supabase proxy routing, prompt shortcuts, terminal handoff, and local usage history. Backend tables/functions and an Edge Function scaffold exist for hosted rate-limit enforcement.
+- The AI assistant supports direct provider routing or hosted Supabase proxy routing, prompt shortcuts, terminal handoff, and local usage history. Backend tables/functions and an Edge Function scaffold exist for hosted rate-limit enforcement, but deployment secrets, production auth hardening, and remote configuration still need to be completed.
 
 ### Not implemented yet
 - End-to-end encrypted SSH key vault sync across devices.
 - Full language-server tooling, completions, and diff views in the code editor.
 - Native Git engine integration with structured conflict handling.
-- Production AI request proxy deployment and app-side proxy routing.
+- Production AI proxy deployment secrets, remote configuration, and hosted auth hardening.
 - StoreKit/subscription entitlements and server-side purchase verification.
 - Signed App Store distribution workflow.
 
@@ -67,12 +67,12 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - `OpenTerm/AppDelegate.swift` launches the SwiftUI workspace shell.
 - `OpenTerm/Workspace/DeveloperWorkspaceRootView.swift` drives the main multi-surface experience.
 - `OpenTerm/Workspace/LegacyTerminalContainerView.swift` wraps the legacy terminal controller.
-- `OpenTerm/Workspace/WorkspaceStore.swift` owns local workspace state, persistence, terminal actions, SSH profile commands, monitor refresh, Git command queuing, file editing, snippets, app accent state, and AI provider configuration. The SwiftUI workspace owns the lightweight highlighted editor surface.
+- `OpenTerm/Workspace/WorkspaceStore.swift` owns local workspace state, persistence, terminal actions, SSH profile commands, protected local vault metadata, monitor refresh, Git command queuing, file editing, snippets, backup export, backend bootstrap settings, app accent state, and AI provider/proxy configuration. The SwiftUI workspace owns the lightweight highlighted editor surface.
 
 ### Backend foundation
 - `supabase/migrations/20260506_workspace_foundation.sql` creates the initial hosted-data shape.
 - `supabase/migrations/20260507_ai_vault_limits.sql` adds AI rate-limit windows, encrypted vault sync storage, monitor alert records, and rate-limit helper functions.
-- `supabase/functions/ai-proxy/index.ts` is a deployable Edge Function scaffold for authenticated AI requests, rate-limit checks, OpenAI forwarding, and usage recording.
+- `supabase/functions/ai-proxy/index.ts` is a deployable Edge Function scaffold for authenticated AI requests, rate-limit checks, OpenAI forwarding, and usage recording. It still needs hosted environment secrets, deployment, and production policy hardening before it should be treated as live infrastructure.
 - Tables currently defined: `users`, `subscriptions`, `devices`, `ssh_profiles_metadata`, `snippets`, `ai_usage`, `server_monitors`, `audit_logs`, `ai_rate_limits`, `vault_sync_items`, `server_monitor_alerts`.
 - Sensitive SSH material should remain end-to-end encrypted before upload. Raw private keys should not be stored server-side in plaintext.
 - The active app direction is free until the core SSH, Git, editor, AI, monitoring, and sync workflows are stable.
@@ -153,6 +153,13 @@ Important:
 - [x] Add backup/export manifest for workspace metadata
 - [ ] Connect app-side encrypted vault sync across devices
 - [ ] Add signed App Store distribution when needed
+
+## Next Engineering Priorities
+- Stabilize hosted AI proxy deployment: Supabase function secrets, auth validation, rate-limit policy tests, and remote feature flags.
+- Connect app-side encrypted vault sync using client-side encryption before upload and metadata-only server visibility.
+- Replace terminal-driven Git helpers with a native Git engine only after the current terminal-based workflow stays reliable.
+- Expand the editor from lightweight highlighting into real developer tooling: diff view, file tree actions, completions, and optional LSP-style assistance.
+- Keep payment/subscription code deferred until the free core product is stable.
 
 ## Documentation
 - `Documentation/OpenTerm-AI-Workspace-Blueprint.md`
