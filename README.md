@@ -37,7 +37,7 @@ The current design target is real-tool clarity first: fewer marketing cards, lig
 - Server monitors persist locally, poll Linux CPU/memory/disk/load snapshots over noninteractive SSH, and keep a local acknowledgeable alert history when thresholds change; monitors are user-created and monitor cards appear only after real poll results.
 - The AI assistant can call a configurable OpenAI-compatible chat endpoint or hosted Supabase proxy, records local usage history, includes prompt shortcuts for errors, commands, scripts, SSH, remote dev setup, Docker, Git conflicts, and regex, and can insert assistant output back into the terminal. Live sending is disabled until a real endpoint/key or proxy/token is configured.
 - The iPhone More tab is custom now, not Apple's automatic overflow list, and contains real AI, Git, settings, theme, and terminal controls.
-- The SwiftUI workspace now uses semantic text colors instead of hard-coded white labels, fixing the broken white-on-light card look across the main shell.
+- The SwiftUI workspace now uses semantic text colors instead of hard-coded white labels, fixes the broken white-on-light card look, and removes awkward duplicate hero panel padding across the main shell.
 - Workspace status feedback is now a temporary top overlay instead of a persistent bar sitting above the bottom tab bar.
 - The home and More copy now avoids inflated âlive/command centerâ language and labels Git/AI as terminal-driven or configuration-gated where appropriate.
 - Home quick actions are configuration-aware: AI routes to setup until configured, monitors route to SSH/server setup until monitors exist, and Git starts with repo discovery.
@@ -48,7 +48,7 @@ The current design target is real-tool clarity first: fewer marketing cards, lig
 - Workspace backup export writes a JSON manifest for profiles, snippets, monitors, vault metadata, and AI routing metadata without raw private-key contents.
 - Backend settings store non-secret routing metadata locally, while AI provider keys, Supabase anon/access tokens, and vault sync secrets are routed through Keychain-backed local storage for hosted AI proxy routing, encrypted vault sync, and remote config refresh.
 - A Supabase schema foundation exists for users, subscriptions, devices, snippet sync, AI usage, monitors, audit logs, AI rate-limit windows, encrypted vault sync items, and monitor alerts.
-- GitHub Actions includes a green unsigned IPA workflow for CI artifact generation.
+- GitHub Actions includes a green unsigned IPA workflow for CI artifact generation. The dependency bootstrap now validates the legacy `ios_error.h` download so transient GitHub HTML error pages are not compiled as C headers.
 - Vendored dependency compatibility patches have been added for modern Xcode/iOS SDK builds. Several old utility, settings, scripting, and ANSI parsing crash paths have been hardened, stale TODO/FIXME comments in touched app code were cleaned up, but legacy controller cleanup is still ongoing.
 
 ### Partially implemented
@@ -129,7 +129,7 @@ The current design target is real-tool clarity first: fewer marketing cards, lig
 | uptime     | wc         | whoami     |            |
 
 ## Local Setup
-- Run `bootstrap.sh` if you need to restore local dependencies, Apple OSS sources, frameworks, and pods in one pass.
+- Run `bootstrap.sh` if you need to restore local dependencies, Apple OSS sources, frameworks, and pods in one pass. It validates the legacy `ios_error.h` framework header after download before continuing.
 - Open `OpenTerm.xcworkspace`.
 - Build the `OpenTerm` scheme.
 - If you want to run on a real device locally, you still need your own signing identity/provisioning. `resign-frameworks.sh` now uses the signing identity you provide instead of an old hard-coded developer certificate.

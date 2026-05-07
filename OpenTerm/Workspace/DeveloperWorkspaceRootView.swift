@@ -937,7 +937,6 @@ private struct HeroPanel: View {
 		}
 		.padding(24)
 		.frame(maxWidth: .infinity, alignment: .leading)
-					.padding(18)
 		.background(WorkspaceCardBackground(tint: AppColor.blue))
 	}
 }

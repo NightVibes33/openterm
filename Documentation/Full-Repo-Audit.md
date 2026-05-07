@@ -45,7 +45,7 @@ This audit covers the whole checked-in repo, not only the new SwiftUI workspace.
 - Added honest empty states for Home, Git, Servers, AI, Files, monitors, vault, alerts, and snippets, plus a Home capability dashboard for configured/missing states.
 - Added global workspace status feedback.
 - Added runnable bundled script examples for system snapshots, website/API probes, archives, text search, and SSH command templates.
-- Replaced hard-coded white text on light system cards with semantic foreground colors across the SwiftUI workspace shell.
+- Replaced hard-coded white text on light system cards with semantic foreground colors across the SwiftUI workspace shell and removed duplicate hero panel padding.
 - Moved workspace status feedback out of the bottom tab area and into a hidden-when-idle top overlay.
 - Reworded inflated Live Workspace/Command Center copy to describe real activity and terminal-driven/configuration-gated tools. Home quick actions are now configuration-aware instead of opening unconfigured feature panels as if they were ready.
 - Added real file/folder rename plus folder tar archive export from the Files tab.
@@ -81,3 +81,6 @@ This audit covers the whole checked-in repo, not only the new SwiftUI workspace.
 - Add runtime command availability capture and surface it in Help/README.
 - Validate Keychain secret migration on a real device and confirm legacy JSON fields are redacted after save.
 - Add SSH monitor preflight command that checks `ssh`, auth type, `top`, `awk`, `df`, `uptime`, and `/proc/meminfo` before creating monitor expectations.
+
+## Current Findings
+- Validated network_ios header downloads in CI/local bootstrap so a transient GitHub HTML error page cannot be compiled as `ios_error.h`.
