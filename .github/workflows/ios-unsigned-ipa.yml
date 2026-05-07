@@ -28,6 +28,37 @@ jobs:
           xcrun --sdk iphoneos --show-sdk-version
           xcrun --sdk iphoneos --show-sdk-path
 
+      - name: Download dependencies and frameworks
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Initialize submodules fully (non-shallow for nested submodules)
+          git submodule update --init --recursive
+
+          # Download sources for ios_system (curl, openssl, libssh2, etc.)
+          pushd Dependencies/ios_system
+          ./get_sources.sh
+          popd
+
+      - name: Build frameworks for ios_system
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          pushd Dependencies/ios_system
+          ./get_frameworks.sh
+          popd
+
+      - name: Build frameworks for network_ios
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          pushd Dependencies/network_ios
+          ./get_frameworks.sh
+          popd
+
       - name: Detect project
         id: detect
         shell: bash
