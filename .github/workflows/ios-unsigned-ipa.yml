@@ -142,6 +142,10 @@ jobs:
           fi
           if [ -f "Pods/SavannaKit/Sources/SavannaKit/View/InnerTextView.swift" ]; then
             sed -i.bak 's/: class/: AnyObject/g' Pods/SavannaKit/Sources/SavannaKit/View/InnerTextView.swift Pods/SavannaKit/Sources/SavannaKit/View/SyntaxTextView.swift
+            find Pods/SavannaKit/Sources/SavannaKit -name "*.swift" -exec sed -i.bak \
+              -e 's/NSTextStorageEditActions/NSTextStorage.EditActions/g' \
+              -e 's/NSAttributedStringKey/NSAttributedString.Key/g' \
+              {} +
           fi
 
       - name: List schemes
