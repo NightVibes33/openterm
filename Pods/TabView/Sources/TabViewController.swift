@@ -237,3 +237,9 @@ open class TabViewController: UIViewController {
         }
     }
 }
+
+extension TabViewController: TabViewBarDataSource {
+}
+
+extension TabViewController: TabViewBarDelegate {
+}
