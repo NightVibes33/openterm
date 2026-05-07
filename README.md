@@ -25,31 +25,36 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 ## Current Repo Status
 
 ### Implemented in this fork right now
-- Legacy OpenTerm terminal core is still present and embedded.
-- A new SwiftUI workspace shell is active from `AppDelegate`.
-- Workspace sections exist for Home, Terminal, Files, Git, Servers, AI, and Settings.
-- The terminal tab uses the legacy `TerminalTabViewController` inside the new shell.
-- iOS 18.0 deployment target is configured in the Xcode project and Podfile.
-- iOS 26-compatible glass styling hooks are present in the SwiftUI workspace shell.
-- Local workspace models exist for sessions, SSH profiles, snippets, premium plans, server snapshots, and Git summaries.
-- Local file listing is wired through `DocumentManager.shared.activeDocumentsFolderURL`.
+- Legacy OpenTerm terminal core is still present and embedded inside the SwiftUI workspace.
+- `AppDelegate` launches the modern workspace shell with Home, Terminal, Files, Git, Servers, AI, and Settings surfaces.
+- iOS 18.0 is the deployment floor, with iOS 26 Liquid Glass-style SwiftUI surfaces enabled when the SDK/runtime supports them.
+- Terminal commands can now be queued or executed from workspace actions, so SSH, Git, snippets, and generated commands can jump into the active terminal tab.
+- SSH profiles persist locally with label, host, username, port, auth type, key path, startup path, notes, and last-used timestamps.
+- SSH quick connect now builds and runs real `ssh` commands through the terminal instead of only switching screens.
+- Local files are scanned from `DocumentManager.shared.activeDocumentsFolderURL`; UTF-8 files can open in an in-app text editor and save back to disk.
+- Command snippets persist locally and can run directly in the terminal.
+- Git repositories are detected by scanning for `.git` folders, and clone/status/pull/commit/push actions are terminal-driven.
+- Server monitors persist locally and can poll Linux CPU, memory, disk, and load snapshots over noninteractive SSH.
+- The AI assistant can call a configurable OpenAI-compatible chat endpoint and records local usage history.
+- Settings are free-preview focused; payment, subscriptions, and entitlement UI are intentionally out of the active product surface.
 - A Supabase schema foundation exists for users, subscriptions, devices, snippet sync, AI usage, monitors, and audit logs.
-- GitHub Actions includes an unsigned IPA workflow for CI artifact generation.
+- GitHub Actions includes a green unsigned IPA workflow for CI artifact generation.
 - Vendored dependency compatibility patches have been added for modern Xcode/iOS SDK builds.
 
 ### Partially implemented
-- SSH manager UI is surfaced, but host connection management is still mostly mock/workspace-model driven.
-- Git workspace screens exist, but full in-app clone/pull/commit/push flows are not finished.
-- AI assistant surfaces and product affordances exist, but a real provider backend is not wired yet.
-- Server monitoring cards exist, but live polling and alert delivery are not connected yet.
-- Some premium/account-oriented UI models still exist in the workspace state, but the app direction is temporarily free until the core product is stable. 
+- SSH profile storage is local only. Encrypted cloud vault sync is not connected yet.
+- Server monitoring works for noninteractive SSH profiles; password-based profiles still require manual terminal sessions.
+- Git actions are terminal-driven because this fork does not currently bundle a native Git engine.
+- The editor is a real UTF-8 text editor, but full syntax highlighting, language tooling, and diff views are not finished.
+- The AI assistant supports a configurable provider endpoint, but production auth, rate limits, hosted usage enforcement, and billing are deferred.
 
 ### Not implemented yet
-- Real encrypted SSH key vault sync.
-- Full code editor with syntax highlighting and language tooling.
-- Production AI request pipeline, rate limits, and usage billing.
+- End-to-end encrypted SSH key vault sync.
+- Full syntax highlighting and language tooling in the code editor.
+- Native Git engine integration with structured conflict handling.
+- Production AI request proxy, rate limits, and server-side usage controls.
 - StoreKit/subscription entitlements and server-side purchase verification.
-- Signed TestFlight/App Store distribution workflow.
+- Signed App Store distribution workflow.
 
 ## Architecture Notes
 
@@ -57,12 +62,13 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - `OpenTerm/AppDelegate.swift` launches the SwiftUI workspace shell.
 - `OpenTerm/Workspace/DeveloperWorkspaceRootView.swift` drives the main multi-surface experience.
 - `OpenTerm/Workspace/LegacyTerminalContainerView.swift` wraps the legacy terminal controller.
-- `OpenTerm/Workspace/WorkspaceStore.swift` currently powers much of the workspace with local/mock state.
+- `OpenTerm/Workspace/WorkspaceStore.swift` owns local workspace state, persistence, terminal actions, SSH profile commands, monitor refresh, Git command queuing, file editing, snippets, and AI provider configuration.
 
 ### Backend foundation
 - `supabase/migrations/20260506_workspace_foundation.sql` creates the initial hosted-data shape.
 - Tables currently defined: `users`, `subscriptions`, `devices`, `ssh_profiles_metadata`, `snippets`, `ai_usage`, `server_monitors`, `audit_logs`.
 - Sensitive SSH material should remain end-to-end encrypted before upload. Raw private keys should not be stored server-side in plaintext.
+- The active app direction is free until the core SSH, Git, editor, AI, and monitoring workflows are stable.
 
 ### CI
 - `.github/workflows/ios-unsigned-ipa.yml` builds an unsigned archive and packages an IPA artifact.
@@ -73,14 +79,14 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 
 ### Core product goals
 - Modernize the UX with SwiftUI while preserving terminal reliability.
-- Add a real tabbed workspace for terminal, files, git, servers, and AI.
+- Build a tabbed mobile workspace for terminal, files, Git, servers, SSH, snippets, and AI.
 - Keep the app friendly to both advanced users and newer developers.
-- Keep the product extensible for future paid features, but focus current work on quality, reliability, and core workflows.
+- Keep future paid features possible, but keep the current release free until product quality is stable.
 
 ### Current release direction
-- The app is being treated as free until the terminal core, SwiftUI workspace shell, SSH flow, Git tools, AI features, and CI/build reliability are stable.
-- Payment and entitlement work is intentionally deferred so product quality can be validated before monetization.
-- Any old premium or billing-oriented references in the codebase should be treated as product placeholders, not finished billing behavior.
+- Payment and entitlement work is intentionally deferred.
+- Buy Me a Coffee, Stripe, StoreKit, and hosted subscription checks should be revisited only after the core workflows are reliable.
+- No device serial-number scheme should be used for entitlement checks. Future verification should be account-based and privacy-preserving.
 
 ## Commands Included
 
@@ -114,19 +120,22 @@ The CI workflow at `.github/workflows/ios-unsigned-ipa.yml` produces an unsigned
 
 Important:
 - Unsigned IPAs do not install on normal real iPhones without signing/provisioning, sideload tooling, or a special device environment.
-- A signed workflow for TestFlight/App Store should be added separately with Apple certificate and provisioning profile secrets.
+- Signed App Store distribution can be added later with Apple certificate and provisioning profile secrets when distribution is needed.
 
 ## Roadmap
 - [x] Preserve terminal core
 - [x] Add SwiftUI workspace shell
 - [x] Add unsigned IPA CI pipeline
 - [x] Add backend schema foundation
-- [ ] Replace mock SSH manager with real connection flow
-- [ ] Add code editor and syntax highlighting
-- [ ] Finish in-app Git actions
-- [ ] Connect AI provider and usage metering
+- [x] Replace mock SSH manager with local profiles and real terminal connect flow
+- [x] Add local UTF-8 text editor
+- [ ] Add syntax highlighting and language tooling
+- [x] Add terminal-driven Git clone/status/pull/commit/push actions
+- [ ] Add native Git engine integration
+- [x] Connect configurable AI provider endpoint and local usage history
+- [ ] Add hosted AI proxy, rate limits, and server-side usage controls
 - [ ] Add encrypted vault and sync
-- [ ] Add signed beta/TestFlight distribution
+- [ ] Add signed App Store distribution when needed
 
 ## Documentation
 - `Documentation/OpenTerm-AI-Workspace-Blueprint.md`

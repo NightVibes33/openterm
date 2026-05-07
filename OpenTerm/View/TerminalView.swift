@@ -298,6 +298,12 @@ class TerminalView: UIView {
 		return textView.canBecomeFirstResponder
 	}
 	
+	func submitCommand(_ command: String) {
+		currentCommand = command
+		newLine()
+		delegate?.didEnterCommand(command)
+	}
+
 	var currentCommand: String {
 		get {
 

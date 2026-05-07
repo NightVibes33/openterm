@@ -14,7 +14,11 @@ struct DeveloperWorkspaceRootView: View {
 				compactLayout
 			}
 		}
-		.tint(Color(red: 0.35, green: 0.60, blue: 0.98))
+		.tint(AppColor.blue)
+		.onAppear {
+			store.refreshLocalFiles()
+			store.refreshGitWorkspaces()
+		}
 		.onReceive(NotificationCenter.default.publisher(for: .workspaceDidRequestTerminalFocus)) { _ in
 			selection = .terminal
 		}
@@ -22,58 +26,10 @@ struct DeveloperWorkspaceRootView: View {
 
 	private var compactLayout: some View {
 		TabView(selection: $selection) {
-			NavigationStack {
-				WorkspaceHomeView(store: store, selection: $selection)
-			}
-			.tag(WorkspaceDestination.home)
-			.tabItem {
-				Label("Workspace", systemImage: WorkspaceDestination.home.systemImage)
-			}
-
-			NavigationStack {
-				FilesWorkspaceView(store: store)
-			}
-			.tag(WorkspaceDestination.files)
-			.tabItem {
-				Label("Files", systemImage: WorkspaceDestination.files.systemImage)
-			}
-
-			LegacyTerminalContainerView()
-				.tag(WorkspaceDestination.terminal)
-				.tabItem {
-					Label("Terminal", systemImage: WorkspaceDestination.terminal.systemImage)
-				}
-
-			NavigationStack {
-				ServersWorkspaceView(store: store, selection: $selection)
-			}
-			.tag(WorkspaceDestination.servers)
-			.tabItem {
-				Label("Servers", systemImage: WorkspaceDestination.servers.systemImage)
-			}
-
-			NavigationStack {
-				WorkspaceAssistantView(store: store)
-			}
-			.tag(WorkspaceDestination.assistant)
-			.tabItem {
-				Label("AI", systemImage: WorkspaceDestination.assistant.systemImage)
-			}
-
-			NavigationStack {
-				GitWorkspaceView(store: store, selection: $selection)
-			}
-			.tag(WorkspaceDestination.git)
-			.tabItem {
-				Label("Git", systemImage: WorkspaceDestination.git.systemImage)
-			}
-
-			NavigationStack {
-				SettingsWorkspaceView(store: store)
-			}
-			.tag(WorkspaceDestination.settings)
-			.tabItem {
-				Label("Settings", systemImage: WorkspaceDestination.settings.systemImage)
+			ForEach([WorkspaceDestination.home, .files, .terminal, .servers, .assistant, .git, .settings]) { destination in
+				detailView(for: destination)
+					.tag(destination)
+					.tabItem { Label(destination.title, systemImage: destination.systemImage) }
 			}
 		}
 		.background(WorkspaceBackdrop().ignoresSafeArea())
@@ -103,33 +59,30 @@ struct DeveloperWorkspaceRootView: View {
 	private func detailView(for destination: WorkspaceDestination) -> some View {
 		switch destination {
 		case .home:
-			NavigationStack {
-				WorkspaceHomeView(store: store, selection: $selection)
-			}
+			NavigationStack { WorkspaceHomeView(store: store, selection: $selection) }
 		case .terminal:
 			LegacyTerminalContainerView()
 		case .files:
-			NavigationStack {
-				FilesWorkspaceView(store: store)
-			}
+			NavigationStack { FilesWorkspaceView(store: store) }
 		case .git:
-			NavigationStack {
-				GitWorkspaceView(store: store, selection: $selection)
-			}
+			NavigationStack { GitWorkspaceView(store: store, selection: $selection) }
 		case .servers:
-			NavigationStack {
-				ServersWorkspaceView(store: store, selection: $selection)
-			}
+			NavigationStack { ServersWorkspaceView(store: store, selection: $selection) }
 		case .assistant:
-			NavigationStack {
-				WorkspaceAssistantView(store: store)
-			}
+			NavigationStack { WorkspaceAssistantView(store: store) }
 		case .settings:
-			NavigationStack {
-				SettingsWorkspaceView(store: store)
-			}
+			NavigationStack { SettingsWorkspaceView(store: store) }
 		}
 	}
+}
+
+private enum AppColor {
+	static let blue = Color(red: 0.29, green: 0.57, blue: 0.95)
+	static let green = Color(red: 0.31, green: 0.72, blue: 0.57)
+	static let amber = Color(red: 0.98, green: 0.67, blue: 0.24)
+	static let coral = Color(red: 0.91, green: 0.35, blue: 0.43)
+	static let violet = Color(red: 0.55, green: 0.47, blue: 0.96)
+	static let ink = Color(red: 0.08, green: 0.10, blue: 0.15)
 }
 
 private struct WorkspaceHomeView: View {
@@ -138,114 +91,341 @@ private struct WorkspaceHomeView: View {
 	@Binding var selection: WorkspaceDestination
 
 	var body: some View {
-		ScrollView {
-			VStack(alignment: .leading, spacing: 24) {
-				HeroPanel(selection: $selection)
-				quickActions
-				sectionHeader(title: "Live Sessions", subtitle: "Jump back into local, SSH, and container work.")
-				featureGrid(items: store.recentSessions.map {
-					WorkspaceFeature(title: $0.title, detail: "\($0.subtitle)\n\($0.detail)", symbol: $0.symbol, tint: $0.tint)
-				})
-				sectionHeader(title: "SSH Quick Connect", subtitle: "Saved hosts should feel one tap away, not buried in settings.")
-				sshQuickConnect
-				sectionHeader(title: "AI Tools", subtitle: "Built for command generation, debugging, and repo help.")
-				featureGrid(items: store.aiTools)
-				sectionHeader(title: "Premium Surface", subtitle: "Worth paying for because it saves time or prevents mistakes.")
-				featureGrid(items: store.premiumFeatures)
+		WorkspaceScroll(title: "OpenTerm") {
+			HeroPanel(selection: $selection)
+			QuickActionGrid(store: store, selection: $selection)
+			SectionHeader(title: "Live Workspace", subtitle: "Recent SSH, Git, monitor, and terminal activity.")
+			AdaptiveGrid {
+				ForEach(store.recentSessions) { session in
+					SessionCard(session: session)
+				}
 			}
-			.padding(20)
-			.padding(.bottom, 32)
+			SectionHeader(title: "Built In", subtitle: "Useful now, designed to grow into a complete mobile developer workspace.")
+			AdaptiveGrid {
+				ForEach(store.featuredCapabilities) { feature in
+					WorkspaceFeatureCard(feature: feature)
+				}
+			}
 		}
-		.background(WorkspaceBackdrop().ignoresSafeArea())
-		.navigationTitle("OpenTerm")
-		.navigationBarTitleDisplayMode(.large)
 		.toolbar {
 			ToolbarItemGroup(placement: .topBarTrailing) {
-				Button {
-					selection = .assistant
-				} label: {
-					Image(systemName: "sparkles")
-				}
-				.keyboardShortcut("k", modifiers: [.command])
-
-				Button {
-					selection = .terminal
-				} label: {
-					Image(systemName: "plus.square.on.square")
-				}
-				.keyboardShortcut("t", modifiers: [.command])
+				Button { selection = .assistant } label: { Image(systemName: "sparkles") }
+				Button { selection = .terminal } label: { Image(systemName: "terminal") }
 			}
 		}
 	}
+}
 
-	private var quickActions: some View {
-		VStack(alignment: .leading, spacing: 16) {
-			sectionHeader(title: "Quick Actions", subtitle: "Clean entry points for the most common developer flows.")
+private struct QuickActionGrid: View {
+	@ObservedObject var store: WorkspaceStore
+	@Binding var selection: WorkspaceDestination
 
-			if #available(iOS 26.0, *) {
-				GlassEffectContainer(spacing: 16) {
-					actionRow
-				}
-			} else {
-				actionRow
-			}
-		}
-	}
-
-	private var actionRow: some View {
-		VStack(spacing: 14) {
-			HStack(spacing: 14) {
-				WorkspaceActionButton(title: "New Session", subtitle: "Local or SSH", symbol: "plus.square.on.square", tint: Color(red: 0.29, green: 0.57, blue: 0.95)) {
-					selection = .terminal
-				}
-
-				WorkspaceActionButton(title: "Quick Connect", subtitle: "Saved hosts", symbol: "bolt.horizontal.circle", tint: Color(red: 0.31, green: 0.72, blue: 0.57)) {
-					selection = .servers
-				}
-			}
-
-			HStack(spacing: 14) {
-				WorkspaceActionButton(title: "Open Files", subtitle: "Edit and preview", symbol: "doc.text", tint: Color(red: 0.96, green: 0.60, blue: 0.24)) {
-					selection = .files
-				}
-
-				WorkspaceActionButton(title: "Git Status", subtitle: "Repo overview", symbol: "point.topleft.down.curvedto.point.bottomright.up", tint: Color(red: 0.55, green: 0.47, blue: 0.96)) {
+	var body: some View {
+		VStack(alignment: .leading, spacing: 14) {
+			SectionHeader(title: "Quick Actions", subtitle: "One-tap entry points into the real workspace flows.")
+			AdaptiveGrid {
+				ActionTile(title: "New Terminal", subtitle: "Open the shell", symbol: "terminal", tint: AppColor.blue) { selection = .terminal }
+				ActionTile(title: "Refresh Monitors", subtitle: "Poll SSH health", symbol: "waveform.path.ecg", tint: AppColor.green) { store.refreshMonitorSnapshots() }
+				ActionTile(title: "Git Status", subtitle: "Scan repos", symbol: "point.topleft.down.curvedto.point.bottomright.up", tint: AppColor.violet) {
+					store.refreshGitWorkspaces()
 					selection = .git
 				}
+				ActionTile(title: "Ask AI", subtitle: "Command help", symbol: "sparkles", tint: AppColor.amber) { selection = .assistant }
 			}
 		}
 	}
+}
 
-	private var sshQuickConnect: some View {
-		ScrollView(.horizontal, showsIndicators: false) {
-			HStack(spacing: 14) {
-				ForEach(store.sshProfiles) { profile in
-					Button {
-						selection = .terminal
-					} label: {
-						VStack(alignment: .leading, spacing: 8) {
-							Text(profile.label)
-								.font(.system(.headline, design: .rounded, weight: .semibold))
-								.foregroundStyle(.white)
-							Text("\(profile.username)@\(profile.host)")
-								.font(.system(.subheadline, design: .monospaced))
-								.foregroundStyle(.white.opacity(0.72))
-							Text("Port \(profile.port) / \(profile.authKind)")
-								.font(.system(.footnote, design: .rounded))
-								.foregroundStyle(.white.opacity(0.66))
+private struct FilesWorkspaceView: View {
+
+	@ObservedObject var store: WorkspaceStore
+	@State private var newFileName = ""
+	@State private var showingNewFile = false
+
+	var body: some View {
+		WorkspaceScroll(title: "Files") {
+			WorkspaceSummaryBanner(title: "Local Files", detail: "Browse the app documents folder, open UTF-8 files, save edits, and run reusable shell snippets.", tint: AppColor.amber)
+
+			VStack(alignment: .leading, spacing: 12) {
+				SectionHeader(title: "Documents", subtitle: "Folders are shown for navigation context; text files open in the editor.")
+				ForEach(store.localFiles) { file in
+					FileRow(file: file) {
+						if !file.isDirectory {
+							store.openFile(relativePath: file.relativePath)
 						}
-						.padding(18)
-						.frame(width: 240, alignment: .leading)
-						.background(WorkspaceCardBackground(tint: Color(red: 0.31, green: 0.72, blue: 0.57)))
 					}
-					.buttonStyle(.plain)
 				}
 			}
-			.padding(.vertical, 2)
+
+			VStack(alignment: .leading, spacing: 12) {
+				SectionHeader(title: "Snippets", subtitle: "Saved commands can run straight in the active terminal tab.")
+				ForEach(store.snippets) { snippet in
+					SnippetRow(snippet: snippet) {
+						store.runSnippetInTerminal(snippet)
+					}
+				}
+			}
+		}
+		.toolbar {
+			ToolbarItemGroup(placement: .topBarTrailing) {
+				Button { showingNewFile = true } label: { Image(systemName: "doc.badge.plus") }
+				Button { store.refreshLocalFiles() } label: { Image(systemName: "arrow.clockwise") }
+			}
+		}
+		.sheet(item: $store.activeEditor) { document in
+			WorkspaceEditorSheet(document: document, store: store)
+		}
+		.alert("New File", isPresented: $showingNewFile) {
+			TextField("script.sh", text: $newFileName)
+			Button("Create") {
+				store.createFile(named: newFileName, initialContent: "#!/bin/sh\n")
+				newFileName = ""
+			}
+			Button("Cancel", role: .cancel) { newFileName = "" }
 		}
 	}
+}
 
-	private func sectionHeader(title: String, subtitle: String) -> some View {
+private struct GitWorkspaceView: View {
+
+	@ObservedObject var store: WorkspaceStore
+	@Binding var selection: WorkspaceDestination
+	@State private var cloneURL = ""
+	@State private var cloneFolder = ""
+	@State private var commitMessage = "Update from OpenTerm"
+
+	var body: some View {
+		WorkspaceScroll(title: "Git") {
+			WorkspaceSummaryBanner(title: "Terminal Git", detail: "Repositories are detected locally. Clone, pull, commit, and push are queued into the terminal because this fork does not bundle a native Git engine yet.", tint: AppColor.violet)
+
+			VStack(alignment: .leading, spacing: 12) {
+				SectionHeader(title: "Clone", subtitle: "Runs git clone inside the terminal session.")
+				TextField("https://github.com/org/repo.git", text: $cloneURL)
+					.textInputAutocapitalization(.never)
+					.autocorrectionDisabled()
+					.textFieldStyle(.roundedBorder)
+				TextField("Optional folder", text: $cloneFolder)
+					.textInputAutocapitalization(.never)
+					.autocorrectionDisabled()
+					.textFieldStyle(.roundedBorder)
+				PrimaryWorkspaceButton(title: "Clone Repository", symbol: "square.and.arrow.down", tint: AppColor.violet) {
+					store.queueGitClone(remoteURL: cloneURL, folderName: cloneFolder)
+					selection = .terminal
+				}
+			}
+			.padding(18)
+			.background(WorkspaceCardBackground(tint: AppColor.violet))
+
+			ForEach(store.gitWorkspaces) { repo in
+				GitRepoCard(repo: repo, commitMessage: $commitMessage) { command in
+					store.queueGitCommand(command, in: repo.path)
+					selection = .terminal
+				}
+			}
+		}
+		.toolbar {
+			ToolbarItem(placement: .topBarTrailing) {
+				Button { store.refreshGitWorkspaces() } label: { Image(systemName: "arrow.clockwise") }
+			}
+		}
+	}
+}
+
+private struct ServersWorkspaceView: View {
+
+	@ObservedObject var store: WorkspaceStore
+	@Binding var selection: WorkspaceDestination
+	@State private var editingProfile: SSHProfileDraft?
+	@State private var editingMonitor: ServerMonitorDraft?
+
+	var body: some View {
+		WorkspaceScroll(title: "Servers") {
+			WorkspaceSummaryBanner(title: "SSH + Monitoring", detail: "Profiles persist locally, quick connect runs real ssh commands, and monitors poll Linux hosts over noninteractive SSH.", tint: AppColor.green)
+
+			SectionHeader(title: "SSH Profiles", subtitle: "Manage hosts, ports, auth type, key path, and startup folder.")
+			ForEach(store.sshProfiles) { profile in
+				SSHProfileCard(profile: profile, lastSeen: store.formatLastSeen(profile.lastSeen)) {
+					store.connect(to: profile)
+					selection = .terminal
+				} edit: {
+					editingProfile = SSHProfileDraft(profile: profile)
+				} delete: {
+					store.deleteSSHProfile(profile)
+				}
+			}
+
+			SectionHeader(title: "Server Monitors", subtitle: "CPU, memory, disk, and load snapshots from saved SSH profiles.")
+			if store.isRefreshingMonitors {
+				ProgressView("Refreshing")
+					.tint(.white)
+					.foregroundStyle(.white)
+			}
+			AdaptiveGrid {
+				ForEach(store.serverSnapshots) { snapshot in
+					ServerSnapshotCard(snapshot: snapshot)
+				}
+			}
+		}
+		.toolbar {
+			ToolbarItemGroup(placement: .topBarTrailing) {
+				Button { editingProfile = SSHProfileDraft(profile: nil) } label: { Image(systemName: "server.rack") }
+				Button {
+					if let profile = store.sshProfiles.first {
+						editingMonitor = ServerMonitorDraft(profileID: profile.id)
+					}
+				} label: { Image(systemName: "waveform.path.ecg") }
+				Button { store.refreshMonitorSnapshots() } label: { Image(systemName: "arrow.clockwise") }
+			}
+		}
+		.onAppear { store.startMonitorAutoRefresh() }
+		.onDisappear { store.stopMonitorAutoRefresh() }
+		.sheet(item: $editingProfile) { draft in
+			SSHProfileEditorSheet(draft: draft) { profile in
+				store.upsertSSHProfile(profile)
+			}
+		}
+		.sheet(item: $editingMonitor) { draft in
+			ServerMonitorEditorSheet(draft: draft, profiles: store.sshProfiles) { monitor in
+				store.upsertServerMonitor(monitor)
+				store.refreshMonitorSnapshots()
+			}
+		}
+	}
+}
+
+private struct WorkspaceAssistantView: View {
+
+	@ObservedObject var store: WorkspaceStore
+
+	var body: some View {
+		WorkspaceScroll(title: "AI") {
+			WorkspaceSummaryBanner(title: "AI Command Center", detail: store.assistantStatus, tint: AppColor.violet)
+
+			VStack(alignment: .leading, spacing: 12) {
+				TextField("Explain this error, generate a command, fix this script", text: $store.assistantDraft, axis: .vertical)
+					.textFieldStyle(.roundedBorder)
+					.lineLimit(3...6)
+				PrimaryWorkspaceButton(title: store.isSendingAssistantPrompt ? "Sending" : "Send Prompt", symbol: "paperplane.fill", tint: AppColor.violet) {
+					store.submitAssistantPrompt()
+				}
+				.disabled(store.isSendingAssistantPrompt)
+			}
+			.padding(18)
+			.background(WorkspaceCardBackground(tint: AppColor.violet))
+
+			ForEach(store.assistantMessages) { message in
+				AssistantBubble(message: message)
+			}
+
+			SectionHeader(title: "Tools", subtitle: "Prompt shortcuts for terminal, SSH, Docker, Git, regex, and code help.")
+			AdaptiveGrid {
+				ForEach(store.aiTools) { tool in
+					WorkspaceFeatureCard(feature: tool)
+				}
+			}
+		}
+	}
+}
+
+private struct SettingsWorkspaceView: View {
+
+	@ObservedObject var store: WorkspaceStore
+	@State private var endpoint = ""
+	@State private var model = ""
+	@State private var apiKey = ""
+	@State private var systemPrompt = ""
+
+	var body: some View {
+		WorkspaceScroll(title: "Settings") {
+			WorkspaceSummaryBanner(title: "Free Preview", detail: store.freeModeSummary, tint: AppColor.blue)
+
+			VStack(alignment: .leading, spacing: 12) {
+				SectionHeader(title: "AI Provider", subtitle: "OpenAI-compatible chat endpoint. Keys stay local in this preview build.")
+				TextField("Endpoint URL", text: $endpoint)
+					.textInputAutocapitalization(.never)
+					.autocorrectionDisabled()
+					.textFieldStyle(.roundedBorder)
+				TextField("Model", text: $model)
+					.textInputAutocapitalization(.never)
+					.autocorrectionDisabled()
+					.textFieldStyle(.roundedBorder)
+				SecureField("API key", text: $apiKey)
+					.textFieldStyle(.roundedBorder)
+				TextField("System prompt", text: $systemPrompt, axis: .vertical)
+					.textFieldStyle(.roundedBorder)
+					.lineLimit(3...6)
+				PrimaryWorkspaceButton(title: "Save AI Settings", symbol: "checkmark.seal", tint: AppColor.blue) {
+					store.updateAIConfiguration(endpoint: endpoint, model: model, apiKey: apiKey, systemPrompt: systemPrompt)
+				}
+			}
+			.padding(18)
+			.background(WorkspaceCardBackground(tint: AppColor.blue))
+
+			AdaptiveGrid {
+				MetricCard(title: "Theme", value: store.activeThemeName, symbol: "paintpalette", tint: AppColor.amber)
+				MetricCard(title: "AI Requests", value: "\(store.aiUsageHistory.count)", symbol: "chart.bar", tint: AppColor.violet)
+				MetricCard(title: "SSH Profiles", value: "\(store.sshProfiles.count)", symbol: "server.rack", tint: AppColor.green)
+				MetricCard(title: "Git Repos", value: "\(store.gitWorkspaces.count)", symbol: "point.topleft.down.curvedto.point.bottomright.up", tint: AppColor.blue)
+			}
+		}
+		.onAppear {
+			endpoint = store.aiConfiguration.endpoint
+			model = store.aiConfiguration.model
+			apiKey = store.aiConfiguration.apiKey
+			systemPrompt = store.aiConfiguration.systemPrompt
+		}
+	}
+}
+
+private struct WorkspaceScroll<Content: View>: View {
+	let title: String
+	@ViewBuilder let content: Content
+
+	var body: some View {
+		ScrollView {
+			VStack(alignment: .leading, spacing: 22) {
+				content
+			}
+			.padding(20)
+			.padding(.bottom, 34)
+		}
+		.background(WorkspaceBackdrop().ignoresSafeArea())
+		.navigationTitle(title)
+	}
+}
+
+private struct HeroPanel: View {
+	@Binding var selection: WorkspaceDestination
+
+	var body: some View {
+		VStack(alignment: .leading, spacing: 18) {
+			Text("OpenTerm")
+				.font(.system(.largeTitle, design: .rounded, weight: .bold))
+				.foregroundStyle(.white)
+			Text("A fast iPhone and iPad developer workspace for terminal sessions, SSH, files, Git, server checks, and command-aware AI.")
+				.font(.system(.body, design: .rounded))
+				.foregroundStyle(.white.opacity(0.78))
+			HStack(spacing: 12) {
+				PrimaryWorkspaceButton(title: "Terminal", symbol: "terminal", tint: AppColor.blue) { selection = .terminal }
+				PrimaryWorkspaceButton(title: "Servers", symbol: "server.rack", tint: AppColor.green) { selection = .servers }
+			}
+			HStack(spacing: 12) {
+				WorkspaceStatPill(title: "iOS", value: "18+")
+				WorkspaceStatPill(title: "SDK", value: "26.4")
+				WorkspaceStatPill(title: "Mode", value: "Free")
+			}
+		}
+		.padding(24)
+		.frame(maxWidth: .infinity, alignment: .leading)
+		.background(WorkspaceCardBackground(tint: AppColor.blue))
+	}
+}
+
+private struct SectionHeader: View {
+	let title: String
+	let subtitle: String
+
+	var body: some View {
 		VStack(alignment: .leading, spacing: 6) {
 			Text(title)
 				.font(.system(.title3, design: .rounded, weight: .semibold))
@@ -255,362 +435,64 @@ private struct WorkspaceHomeView: View {
 				.foregroundStyle(.white.opacity(0.72))
 		}
 	}
+}
 
-	private func featureGrid(items: [WorkspaceFeature]) -> some View {
-		LazyVGrid(columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)], spacing: 14) {
-			ForEach(items) { item in
-				WorkspaceFeatureCard(feature: item)
-			}
+private struct AdaptiveGrid<Content: View>: View {
+	@ViewBuilder let content: Content
+
+	var body: some View {
+		LazyVGrid(columns: [GridItem(.adaptive(minimum: 210), spacing: 14)], spacing: 14) {
+			content
 		}
 	}
 }
 
-private struct FilesWorkspaceView: View {
-
-	@ObservedObject var store: WorkspaceStore
+private struct ActionTile: View {
+	let title: String
+	let subtitle: String
+	let symbol: String
+	let tint: Color
+	let action: () -> Void
 
 	var body: some View {
-		List {
-			Section {
-				Text("Local file manager, code editor, and quick-open should all grow from the same documents foundation. This section already reads the app sandbox documents folder through `DocumentManager`.")
+		Button(action: action) {
+			VStack(alignment: .leading, spacing: 10) {
+				Image(systemName: symbol)
+					.font(.system(size: 20, weight: .semibold))
+					.foregroundStyle(tint)
+				Text(title)
+					.font(.system(.headline, design: .rounded, weight: .semibold))
+					.foregroundStyle(.white)
+				Text(subtitle)
 					.font(.system(.subheadline, design: .rounded))
-					.foregroundStyle(.secondary)
+					.foregroundStyle(.white.opacity(0.70))
 			}
-
-			Section("Recent Files") {
-				ForEach(store.localFiles) { file in
-					HStack(alignment: .top, spacing: 12) {
-						Image(systemName: file.isDirectory ? "folder.fill" : "doc.text")
-							.foregroundStyle(file.isDirectory ? .blue : .secondary)
-						VStack(alignment: .leading, spacing: 4) {
-							Text(file.name)
-								.font(.system(.headline, design: .rounded, weight: .semibold))
-							Text(file.relativePath)
-								.font(.system(.footnote, design: .monospaced))
-								.foregroundStyle(.secondary)
-							Text("\(file.sizeDescription) / \(file.modifiedDescription)")
-								.font(.system(.footnote, design: .rounded))
-								.foregroundStyle(.secondary)
-						}
-					}
-					.padding(.vertical, 4)
-				}
-			}
-
-			Section("Planned Editor Upgrades") {
-				Text("Syntax highlighting")
-				Text("Inline AI code assistant")
-				Text("Diff and blame views")
-				Text("Keyboard-first editing on iPad")
-			}
+			.padding(18)
+			.frame(maxWidth: .infinity, minHeight: 118, alignment: .topLeading)
+			.background(WorkspaceCardBackground(tint: tint))
 		}
-		.scrollContentBackground(.hidden)
-		.background(WorkspaceBackdrop().ignoresSafeArea())
-		.navigationTitle("Files")
-		.toolbar {
-			ToolbarItem(placement: .topBarTrailing) {
-				Button("Refresh") {
-					store.refreshLocalFiles()
-				}
-			}
-		}
+		.buttonStyle(.plain)
 	}
 }
 
-private struct GitWorkspaceView: View {
-
-	@ObservedObject var store: WorkspaceStore
-	@Binding var selection: WorkspaceDestination
-
-	var body: some View {
-		ScrollView {
-			VStack(alignment: .leading, spacing: 20) {
-				WorkspaceSummaryBanner(
-					title: "Git Workspace",
-					detail: "Status, branch context, and AI-assisted diffs should be first-class, not hidden behind raw shell commands.",
-					tint: Color(red: 0.29, green: 0.57, blue: 0.95)
-				)
-
-				ForEach(store.gitWorkspaces) { repo in
-					VStack(alignment: .leading, spacing: 10) {
-						Text(repo.name)
-							.font(.system(.title3, design: .rounded, weight: .semibold))
-							.foregroundStyle(.white)
-						Text("Branch: \(repo.branch)")
-							.font(.system(.subheadline, design: .monospaced))
-							.foregroundStyle(.white.opacity(0.72))
-						Text("State: \(repo.status)")
-							.font(.system(.subheadline, design: .rounded))
-							.foregroundStyle(.white.opacity(0.72))
-						Text("Remote: \(repo.aheadBehind)")
-							.font(.system(.footnote, design: .rounded))
-							.foregroundStyle(.white.opacity(0.60))
-
-						HStack(spacing: 10) {
-							WorkspaceMiniButton(title: "Open Terminal") {
-								selection = .terminal
-							}
-							WorkspaceMiniButton(title: "Ask AI") {
-								selection = .assistant
-							}
-						}
-					}
-					.padding(18)
-					.background(WorkspaceCardBackground(tint: Color(red: 0.29, green: 0.57, blue: 0.95)))
-				}
-			}
-			.padding(20)
-			.padding(.bottom, 32)
-		}
-		.background(WorkspaceBackdrop().ignoresSafeArea())
-		.navigationTitle("Git")
-	}
-}
-
-private struct ServersWorkspaceView: View {
-
-	@ObservedObject var store: WorkspaceStore
-	@Binding var selection: WorkspaceDestination
+private struct PrimaryWorkspaceButton: View {
+	let title: String
+	let symbol: String
+	let tint: Color
+	let action: () -> Void
 
 	var body: some View {
-		ScrollView {
-			VStack(alignment: .leading, spacing: 20) {
-				WorkspaceSummaryBanner(
-					title: "Servers",
-					detail: "The server layer should combine SSH quick connect, health snapshots, and premium alerts in one place.",
-					tint: Color(red: 0.31, green: 0.72, blue: 0.57)
-				)
-
-				Text("SSH Profiles")
-					.font(.system(.title3, design: .rounded, weight: .semibold))
-					.foregroundStyle(.white)
-
-				ForEach(store.sshProfiles) { profile in
-					VStack(alignment: .leading, spacing: 8) {
-						Text(profile.label)
-							.font(.system(.headline, design: .rounded, weight: .semibold))
-							.foregroundStyle(.white)
-						Text("\(profile.username)@\(profile.host):\(profile.port)")
-							.font(.system(.subheadline, design: .monospaced))
-							.foregroundStyle(.white.opacity(0.72))
-						Text("\(profile.authKind) / Last used \(profile.lastSeen)")
-							.font(.system(.footnote, design: .rounded))
-							.foregroundStyle(.white.opacity(0.66))
-
-						WorkspaceMiniButton(title: "Connect") {
-							selection = .terminal
-						}
-					}
-					.padding(18)
-					.background(WorkspaceCardBackground(tint: Color(red: 0.31, green: 0.72, blue: 0.57)))
-				}
-
-				Text("Live Monitoring")
-					.font(.system(.title3, design: .rounded, weight: .semibold))
-					.foregroundStyle(.white)
-
-				LazyVGrid(columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)], spacing: 14) {
-					ForEach(store.serverSnapshots) { snapshot in
-						VStack(alignment: .leading, spacing: 10) {
-							Text(snapshot.name)
-								.font(.system(.headline, design: .rounded, weight: .semibold))
-								.foregroundStyle(.white)
-							Text("CPU \(snapshot.cpu) / RAM \(snapshot.memory)")
-								.font(.system(.subheadline, design: .rounded))
-								.foregroundStyle(.white.opacity(0.74))
-							Text("Disk \(snapshot.disk) / Net \(snapshot.network)")
-								.font(.system(.subheadline, design: .rounded))
-								.foregroundStyle(.white.opacity(0.74))
-							Text(snapshot.alertState)
-								.font(.system(.footnote, design: .rounded))
-								.foregroundStyle(snapshot.tint)
-						}
-						.padding(18)
-						.frame(maxWidth: .infinity, alignment: .leading)
-						.background(WorkspaceCardBackground(tint: snapshot.tint))
-					}
-				}
-			}
-			.padding(20)
-			.padding(.bottom, 32)
+		Button(action: action) {
+			Label(title, systemImage: symbol)
+				.font(.system(.headline, design: .rounded, weight: .semibold))
+				.frame(maxWidth: .infinity)
 		}
-		.background(WorkspaceBackdrop().ignoresSafeArea())
-		.navigationTitle("Servers")
-	}
-}
-
-private struct WorkspaceAssistantView: View {
-
-	@ObservedObject var store: WorkspaceStore
-	@State private var prompt: String = "Turn my goal into commands"
-
-	var body: some View {
-		ScrollView {
-			VStack(alignment: .leading, spacing: 18) {
-				Text("AI Command Center")
-					.font(.system(.largeTitle, design: .rounded, weight: .bold))
-					.foregroundStyle(.white)
-
-				Text("This shell should sell automation, not just chat. Every premium AI feature should map to a concrete developer outcome.")
-					.font(.system(.body, design: .rounded))
-					.foregroundStyle(.white.opacity(0.76))
-
-				VStack(alignment: .leading, spacing: 12) {
-					Text("Suggested prompt")
-						.font(.system(.headline, design: .rounded, weight: .semibold))
-						.foregroundStyle(.white)
-					TextField("Ask OpenTerm AI", text: $prompt)
-						.textFieldStyle(.roundedBorder)
-					Text("Examples: explain this SSH error, generate a Docker command, fix this shell script, convert bash to zsh, or summarize a Git diff.")
-						.font(.system(.footnote, design: .rounded))
-						.foregroundStyle(.white.opacity(0.68))
-				}
-				.padding(20)
-				.background(WorkspaceCardBackground(tint: Color(red: 0.55, green: 0.47, blue: 0.96)))
-
-				ForEach(store.aiTools) { tool in
-					WorkspaceFeatureCard(feature: tool)
-				}
-			}
-			.padding(20)
-			.padding(.bottom, 32)
-		}
-		.background(WorkspaceBackdrop().ignoresSafeArea())
-		.navigationTitle("AI")
-		.navigationBarTitleDisplayMode(.inline)
-	}
-}
-
-private struct SettingsWorkspaceView: View {
-
-	@ObservedObject var store: WorkspaceStore
-
-	var body: some View {
-		ScrollView {
-			VStack(alignment: .leading, spacing: 20) {
-				WorkspaceSummaryBanner(
-					title: "Premium + Settings",
-					detail: "Digital entitlements need a compliant split: StoreKit 2 inside App Store builds, Stripe Checkout on the web account side, and Supabase as the backend source of truth.",
-					tint: Color(red: 0.55, green: 0.47, blue: 0.96)
-				)
-
-				VStack(alignment: .leading, spacing: 10) {
-					Text("Current Theme")
-						.font(.system(.headline, design: .rounded, weight: .semibold))
-						.foregroundStyle(.white)
-					Text(store.activeThemeName)
-						.font(.system(.title3, design: .rounded, weight: .bold))
-						.foregroundStyle(.white)
-					Text(store.billingSourceDescription)
-						.font(.system(.subheadline, design: .rounded))
-						.foregroundStyle(.white.opacity(0.72))
-				}
-				.padding(18)
-				.background(WorkspaceCardBackground(tint: Color(red: 0.55, green: 0.47, blue: 0.96)))
-
-				ForEach(store.premiumPlans) { plan in
-					VStack(alignment: .leading, spacing: 12) {
-						Text(plan.name)
-							.font(.system(.title3, design: .rounded, weight: .bold))
-							.foregroundStyle(.white)
-						Text(plan.price)
-							.font(.system(.headline, design: .rounded, weight: .semibold))
-							.foregroundStyle(plan.tint)
-						Text(plan.highlight)
-							.font(.system(.subheadline, design: .rounded))
-							.foregroundStyle(.white.opacity(0.72))
-
-						ForEach(plan.features, id: \.self) { feature in
-							Label(feature, systemImage: "checkmark.circle.fill")
-								.font(.system(.subheadline, design: .rounded))
-								.foregroundStyle(.white.opacity(0.78))
-						}
-					}
-					.padding(18)
-					.background(WorkspaceCardBackground(tint: plan.tint))
-				}
-			}
-			.padding(20)
-			.padding(.bottom, 32)
-		}
-		.background(WorkspaceBackdrop().ignoresSafeArea())
-		.navigationTitle("Settings")
-	}
-}
-
-private struct HeroPanel: View {
-
-	@Binding var selection: WorkspaceDestination
-
-	var body: some View {
-		VStack(alignment: .leading, spacing: 18) {
-			Text("Raycast-speed workflows, terminal-first power, and a friendlier mobile UX.")
-				.font(.system(.largeTitle, design: .rounded, weight: .bold))
-				.foregroundStyle(.white)
-				.fixedSize(horizontal: false, vertical: true)
-
-			Text("OpenTerm is shifting from a single-screen shell into a modern mobile developer workspace for terminal sessions, SSH, files, Git, servers, and AI.")
-				.font(.system(.body, design: .rounded))
-				.foregroundStyle(.white.opacity(0.78))
-
-			HStack(spacing: 12) {
-				heroButton(title: "Launch Terminal", systemImage: "terminal", prominent: true) {
-					selection = .terminal
-				}
-				heroButton(title: "Explore AI", systemImage: "sparkles", prominent: false) {
-					selection = .assistant
-				}
-			}
-
-			HStack(spacing: 12) {
-				WorkspaceStatPill(title: "iOS Baseline", value: "18+")
-				WorkspaceStatPill(title: "Latest SDK", value: "26.4")
-				WorkspaceStatPill(title: "Shell Model", value: "SwiftUI")
-			}
-		}
-		.padding(24)
-		.frame(maxWidth: .infinity, alignment: .leading)
-		.background(WorkspaceCardBackground(tint: Color(red: 0.28, green: 0.41, blue: 0.86)))
-	}
-
-	@ViewBuilder
-	private func heroButton(title: String, systemImage: String, prominent: Bool, action: @escaping () -> Void) -> some View {
-		let label = Label(title, systemImage: systemImage)
-			.font(.system(.headline, design: .rounded, weight: .semibold))
-			.frame(maxWidth: .infinity)
-
-		if #available(iOS 26.0, *) {
-			if prominent {
-				Button(action: action) {
-					label
-				}
-				.buttonStyle(.glassProminent)
-			} else {
-				Button(action: action) {
-					label
-				}
-				.buttonStyle(.glass)
-			}
-		} else {
-			if prominent {
-				Button(action: action) {
-					label
-				}
-				.buttonStyle(.borderedProminent)
-				.tint(Color.white.opacity(0.22))
-			} else {
-				Button(action: action) {
-					label
-				}
-				.buttonStyle(.bordered)
-				.tint(Color.white.opacity(0.12))
-			}
-		}
+		.buttonStyle(.borderedProminent)
+		.tint(tint)
 	}
 }
 
 private struct WorkspaceSummaryBanner: View {
-
 	let title: String
 	let detail: String
 	let tint: Color
@@ -630,8 +512,31 @@ private struct WorkspaceSummaryBanner: View {
 	}
 }
 
-private struct WorkspaceFeatureCard: View {
+private struct SessionCard: View {
+	let session: WorkspaceSession
 
+	var body: some View {
+		VStack(alignment: .leading, spacing: 10) {
+			Image(systemName: session.symbol)
+				.font(.system(size: 20, weight: .semibold))
+				.foregroundStyle(session.tint)
+			Text(session.title)
+				.font(.system(.headline, design: .rounded, weight: .semibold))
+				.foregroundStyle(.white)
+			Text(session.subtitle)
+				.font(.system(.subheadline, design: .rounded))
+				.foregroundStyle(.white.opacity(0.72))
+			Text(session.detail)
+				.font(.system(.footnote, design: .rounded))
+				.foregroundStyle(.white.opacity(0.62))
+		}
+		.padding(18)
+		.frame(maxWidth: .infinity, minHeight: 150, alignment: .topLeading)
+		.background(WorkspaceCardBackground(tint: session.tint))
+	}
+}
+
+private struct WorkspaceFeatureCard: View {
 	let feature: WorkspaceFeature
 
 	var body: some View {
@@ -640,132 +545,431 @@ private struct WorkspaceFeatureCard: View {
 				.font(.system(size: 18, weight: .semibold))
 				.foregroundStyle(feature.tint)
 				.frame(width: 40, height: 40)
-				.background(feature.tint.opacity(0.18), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-
+				.background(feature.tint.opacity(0.18), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
 			Text(feature.title)
 				.font(.system(.headline, design: .rounded, weight: .semibold))
 				.foregroundStyle(.white)
-
 			Text(feature.detail)
 				.font(.system(.subheadline, design: .rounded))
 				.foregroundStyle(.white.opacity(0.74))
-				.frame(maxWidth: .infinity, alignment: .leading)
 		}
 		.padding(18)
-		.frame(maxWidth: .infinity, minHeight: 156, alignment: .topLeading)
+		.frame(maxWidth: .infinity, minHeight: 158, alignment: .topLeading)
 		.background(WorkspaceCardBackground(tint: feature.tint))
 	}
 }
 
-private struct WorkspaceActionButton: View {
-
-	let title: String
-	let subtitle: String
-	let symbol: String
-	let tint: Color
+private struct FileRow: View {
+	let file: LocalWorkspaceFile
 	let action: () -> Void
 
 	var body: some View {
 		Button(action: action) {
-			VStack(alignment: .leading, spacing: 10) {
-				Image(systemName: symbol)
-					.font(.system(size: 18, weight: .semibold))
-					.foregroundStyle(tint)
-				Text(title)
-					.font(.system(.headline, design: .rounded, weight: .semibold))
-					.foregroundStyle(.white)
-				Text(subtitle)
-					.font(.system(.subheadline, design: .rounded))
-					.foregroundStyle(.white.opacity(0.7))
+			HStack(spacing: 12) {
+				Image(systemName: file.isDirectory ? "folder.fill" : "doc.text")
+					.foregroundStyle(file.isDirectory ? AppColor.blue : .white.opacity(0.78))
+				VStack(alignment: .leading, spacing: 4) {
+					Text(file.name)
+						.font(.system(.headline, design: .rounded, weight: .semibold))
+						.foregroundStyle(.white)
+					Text(file.relativePath)
+						.font(.system(.footnote, design: .monospaced))
+						.foregroundStyle(.white.opacity(0.62))
+					Text("\(file.sizeDescription) / \(file.modifiedDescription)")
+						.font(.system(.footnote, design: .rounded))
+						.foregroundStyle(.white.opacity(0.56))
+				}
+				Spacer()
 			}
-			.padding(18)
-			.frame(maxWidth: .infinity, minHeight: 116, alignment: .topLeading)
-			.background(WorkspaceCardBackground(tint: tint))
+			.padding(16)
+			.background(WorkspaceCardBackground(tint: file.isDirectory ? AppColor.blue : AppColor.amber))
 		}
 		.buttonStyle(.plain)
 	}
 }
 
-private struct WorkspaceMiniButton: View {
-
-	let title: String
-	let action: () -> Void
+private struct SnippetRow: View {
+	let snippet: WorkspaceSnippet
+	let run: () -> Void
 
 	var body: some View {
-		Button(title, action: action)
-			.buttonStyle(.borderedProminent)
+		VStack(alignment: .leading, spacing: 10) {
+			HStack {
+				Text(snippet.title)
+					.font(.system(.headline, design: .rounded, weight: .semibold))
+					.foregroundStyle(.white)
+				Spacer()
+				Text(snippet.category)
+					.font(.system(.caption, design: .rounded, weight: .semibold))
+					.foregroundStyle(AppColor.amber)
+			}
+			Text(snippet.body)
+				.font(.system(.footnote, design: .monospaced))
+				.foregroundStyle(.white.opacity(0.70))
+			PrimaryWorkspaceButton(title: "Run", symbol: "play.fill", tint: AppColor.amber, action: run)
+		}
+		.padding(16)
+		.background(WorkspaceCardBackground(tint: AppColor.amber))
 	}
 }
 
-private struct WorkspaceStatPill: View {
+private struct GitRepoCard: View {
+	let repo: GitWorkspaceSummary
+	@Binding var commitMessage: String
+	let run: (String) -> Void
 
+	var body: some View {
+		VStack(alignment: .leading, spacing: 12) {
+			Text(repo.name)
+				.font(.system(.title3, design: .rounded, weight: .semibold))
+				.foregroundStyle(.white)
+			Text(repo.path)
+				.font(.system(.footnote, design: .monospaced))
+				.foregroundStyle(.white.opacity(0.58))
+			HStack(spacing: 10) {
+				MetricPill(title: "Branch", value: repo.branch)
+				MetricPill(title: "State", value: repo.status)
+			}
+			TextField("Commit message", text: $commitMessage)
+				.textFieldStyle(.roundedBorder)
+			LazyVGrid(columns: [GridItem(.adaptive(minimum: 120), spacing: 10)], spacing: 10) {
+				PrimaryWorkspaceButton(title: "Status", symbol: "list.bullet", tint: AppColor.blue) { run("git status") }
+				PrimaryWorkspaceButton(title: "Pull", symbol: "arrow.down.circle", tint: AppColor.green) { run("git pull") }
+				PrimaryWorkspaceButton(title: "Commit", symbol: "checkmark.circle", tint: AppColor.amber) { run("git add -A && git commit -m '\(commitMessage.replacingOccurrences(of: "'", with: "'\\''"))'") }
+				PrimaryWorkspaceButton(title: "Push", symbol: "arrow.up.circle", tint: AppColor.violet) { run("git push") }
+			}
+		}
+		.padding(18)
+		.background(WorkspaceCardBackground(tint: AppColor.violet))
+	}
+}
+
+private struct SSHProfileCard: View {
+	let profile: SSHProfileSummary
+	let lastSeen: String
+	let connect: () -> Void
+	let edit: () -> Void
+	let delete: () -> Void
+
+	var body: some View {
+		VStack(alignment: .leading, spacing: 12) {
+			HStack(alignment: .top) {
+				VStack(alignment: .leading, spacing: 5) {
+					Text(profile.label)
+						.font(.system(.title3, design: .rounded, weight: .semibold))
+						.foregroundStyle(.white)
+					Text("\(profile.username)@\(profile.host):\(profile.port)")
+						.font(.system(.subheadline, design: .monospaced))
+						.foregroundStyle(.white.opacity(0.72))
+					Text("\(profile.authKind.title) / Last used \(lastSeen)")
+						.font(.system(.footnote, design: .rounded))
+						.foregroundStyle(.white.opacity(0.62))
+				}
+				Spacer()
+				Button(role: .destructive, action: delete) { Image(systemName: "trash") }
+			}
+			HStack(spacing: 10) {
+				PrimaryWorkspaceButton(title: "Connect", symbol: "bolt.horizontal.circle", tint: AppColor.green, action: connect)
+				PrimaryWorkspaceButton(title: "Edit", symbol: "slider.horizontal.3", tint: AppColor.blue, action: edit)
+			}
+		}
+		.padding(18)
+		.background(WorkspaceCardBackground(tint: AppColor.green))
+	}
+}
+
+private struct ServerSnapshotCard: View {
+	let snapshot: ServerSnapshotSummary
+
+	var body: some View {
+		VStack(alignment: .leading, spacing: 10) {
+			HStack {
+				Text(snapshot.name)
+					.font(.system(.headline, design: .rounded, weight: .semibold))
+					.foregroundStyle(.white)
+				Spacer()
+				Text(snapshot.alertLevel.title)
+					.font(.system(.caption, design: .rounded, weight: .bold))
+					.foregroundStyle(snapshot.alertLevel.tint)
+			}
+			HStack(spacing: 8) {
+				MetricPill(title: "CPU", value: percent(snapshot.cpuPercent))
+				MetricPill(title: "RAM", value: percent(snapshot.memoryPercent))
+				MetricPill(title: "Disk", value: percent(snapshot.diskPercent))
+			}
+			Text(snapshot.detail)
+				.font(.system(.footnote, design: .rounded))
+				.foregroundStyle(.white.opacity(0.66))
+		}
+		.padding(18)
+		.frame(maxWidth: .infinity, alignment: .leading)
+		.background(WorkspaceCardBackground(tint: snapshot.alertLevel.tint))
+	}
+
+	private func percent(_ value: Int?) -> String {
+		guard let value else { return "--" }
+		return "\(value)%"
+	}
+}
+
+private struct AssistantBubble: View {
+	let message: AssistantMessage
+
+	var body: some View {
+		VStack(alignment: .leading, spacing: 8) {
+			Text(message.role.uppercased())
+				.font(.system(.caption, design: .rounded, weight: .bold))
+				.foregroundStyle(message.role == "assistant" ? AppColor.violet : AppColor.green)
+			Text(message.content)
+				.font(.system(.body, design: message.content.contains("$") ? .monospaced : .rounded))
+				.foregroundStyle(.white.opacity(0.82))
+		}
+		.padding(16)
+		.frame(maxWidth: .infinity, alignment: .leading)
+		.background(WorkspaceCardBackground(tint: message.role == "assistant" ? AppColor.violet : AppColor.green))
+	}
+}
+
+private struct MetricCard: View {
+	let title: String
+	let value: String
+	let symbol: String
+	let tint: Color
+
+	var body: some View {
+		VStack(alignment: .leading, spacing: 10) {
+			Image(systemName: symbol)
+				.foregroundStyle(tint)
+			Text(value)
+				.font(.system(.title2, design: .rounded, weight: .bold))
+				.foregroundStyle(.white)
+			Text(title)
+				.font(.system(.subheadline, design: .rounded))
+				.foregroundStyle(.white.opacity(0.64))
+		}
+		.padding(18)
+		.frame(maxWidth: .infinity, alignment: .leading)
+		.background(WorkspaceCardBackground(tint: tint))
+	}
+}
+
+private struct MetricPill: View {
 	let title: String
 	let value: String
 
 	var body: some View {
-		VStack(alignment: .leading, spacing: 4) {
+		VStack(alignment: .leading, spacing: 3) {
 			Text(title.uppercased())
-				.font(.system(size: 11, weight: .bold, design: .rounded))
-				.foregroundStyle(.white.opacity(0.56))
+				.font(.system(size: 10, weight: .bold, design: .rounded))
+				.foregroundStyle(.white.opacity(0.48))
 			Text(value)
-				.font(.system(.headline, design: .rounded, weight: .semibold))
+				.font(.system(.caption, design: .rounded, weight: .semibold))
 				.foregroundStyle(.white)
 		}
-		.padding(.horizontal, 14)
-		.padding(.vertical, 10)
+		.padding(.horizontal, 10)
+		.padding(.vertical, 8)
 		.background(Color.white.opacity(0.08), in: Capsule())
 	}
 }
 
-private struct WorkspaceCardBackground: View {
+private struct WorkspaceStatPill: View {
+	let title: String
+	let value: String
 
+	var body: some View {
+		MetricPill(title: title, value: value)
+	}
+}
+
+private struct WorkspaceEditorSheet: View {
+	let document: WorkspaceEditorDocument
+	@ObservedObject var store: WorkspaceStore
+	@State private var text: String
+
+	init(document: WorkspaceEditorDocument, store: WorkspaceStore) {
+		self.document = document
+		self.store = store
+		_text = State(initialValue: document.initialContent)
+	}
+
+	var body: some View {
+		NavigationStack {
+			TextEditor(text: $text)
+				.font(.system(.body, design: .monospaced))
+				.padding()
+				.navigationTitle(document.title)
+				.navigationBarTitleDisplayMode(.inline)
+				.toolbar {
+					ToolbarItem(placement: .cancellationAction) {
+						Button("Close") { store.closeEditor() }
+					}
+					ToolbarItem(placement: .confirmationAction) {
+						Button("Save") { store.saveEditorDocument(relativePath: document.relativePath, content: text) }
+					}
+				}
+		}
+	}
+}
+
+private struct SSHProfileDraft: Identifiable {
+	var id: UUID
+	var label: String
+	var host: String
+	var username: String
+	var authKind: SSHAuthKind
+	var port: Int
+	var privateKeyPath: String
+	var startupPath: String
+	var notes: String
+	var lastSeen: Date?
+
+	init(profile: SSHProfileSummary?) {
+		id = profile?.id ?? UUID()
+		label = profile?.label ?? ""
+		host = profile?.host ?? ""
+		username = profile?.username ?? "root"
+		authKind = profile?.authKind ?? .agent
+		port = profile?.port ?? 22
+		privateKeyPath = profile?.privateKeyPath ?? ""
+		startupPath = profile?.startupPath ?? ""
+		notes = profile?.notes ?? ""
+		lastSeen = profile?.lastSeen
+	}
+
+	var profile: SSHProfileSummary {
+		SSHProfileSummary(id: id, label: label, host: host, username: username, authKind: authKind, lastSeen: lastSeen, port: port, privateKeyPath: privateKeyPath, startupPath: startupPath, notes: notes)
+	}
+}
+
+private struct SSHProfileEditorSheet: View {
+	@Environment(\.dismiss) private var dismiss
+	@State private var draft: SSHProfileDraft
+	let save: (SSHProfileSummary) -> Void
+
+	init(draft: SSHProfileDraft, save: @escaping (SSHProfileSummary) -> Void) {
+		_draft = State(initialValue: draft)
+		self.save = save
+	}
+
+	var body: some View {
+		NavigationStack {
+			Form {
+				TextField("Label", text: $draft.label)
+				TextField("Host", text: $draft.host)
+				TextField("Username", text: $draft.username)
+				Stepper("Port \(draft.port)", value: $draft.port, in: 1...65535)
+				Picker("Auth", selection: $draft.authKind) {
+					ForEach(SSHAuthKind.allCases) { kind in
+						Text(kind.title).tag(kind)
+					}
+				}
+				TextField("Private key path", text: $draft.privateKeyPath)
+				TextField("Startup path", text: $draft.startupPath)
+				TextField("Notes", text: $draft.notes, axis: .vertical)
+			}
+			.navigationTitle("SSH Profile")
+			.toolbar {
+				ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+				ToolbarItem(placement: .confirmationAction) {
+					Button("Save") {
+						save(draft.profile)
+						dismiss()
+					}
+				}
+			}
+		}
+	}
+}
+
+private struct ServerMonitorDraft: Identifiable {
+	var id = UUID()
+	var profileID: UUID
+	var label = "Server"
+	var path = "/"
+	var cpuThreshold = 85
+	var memoryThreshold = 85
+	var diskThreshold = 90
+
+	init(profileID: UUID) {
+		self.profileID = profileID
+	}
+
+	var monitor: ServerMonitorSummary {
+		ServerMonitorSummary(id: id, sshProfileID: profileID, label: label, path: path, cpuThreshold: cpuThreshold, memoryThreshold: memoryThreshold, diskThreshold: diskThreshold)
+	}
+}
+
+private struct ServerMonitorEditorSheet: View {
+	@Environment(\.dismiss) private var dismiss
+	@State private var draft: ServerMonitorDraft
+	let profiles: [SSHProfileSummary]
+	let save: (ServerMonitorSummary) -> Void
+
+	init(draft: ServerMonitorDraft, profiles: [SSHProfileSummary], save: @escaping (ServerMonitorSummary) -> Void) {
+		_draft = State(initialValue: draft)
+		self.profiles = profiles
+		self.save = save
+	}
+
+	var body: some View {
+		NavigationStack {
+			Form {
+				Picker("Profile", selection: $draft.profileID) {
+					ForEach(profiles) { profile in
+						Text(profile.label).tag(profile.id)
+					}
+				}
+				TextField("Label", text: $draft.label)
+				TextField("Disk path", text: $draft.path)
+				Stepper("CPU alert \(draft.cpuThreshold)%", value: $draft.cpuThreshold, in: 1...100)
+				Stepper("Memory alert \(draft.memoryThreshold)%", value: $draft.memoryThreshold, in: 1...100)
+				Stepper("Disk alert \(draft.diskThreshold)%", value: $draft.diskThreshold, in: 1...100)
+			}
+			.navigationTitle("Server Monitor")
+			.toolbar {
+				ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+				ToolbarItem(placement: .confirmationAction) {
+					Button("Save") {
+						save(draft.monitor)
+						dismiss()
+					}
+				}
+			}
+		}
+	}
+}
+
+private struct WorkspaceCardBackground: View {
 	let tint: Color
 
 	var body: some View {
 		Group {
 			if #available(iOS 26.0, *) {
-				RoundedRectangle(cornerRadius: 26, style: .continuous)
+				RoundedRectangle(cornerRadius: 22, style: .continuous)
 					.fill(tint.opacity(0.10))
-					.overlay(
-						RoundedRectangle(cornerRadius: 26, style: .continuous)
-							.strokeBorder(Color.white.opacity(0.12), lineWidth: 0.8)
-					)
-					.glassEffect(.regular.tint(tint.opacity(0.18)), in: .rect(cornerRadius: 26))
+					.overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(Color.white.opacity(0.12), lineWidth: 0.8))
+					.glassEffect(.regular.tint(tint.opacity(0.18)), in: .rect(cornerRadius: 22))
 			} else {
-				RoundedRectangle(cornerRadius: 26, style: .continuous)
+				RoundedRectangle(cornerRadius: 22, style: .continuous)
 					.fill(.ultraThinMaterial)
-					.overlay(
-						RoundedRectangle(cornerRadius: 26, style: .continuous)
-							.strokeBorder(Color.white.opacity(0.10), lineWidth: 0.8)
-					)
+					.overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(Color.white.opacity(0.10), lineWidth: 0.8))
 			}
 		}
 	}
 }
 
 private struct WorkspaceBackdrop: View {
-
 	var body: some View {
 		ZStack {
 			LinearGradient(
 				colors: [
-					Color(red: 0.08, green: 0.10, blue: 0.15),
-					Color(red: 0.11, green: 0.16, blue: 0.23),
-					Color(red: 0.06, green: 0.07, blue: 0.11),
+					Color(red: 0.07, green: 0.09, blue: 0.13),
+					Color(red: 0.12, green: 0.15, blue: 0.19),
+					Color(red: 0.06, green: 0.08, blue: 0.11)
 				],
 				startPoint: .topLeading,
 				endPoint: .bottomTrailing
 			)
-
-			Circle()
-				.fill(Color(red: 0.28, green: 0.41, blue: 0.86).opacity(0.28))
-				.blur(radius: 90)
-				.offset(x: -120, y: -260)
-
-			Circle()
-				.fill(Color(red: 0.27, green: 0.75, blue: 0.64).opacity(0.22))
-				.blur(radius: 110)
-				.offset(x: 150, y: 220)
 		}
 	}
 }

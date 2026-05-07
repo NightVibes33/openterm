@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import UIKit
 
 enum WorkspaceDestination: String, CaseIterable, Hashable, Identifiable {
 	case home
@@ -51,6 +52,61 @@ enum WorkspaceDestination: String, CaseIterable, Hashable, Identifiable {
 	}
 }
 
+enum SSHAuthKind: String, CaseIterable, Codable, Identifiable {
+	case agent
+	case password
+	case key
+	case certificate
+
+	var id: String { rawValue }
+
+	var title: String {
+		switch self {
+		case .agent:
+			return "SSH Agent"
+		case .password:
+			return "Password"
+		case .key:
+			return "Private Key"
+		case .certificate:
+			return "Certificate"
+		}
+	}
+}
+
+enum MonitorAlertLevel: String, Codable {
+	case healthy
+	case watch
+	case alert
+	case unavailable
+
+	var title: String {
+		switch self {
+		case .healthy:
+			return "Healthy"
+		case .watch:
+			return "Watch"
+		case .alert:
+			return "Alert"
+		case .unavailable:
+			return "Unavailable"
+		}
+	}
+
+	var tint: Color {
+		switch self {
+		case .healthy:
+			return Color(red: 0.31, green: 0.72, blue: 0.57)
+		case .watch:
+			return Color(red: 0.98, green: 0.67, blue: 0.24)
+		case .alert:
+			return Color(red: 0.91, green: 0.35, blue: 0.43)
+		case .unavailable:
+			return Color(red: 0.65, green: 0.67, blue: 0.72)
+		}
+	}
+}
+
 struct WorkspaceSession: Identifiable {
 	let id = UUID()
 	let title: String
@@ -60,11 +116,18 @@ struct WorkspaceSession: Identifiable {
 	let tint: Color
 }
 
-struct WorkspaceSnippet: Identifiable {
-	let id = UUID()
-	let title: String
-	let body: String
-	let category: String
+struct WorkspaceSnippet: Identifiable, Codable, Hashable {
+	var id: UUID
+	var title: String
+	var body: String
+	var category: String
+
+	init(id: UUID = UUID(), title: String, body: String, category: String) {
+		self.id = id
+		self.title = title
+		self.body = body
+		self.category = category
+	}
 }
 
 struct WorkspaceFeature: Identifiable {
@@ -75,37 +138,122 @@ struct WorkspaceFeature: Identifiable {
 	let tint: Color
 }
 
-struct SSHProfileSummary: Identifiable {
-	let id = UUID()
-	let label: String
-	let host: String
-	let username: String
-	let authKind: String
-	let lastSeen: String
-	let port: Int
+struct SSHProfileSummary: Identifiable, Codable, Hashable {
+	var id: UUID
+	var label: String
+	var host: String
+	var username: String
+	var authKind: SSHAuthKind
+	var lastSeen: Date?
+	var port: Int
+	var privateKeyPath: String
+	var startupPath: String
+	var notes: String
+
+	init(
+		id: UUID = UUID(),
+		label: String,
+		host: String,
+		username: String,
+		authKind: SSHAuthKind,
+		lastSeen: Date? = nil,
+		port: Int = 22,
+		privateKeyPath: String = "",
+		startupPath: String = "",
+		notes: String = ""
+	) {
+		self.id = id
+		self.label = label
+		self.host = host
+		self.username = username
+		self.authKind = authKind
+		self.lastSeen = lastSeen
+		self.port = port
+		self.privateKeyPath = privateKeyPath
+		self.startupPath = startupPath
+		self.notes = notes
+	}
 }
 
-struct GitWorkspaceSummary: Identifiable {
-	let id = UUID()
+struct GitWorkspaceSummary: Identifiable, Hashable {
+	var id: String { path }
 	let name: String
+	let path: String
 	let branch: String
 	let status: String
 	let aheadBehind: String
 }
 
-struct ServerSnapshotSummary: Identifiable {
-	let id = UUID()
-	let name: String
-	let cpu: String
-	let memory: String
-	let disk: String
-	let network: String
-	let alertState: String
-	let tint: Color
+struct ServerMonitorSummary: Identifiable, Codable, Hashable {
+	var id: UUID
+	var sshProfileID: UUID
+	var label: String
+	var path: String
+	var cpuThreshold: Int
+	var memoryThreshold: Int
+	var diskThreshold: Int
+	var refreshInterval: Int
+	var isEnabled: Bool
+
+	init(
+		id: UUID = UUID(),
+		sshProfileID: UUID,
+		label: String,
+		path: String = "/",
+		cpuThreshold: Int = 85,
+		memoryThreshold: Int = 85,
+		diskThreshold: Int = 90,
+		refreshInterval: Int = 60,
+		isEnabled: Bool = true
+	) {
+		self.id = id
+		self.sshProfileID = sshProfileID
+		self.label = label
+		self.path = path
+		self.cpuThreshold = cpuThreshold
+		self.memoryThreshold = memoryThreshold
+		self.diskThreshold = diskThreshold
+		self.refreshInterval = refreshInterval
+		self.isEnabled = isEnabled
+	}
 }
 
-struct LocalWorkspaceFile: Identifiable {
-	let id = UUID()
+struct ServerSnapshotSummary: Identifiable, Codable, Hashable {
+	var id: UUID
+	var name: String
+	var cpuPercent: Int?
+	var memoryPercent: Int?
+	var diskPercent: Int?
+	var latency: String
+	var alertLevel: MonitorAlertLevel
+	var detail: String
+	var lastChecked: Date?
+
+	init(
+		id: UUID,
+		name: String,
+		cpuPercent: Int? = nil,
+		memoryPercent: Int? = nil,
+		diskPercent: Int? = nil,
+		latency: String = "--",
+		alertLevel: MonitorAlertLevel = .unavailable,
+		detail: String = "No snapshot yet",
+		lastChecked: Date? = nil
+	) {
+		self.id = id
+		self.name = name
+		self.cpuPercent = cpuPercent
+		self.memoryPercent = memoryPercent
+		self.diskPercent = diskPercent
+		self.latency = latency
+		self.alertLevel = alertLevel
+		self.detail = detail
+		self.lastChecked = lastChecked
+	}
+}
+
+struct LocalWorkspaceFile: Identifiable, Hashable {
+	var id: String { relativePath }
 	let name: String
 	let relativePath: String
 	let sizeDescription: String
@@ -113,91 +261,263 @@ struct LocalWorkspaceFile: Identifiable {
 	let isDirectory: Bool
 }
 
-struct PremiumPlanSummary: Identifiable {
+struct AIProviderConfiguration: Codable, Equatable {
+	var endpoint: String
+	var model: String
+	var apiKey: String
+	var systemPrompt: String
+
+	static let `default` = AIProviderConfiguration(
+		endpoint: "",
+		model: "gpt-4.1-mini",
+		apiKey: "",
+		systemPrompt: "You are OpenTerm AI, a concise mobile developer assistant focused on shell, SSH, Linux, and code tasks."
+	)
+}
+
+struct AssistantMessage: Identifiable, Hashable {
 	let id = UUID()
-	let name: String
-	let price: String
-	let highlight: String
-	let features: [String]
-	let tint: Color
+	let role: String
+	let content: String
+	let createdAt: Date
+}
+
+struct AIUsageRecord: Codable, Hashable {
+	var id: UUID
+	var prompt: String
+	var model: String
+	var promptTokens: Int
+	var completionTokens: Int
+	var createdAt: Date
+
+	init(id: UUID = UUID(), prompt: String, model: String, promptTokens: Int = 0, completionTokens: Int = 0, createdAt: Date = Date()) {
+		self.id = id
+		self.prompt = prompt
+		self.model = model
+		self.promptTokens = promptTokens
+		self.completionTokens = completionTokens
+		self.createdAt = createdAt
+	}
+}
+
+struct WorkspaceEditorDocument: Identifiable, Equatable {
+	var id: String { relativePath }
+	let title: String
+	let relativePath: String
+	let initialContent: String
+}
+
+private struct WorkspaceCommandResult {
+	let stdout: String
+	let stderr: String
+	let status: Int
+}
+
+private final class WorkspaceCommandCapture: NSObject, CommandExecutorDelegate {
+	private let executor = CommandExecutor()
+	private var stdout = Data()
+	private var stderr = Data()
+	private var completion: ((WorkspaceCommandResult) -> Void)?
+
+	override init() {
+		super.init()
+		executor.delegate = self
+	}
+
+	func run(command: String, workingDirectory: URL? = nil, completion: @escaping (WorkspaceCommandResult) -> Void) {
+		stdout = Data()
+		stderr = Data()
+		self.completion = completion
+		if let workingDirectory = workingDirectory {
+			executor.currentWorkingDirectory = workingDirectory
+		}
+		executor.dispatch(command)
+	}
+
+	func commandExecutor(_ commandExecutor: CommandExecutor, receivedStdout stdout: Data) {
+		self.stdout.append(stdout)
+	}
+
+	func commandExecutor(_ commandExecutor: CommandExecutor, receivedStderr stderr: Data) {
+		self.stderr.append(stderr)
+	}
+
+	func commandExecutor(_ commandExecutor: CommandExecutor, didChangeWorkingDirectory to: URL) {}
+	func commandExecutor(_ commandExecutor: CommandExecutor, waitForInput callback: @escaping (String) -> Void) {}
+	func commandExecutor(_ commandExecutor: CommandExecutor, executeSubCommand subCommand: String, callback: @escaping (Int) -> Void) {}
+	func commandExecutor(_ commandExecutor: CommandExecutor, executeSubCommand subCommand: String, capturingOutput callback: @escaping (String) -> Void) {}
+
+	func commandExecutor(_ commandExecutor: CommandExecutor, stateDidChange newState: CommandExecutor.State) {
+		guard case .idle = newState, let completion = completion else {
+			return
+		}
+
+		self.completion = nil
+		let status = Int(commandExecutor.context[.status] ?? "1") ?? 1
+		let eot = Parser.Code.endOfTransmission.rawValue
+		let stdoutString = String(data: stdout, encoding: .utf8)?.replacingOccurrences(of: eot, with: "").trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+		let stderrString = String(data: stderr, encoding: .utf8)?.replacingOccurrences(of: eot, with: "").trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+		DispatchQueue.main.async {
+			completion(WorkspaceCommandResult(stdout: stdoutString, stderr: stderrString, status: status))
+		}
+	}
 }
 
 final class WorkspaceStore: ObservableObject {
 
 	static let shared = WorkspaceStore()
 
-	@Published var recentSessions: [WorkspaceSession] = [
-		WorkspaceSession(title: "Prod API", subtitle: "SSH / ubuntu@api-1", detail: "Healthy / 21 ms", symbol: "server.rack", tint: Color(red: 0.31, green: 0.72, blue: 0.57)),
-		WorkspaceSession(title: "Local Repo", subtitle: "Git / feature/ios-workspace", detail: "3 modified files", symbol: "point.topleft.down.curvedto.point.bottomright.up", tint: Color(red: 0.29, green: 0.57, blue: 0.95)),
-		WorkspaceSession(title: "Docker Lab", subtitle: "Container / compose/dev", detail: "2 services online", symbol: "shippingbox", tint: Color(red: 0.96, green: 0.60, blue: 0.24)),
-	]
-
-	@Published var snippets: [WorkspaceSnippet] = [
-		WorkspaceSnippet(title: "Zero-downtime deploy", body: "git pull && docker compose pull && docker compose up -d", category: "Deploy"),
-		WorkspaceSnippet(title: "Top offenders", body: "ps aux --sort=-%mem | head -n 15", category: "Ops"),
-		WorkspaceSnippet(title: "Find big files", body: "du -ah . | sort -rh | head -n 20", category: "Storage"),
-		WorkspaceSnippet(title: "Tail recent errors", body: "journalctl -u nginx -n 200 --no-pager", category: "Logs"),
-	]
-
-	@Published var aiTools: [WorkspaceFeature] = [
-		WorkspaceFeature(title: "Explain Error", detail: "Paste output and get a plain-English diagnosis.", symbol: "stethoscope", tint: Color(red: 0.91, green: 0.35, blue: 0.43)),
-		WorkspaceFeature(title: "Generate Command", detail: "Turn a goal into a safe, shell-ready command.", symbol: "wand.and.stars", tint: Color(red: 0.55, green: 0.47, blue: 0.96)),
-		WorkspaceFeature(title: "Fix Shell Script", detail: "Repair broken bash and zsh scripts inline.", symbol: "wrench.and.screwdriver", tint: Color(red: 0.29, green: 0.57, blue: 0.95)),
-		WorkspaceFeature(title: "SSH Troubleshooting", detail: "Walk through auth, keys, ports, and host issues.", symbol: "network.badge.shield.half.filled", tint: Color(red: 0.31, green: 0.72, blue: 0.57)),
-		WorkspaceFeature(title: "Regex Generator", detail: "Build and explain regular expressions from plain English.", symbol: "textformat.abc.dottedunderline", tint: Color(red: 0.98, green: 0.67, blue: 0.24)),
-	]
-
-	@Published var premiumFeatures: [WorkspaceFeature] = [
-		WorkspaceFeature(title: "Unlimited AI", detail: "Remove assistant request caps and unlock longer context.", symbol: "sparkles", tint: Color(red: 0.98, green: 0.67, blue: 0.24)),
-		WorkspaceFeature(title: "SSH Vault Sync", detail: "Encrypted profile metadata and vault references across devices.", symbol: "key.horizontal", tint: Color(red: 0.29, green: 0.57, blue: 0.95)),
-		WorkspaceFeature(title: "Monitoring Alerts", detail: "CPU, memory, disk, and uptime alerts for remote servers.", symbol: "waveform.path.ecg", tint: Color(red: 0.91, green: 0.35, blue: 0.43)),
-		WorkspaceFeature(title: "GitHub Repo Assistant", detail: "AI-assisted repo summaries, diffs, and release prep.", symbol: "chevron.left.forwardslash.chevron.right", tint: Color(red: 0.55, green: 0.47, blue: 0.96)),
-	]
-
-	@Published var sshProfiles: [SSHProfileSummary] = [
-		SSHProfileSummary(label: "Prod API", host: "api-1.example.com", username: "ubuntu", authKind: "Vault key", lastSeen: "5 min ago", port: 22),
-		SSHProfileSummary(label: "Home Lab", host: "192.168.1.44", username: "dev", authKind: "Ed25519", lastSeen: "Yesterday", port: 22),
-		SSHProfileSummary(label: "DB Bastion", host: "bastion.internal", username: "ops", authKind: "Certificate", lastSeen: "2 days ago", port: 2222),
-	]
-
-	@Published var gitWorkspaces: [GitWorkspaceSummary] = [
-		GitWorkspaceSummary(name: "OpenTerm", branch: "feature/workspace-redesign", status: "3 modified / 1 staged", aheadBehind: "ahead 2"),
-		GitWorkspaceSummary(name: "infra-scripts", branch: "main", status: "clean", aheadBehind: "in sync"),
-	]
-
-	@Published var serverSnapshots: [ServerSnapshotSummary] = [
-		ServerSnapshotSummary(name: "Prod API", cpu: "41%", memory: "62%", disk: "58%", network: "21 ms", alertState: "Healthy", tint: Color(red: 0.31, green: 0.72, blue: 0.57)),
-		ServerSnapshotSummary(name: "Redis Node", cpu: "72%", memory: "81%", disk: "44%", network: "34 ms", alertState: "Watch", tint: Color(red: 0.98, green: 0.67, blue: 0.24)),
-		ServerSnapshotSummary(name: "Backups", cpu: "28%", memory: "37%", disk: "91%", network: "18 ms", alertState: "Disk alert", tint: Color(red: 0.91, green: 0.35, blue: 0.43)),
-	]
-
+	@Published var recentSessions: [WorkspaceSession] = []
+	@Published var snippets: [WorkspaceSnippet] = []
+	@Published var aiTools: [WorkspaceFeature] = []
+	@Published var featuredCapabilities: [WorkspaceFeature] = []
+	@Published var sshProfiles: [SSHProfileSummary] = []
+	@Published var gitWorkspaces: [GitWorkspaceSummary] = []
+	@Published var serverMonitors: [ServerMonitorSummary] = []
+	@Published var serverSnapshots: [ServerSnapshotSummary] = []
 	@Published var localFiles: [LocalWorkspaceFile] = []
-	@Published var premiumPlans: [PremiumPlanSummary] = [
-		PremiumPlanSummary(name: "Pro", price: "$9/mo", highlight: "For solo developers", features: ["Unlimited AI requests", "Theme packs", "Session restore", "Advanced Git tools"], tint: Color(red: 0.29, green: 0.57, blue: 0.95)),
-		PremiumPlanSummary(name: "Infra", price: "$19/mo", highlight: "For operators and homelabs", features: ["SSH vault sync", "Monitoring history", "Alerts", "Encrypted exports"], tint: Color(red: 0.31, green: 0.72, blue: 0.57)),
-		PremiumPlanSummary(name: "Team", price: "$39/mo", highlight: "For shared workflows later", features: ["Shared snippets", "Team workspaces", "Audit visibility", "Repo assistant seats"], tint: Color(red: 0.55, green: 0.47, blue: 0.96)),
-	]
-
+	@Published var activeEditor: WorkspaceEditorDocument?
+	@Published var assistantMessages: [AssistantMessage] = []
+	@Published var assistantDraft: String = "Turn my goal into commands"
+	@Published var assistantStatus: String = "Configure an AI endpoint in Settings to enable live answers."
+	@Published var isSendingAssistantPrompt: Bool = false
+	@Published var aiConfiguration: AIProviderConfiguration = .default
+	@Published var aiUsageHistory: [AIUsageRecord] = []
+	@Published var isRefreshingMonitors: Bool = false
+	@Published var statusMessage: String = "Workspace ready"
 	@Published var activeThemeName: String = "Glass Slate"
-	@Published var billingSourceDescription: String = "StoreKit 2 for App Store builds / Stripe Checkout for web account billing"
+	@Published var freeModeSummary: String = "Free preview while SSH, Git, AI, editor, and monitoring flows are hardened."
 
+	private let fileManager = FileManager.default
 	private let byteCountFormatter = ByteCountFormatter()
 	private let dateFormatter: RelativeDateTimeFormatter = {
 		let formatter = RelativeDateTimeFormatter()
 		formatter.unitsStyle = .short
 		return formatter
 	}()
+	private let commandCapture = WorkspaceCommandCapture()
+	private var monitorTimer: Timer?
 
-	init() {
+	private init() {
 		byteCountFormatter.allowedUnits = [.useKB, .useMB]
 		byteCountFormatter.countStyle = .file
+		seedStaticFeatures()
+		ensureWorkspaceSupportDirectory()
+		loadPersistedState()
 		refreshLocalFiles()
+		refreshGitWorkspaces()
+		rebuildRecentSessions()
+	}
+
+	private var workspaceSupportURL: URL {
+		DocumentManager.shared.activeDocumentsFolderURL.appendingPathComponent(".openterm-workspace", isDirectory: true)
+	}
+
+	private func seedStaticFeatures() {
+		aiTools = [
+			WorkspaceFeature(title: "Explain Error", detail: "Paste output and get a plain-English diagnosis.", symbol: "stethoscope", tint: Color(red: 0.91, green: 0.35, blue: 0.43)),
+			WorkspaceFeature(title: "Generate Command", detail: "Turn a goal into a safe, shell-ready command.", symbol: "wand.and.stars", tint: Color(red: 0.55, green: 0.47, blue: 0.96)),
+			WorkspaceFeature(title: "Fix Shell Script", detail: "Repair broken bash and zsh scripts inline.", symbol: "wrench.and.screwdriver", tint: Color(red: 0.29, green: 0.57, blue: 0.95)),
+			WorkspaceFeature(title: "SSH Troubleshooting", detail: "Walk through auth, keys, ports, and host issues.", symbol: "network.badge.shield.half.filled", tint: Color(red: 0.31, green: 0.72, blue: 0.57)),
+			WorkspaceFeature(title: "Regex Generator", detail: "Build and explain regular expressions from plain English.", symbol: "textformat.abc.dottedunderline", tint: Color(red: 0.98, green: 0.67, blue: 0.24))
+		]
+
+		featuredCapabilities = [
+			WorkspaceFeature(title: "Saved SSH Profiles", detail: "Persist hosts, ports, auth modes, and startup paths locally.", symbol: "server.rack", tint: Color(red: 0.31, green: 0.72, blue: 0.57)),
+			WorkspaceFeature(title: "Monitor Refresh", detail: "Pull Linux server snapshots over SSH and surface threshold warnings.", symbol: "waveform.path.ecg", tint: Color(red: 0.98, green: 0.67, blue: 0.24)),
+			WorkspaceFeature(title: "Local Code Editor", detail: "Open, edit, and save text files directly from the documents workspace.", symbol: "doc.text.magnifyingglass", tint: Color(red: 0.29, green: 0.57, blue: 0.95)),
+			WorkspaceFeature(title: "Terminal Actions", detail: "Run SSH, Git, and snippet workflows straight into the active terminal tab.", symbol: "terminal", tint: Color(red: 0.55, green: 0.47, blue: 0.96))
+		]
+	}
+
+	private func ensureWorkspaceSupportDirectory() {
+		if !fileManager.fileExists(atPath: workspaceSupportURL.path) {
+			try? fileManager.createDirectory(at: workspaceSupportURL, withIntermediateDirectories: true, attributes: nil)
+		}
+	}
+
+	private func stateURL(for component: String) -> URL {
+		workspaceSupportURL.appendingPathComponent(component)
+	}
+
+	private func loadPersistedState() {
+		sshProfiles = load([SSHProfileSummary].self, from: stateURL(for: "ssh-profiles.json")) ?? defaultSSHProfiles()
+		snippets = load([WorkspaceSnippet].self, from: stateURL(for: "snippets.json")) ?? defaultSnippets()
+		serverMonitors = load([ServerMonitorSummary].self, from: stateURL(for: "server-monitors.json")) ?? defaultServerMonitors(from: sshProfiles)
+		serverSnapshots = load([ServerSnapshotSummary].self, from: stateURL(for: "server-snapshots.json")) ?? []
+		aiConfiguration = load(AIProviderConfiguration.self, from: stateURL(for: "ai-configuration.json")) ?? .default
+		aiUsageHistory = load([AIUsageRecord].self, from: stateURL(for: "ai-usage-history.json")) ?? []
+		assistantMessages = [AssistantMessage(role: "system", content: "Workspace assistant ready. Configure an endpoint in Settings, then ask for commands, error analysis, or SSH help.", createdAt: Date())]
+	}
+
+	private func load<T: Decodable>(_ type: T.Type, from url: URL) -> T? {
+		guard let data = try? Data(contentsOf: url) else {
+			return nil
+		}
+		let decoder = JSONDecoder()
+		decoder.dateDecodingStrategy = .iso8601
+		return try? decoder.decode(T.self, from: data)
+	}
+
+	private func save<T: Encodable>(_ value: T, to url: URL) {
+		let encoder = JSONEncoder()
+		encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+		encoder.dateEncodingStrategy = .iso8601
+		guard let data = try? encoder.encode(value) else {
+			return
+		}
+		try? data.write(to: url, options: .atomic)
+	}
+
+	private func defaultSSHProfiles() -> [SSHProfileSummary] {
+		[
+			SSHProfileSummary(label: "Prod API", host: "api-1.example.com", username: "ubuntu", authKind: .key, port: 22, privateKeyPath: "", startupPath: "/srv/api", notes: "Primary production app node"),
+			SSHProfileSummary(label: "Home Lab", host: "192.168.1.44", username: "dev", authKind: .agent, port: 22, privateKeyPath: "", startupPath: "~/projects", notes: "LAN development machine")
+		]
+	}
+
+	private func defaultSnippets() -> [WorkspaceSnippet] {
+		[
+			WorkspaceSnippet(title: "Zero-downtime deploy", body: "git pull && docker compose pull && docker compose up -d", category: "Deploy"),
+			WorkspaceSnippet(title: "Top offenders", body: "ps aux --sort=-%mem | head -n 15", category: "Ops"),
+			WorkspaceSnippet(title: "Find big files", body: "du -ah . | sort -rh | head -n 20", category: "Storage"),
+			WorkspaceSnippet(title: "Tail recent errors", body: "journalctl -u nginx -n 200 --no-pager", category: "Logs")
+		]
+	}
+
+	private func defaultServerMonitors(from profiles: [SSHProfileSummary]) -> [ServerMonitorSummary] {
+		profiles.prefix(2).map {
+			ServerMonitorSummary(sshProfileID: $0.id, label: $0.label, path: "/")
+		}
+	}
+
+	private func saveSSHProfiles() {
+		save(sshProfiles, to: stateURL(for: "ssh-profiles.json"))
+	}
+
+	private func saveSnippets() {
+		save(snippets, to: stateURL(for: "snippets.json"))
+	}
+
+	private func saveServerMonitors() {
+		save(serverMonitors, to: stateURL(for: "server-monitors.json"))
+	}
+
+	private func saveServerSnapshots() {
+		save(serverSnapshots, to: stateURL(for: "server-snapshots.json"))
+	}
+
+	private func saveAIConfiguration() {
+		save(aiConfiguration, to: stateURL(for: "ai-configuration.json"))
+	}
+
+	private func saveAIUsageHistory() {
+		save(aiUsageHistory, to: stateURL(for: "ai-usage-history.json"))
 	}
 
 	func refreshLocalFiles() {
 		let rootURL = DocumentManager.shared.activeDocumentsFolderURL
-		let fileManager = FileManager.default
-
 		guard let enumerator = fileManager.enumerator(at: rootURL, includingPropertiesForKeys: [.isDirectoryKey, .contentModificationDateKey, .fileSizeKey], options: [.skipsHiddenFiles]) else {
 			localFiles = []
 			return
@@ -206,7 +526,7 @@ final class WorkspaceStore: ObservableObject {
 		var files = [LocalWorkspaceFile]()
 
 		for case let fileURL as URL in enumerator {
-			guard files.count < 24 else {
+			guard files.count < 40 else {
 				break
 			}
 
@@ -223,23 +543,522 @@ final class WorkspaceStore: ObservableObject {
 			}
 
 			let relativePath = fileURL.path.replacingOccurrences(of: rootURL.path + "/", with: "")
-			files.append(
-				LocalWorkspaceFile(
-					name: fileURL.lastPathComponent,
-					relativePath: relativePath,
-					sizeDescription: sizeDescription,
-					modifiedDescription: dateFormatter.localizedString(for: modified, relativeTo: Date()),
-					isDirectory: isDirectory
-				)
-			)
+			files.append(LocalWorkspaceFile(name: fileURL.lastPathComponent, relativePath: relativePath, sizeDescription: sizeDescription, modifiedDescription: dateFormatter.localizedString(for: modified, relativeTo: Date()), isDirectory: isDirectory))
 		}
 
 		localFiles = files.sorted {
 			if $0.isDirectory == $1.isDirectory {
 				return $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
 			}
-
 			return $0.isDirectory && !$1.isDirectory
 		}
+	}
+
+	func refreshGitWorkspaces() {
+		let root = DocumentManager.shared.activeDocumentsFolderURL
+		var repositories = [URL]()
+		scanRepositories(in: root, depth: 3, found: &repositories)
+
+		gitWorkspaces = repositories.map { repoURL in
+			GitWorkspaceSummary(
+				name: repoURL.lastPathComponent,
+				path: repoURL.path,
+				branch: branchName(forRepositoryAt: repoURL),
+				status: "Terminal-driven actions available",
+				aheadBehind: "Repo detected locally"
+			)
+		}.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+	}
+
+	private func scanRepositories(in directory: URL, depth: Int, found: inout [URL]) {
+		guard depth >= 0 else { return }
+		guard let children = try? fileManager.contentsOfDirectory(at: directory, includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsPackageDescendants]) else {
+			return
+		}
+
+		for child in children {
+			if child.lastPathComponent == ".git" {
+				found.append(directory)
+				return
+			}
+
+			guard let isDirectory = try? child.resourceValues(forKeys: [.isDirectoryKey]).isDirectory, isDirectory == true else {
+				continue
+			}
+
+			if child.lastPathComponent.hasPrefix(".") {
+				continue
+			}
+
+			scanRepositories(in: child, depth: depth - 1, found: &found)
+		}
+	}
+
+	private func branchName(forRepositoryAt repositoryURL: URL) -> String {
+		let headURL = repositoryURL.appendingPathComponent(".git/HEAD")
+		guard let headContents = try? String(contentsOf: headURL, encoding: .utf8).trimmingCharacters(in: .whitespacesAndNewlines), !headContents.isEmpty else {
+			return "unknown"
+		}
+
+		if headContents.hasPrefix("ref:") {
+			return headContents.components(separatedBy: "/").last ?? headContents
+		}
+
+		return String(headContents.prefix(7))
+	}
+
+	func formatLastSeen(_ date: Date?) -> String {
+		guard let date else {
+			return "Never"
+		}
+		return dateFormatter.localizedString(for: date, relativeTo: Date())
+	}
+
+	func upsertSSHProfile(_ profile: SSHProfileSummary) {
+		if let index = sshProfiles.firstIndex(where: { $0.id == profile.id }) {
+			sshProfiles[index] = profile
+		} else {
+			sshProfiles.append(profile)
+		}
+		sshProfiles.sort { $0.label.localizedCaseInsensitiveCompare($1.label) == .orderedAscending }
+		saveSSHProfiles()
+		rebuildRecentSessions()
+	}
+
+	func deleteSSHProfile(_ profile: SSHProfileSummary) {
+		sshProfiles.removeAll { $0.id == profile.id }
+		serverMonitors.removeAll { $0.sshProfileID == profile.id }
+		serverSnapshots.removeAll { snapshot in
+			!serverMonitors.contains(where: { $0.id == snapshot.id })
+		}
+		saveSSHProfiles()
+		saveServerMonitors()
+		saveServerSnapshots()
+		rebuildRecentSessions()
+	}
+
+	func upsertSnippet(_ snippet: WorkspaceSnippet) {
+		if let index = snippets.firstIndex(where: { $0.id == snippet.id }) {
+			snippets[index] = snippet
+		} else {
+			snippets.insert(snippet, at: 0)
+		}
+		saveSnippets()
+	}
+
+	func deleteSnippet(_ snippet: WorkspaceSnippet) {
+		snippets.removeAll { $0.id == snippet.id }
+		saveSnippets()
+	}
+
+	func upsertServerMonitor(_ monitor: ServerMonitorSummary) {
+		if let index = serverMonitors.firstIndex(where: { $0.id == monitor.id }) {
+			serverMonitors[index] = monitor
+		} else {
+			serverMonitors.append(monitor)
+		}
+		saveServerMonitors()
+		refreshDerivedSnapshots()
+	}
+
+	func deleteServerMonitor(_ monitor: ServerMonitorSummary) {
+		serverMonitors.removeAll { $0.id == monitor.id }
+		serverSnapshots.removeAll { $0.id == monitor.id }
+		saveServerMonitors()
+		saveServerSnapshots()
+	}
+
+	private func refreshDerivedSnapshots() {
+		for monitor in serverMonitors where !serverSnapshots.contains(where: { $0.id == monitor.id }) {
+			serverSnapshots.append(ServerSnapshotSummary(id: monitor.id, name: monitor.label))
+		}
+		serverSnapshots.removeAll { snapshot in
+			!serverMonitors.contains(where: { $0.id == snapshot.id })
+		}
+	}
+
+	func updateAIConfiguration(endpoint: String, model: String, apiKey: String, systemPrompt: String) {
+		aiConfiguration = AIProviderConfiguration(endpoint: endpoint.trimmingCharacters(in: .whitespacesAndNewlines), model: model.trimmingCharacters(in: .whitespacesAndNewlines), apiKey: apiKey.trimmingCharacters(in: .whitespacesAndNewlines), systemPrompt: systemPrompt.trimmingCharacters(in: .whitespacesAndNewlines))
+		saveAIConfiguration()
+		assistantStatus = aiConfiguration.endpoint.isEmpty ? "Configure an AI endpoint in Settings to enable live answers." : "AI endpoint saved. Prompts will use \(aiConfiguration.model)."
+	}
+
+	func openTerminal(command: String, executeNow: Bool) {
+		TerminalTabViewController.focusOrQueue(command: command, execute: executeNow)
+		NotificationCenter.default.post(name: .workspaceDidRequestTerminalFocus, object: nil)
+	}
+
+	func runSnippetInTerminal(_ snippet: WorkspaceSnippet) {
+		openTerminal(command: snippet.body, executeNow: true)
+		statusMessage = "Running snippet: \(snippet.title)"
+	}
+
+	func connect(to profile: SSHProfileSummary) {
+		openTerminal(command: sshCommand(for: profile), executeNow: true)
+		touchProfile(profile.id)
+		statusMessage = "Opening SSH session for \(profile.label)"
+	}
+
+	private func touchProfile(_ id: UUID) {
+		guard let index = sshProfiles.firstIndex(where: { $0.id == id }) else {
+			return
+		}
+		sshProfiles[index].lastSeen = Date()
+		saveSSHProfiles()
+		rebuildRecentSessions()
+	}
+
+	func sshCommand(for profile: SSHProfileSummary, remoteCommand: String? = nil, batchMode: Bool = false) -> String {
+		var parts = ["ssh"]
+		if batchMode {
+			parts.append(contentsOf: ["-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=accept-new"])
+		}
+		if profile.port != 22 {
+			parts.append(contentsOf: ["-p", String(profile.port)])
+		}
+		if (profile.authKind == .key || profile.authKind == .certificate), !profile.privateKeyPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+			parts.append(contentsOf: ["-i", shellQuote(profile.privateKeyPath)])
+		}
+
+		parts.append("\(profile.username)@\(profile.host)")
+
+		var finalRemoteCommand = remoteCommand
+		if finalRemoteCommand == nil, !profile.startupPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+			let path = shellQuote(profile.startupPath)
+			finalRemoteCommand = "cd \(path) && exec ${SHELL:-/bin/sh} -l"
+		}
+
+		if let finalRemoteCommand, !finalRemoteCommand.isEmpty {
+			parts.append("-t")
+			parts.append(shellQuote(finalRemoteCommand))
+		}
+
+		return parts.joined(separator: " ")
+	}
+
+	private func shellQuote(_ string: String) -> String {
+		"'" + string.replacingOccurrences(of: "'", with: "'\"'\"'") + "'"
+	}
+
+	func refreshMonitorSnapshots() {
+		guard !isRefreshingMonitors else {
+			return
+		}
+		isRefreshingMonitors = true
+		statusMessage = "Refreshing server snapshots"
+		refreshDerivedSnapshots()
+
+		let enabledMonitors = serverMonitors.filter { $0.isEnabled }
+		guard !enabledMonitors.isEmpty else {
+			isRefreshingMonitors = false
+			statusMessage = "No enabled monitors configured"
+			return
+		}
+
+		var pendingCount = enabledMonitors.count
+		for monitor in enabledMonitors {
+			refreshMonitor(monitor) {
+				pendingCount -= 1
+				if pendingCount == 0 {
+					self.isRefreshingMonitors = false
+					self.saveServerSnapshots()
+					self.statusMessage = "Server snapshots updated"
+					self.rebuildRecentSessions()
+				}
+			}
+		}
+	}
+
+	private func refreshMonitor(_ monitor: ServerMonitorSummary, completion: @escaping () -> Void) {
+		guard let profile = sshProfiles.first(where: { $0.id == monitor.sshProfileID }) else {
+			updateSnapshot(for: monitor, snapshot: ServerSnapshotSummary(id: monitor.id, name: monitor.label, alertLevel: .unavailable, detail: "Missing SSH profile", lastChecked: Date()))
+			completion()
+			return
+		}
+
+		guard profile.authKind != .password else {
+			updateSnapshot(for: monitor, snapshot: ServerSnapshotSummary(id: monitor.id, name: monitor.label, alertLevel: .unavailable, detail: "Password auth is interactive only. Open the terminal to connect manually.", lastChecked: Date()))
+			completion()
+			return
+		}
+
+		let remoteScript = "CPU=$(top -bn1 2>/dev/null | awk '/Cpu|CPU/ {for (i=1;i<=NF;i++) if ($i ~ /id,/) idle=$(i-1)} END {if (idle==\"\") print 0; else printf \"%d\", 100-idle}') ; MEM=$(awk '/MemTotal/ {total=$2} /MemAvailable/ {available=$2} END {if (total>0) printf \"%d\", ((total-available)*100)/total; else print 0}' /proc/meminfo 2>/dev/null) ; DISK=$(df -P \(shellQuote(monitor.path)) 2>/dev/null | awk 'NR==2 {gsub(/%/, \"\", $5); print $5}') ; LOAD=$(uptime 2>/dev/null | sed 's/.*load averages*[: ]*//') ; echo \"CPU:${CPU:-0}|MEM:${MEM:-0}|DISK:${DISK:-0}|LOAD:${LOAD:-n/a}\""
+		let command = sshCommand(for: profile, remoteCommand: remoteScript, batchMode: true)
+
+		commandCapture.run(command: command) { result in
+			let snapshot = self.snapshot(from: result, monitor: monitor)
+			self.updateSnapshot(for: monitor, snapshot: snapshot)
+			completion()
+		}
+	}
+
+	private func snapshot(from result: WorkspaceCommandResult, monitor: ServerMonitorSummary) -> ServerSnapshotSummary {
+		guard result.status == 0, !result.stdout.isEmpty else {
+			let detail = result.stderr.isEmpty ? "SSH command failed" : result.stderr
+			return ServerSnapshotSummary(id: monitor.id, name: monitor.label, alertLevel: .unavailable, detail: detail, lastChecked: Date())
+		}
+
+		let segments = result.stdout.components(separatedBy: "|")
+		var values = [String: String]()
+		for segment in segments {
+			let pair = segment.components(separatedBy: ":")
+			guard pair.count >= 2 else { continue }
+			values[pair[0]] = pair.dropFirst().joined(separator: ":")
+		}
+
+		let cpu = Int(values["CPU"] ?? "")
+		let memory = Int(values["MEM"] ?? "")
+		let disk = Int(values["DISK"] ?? "")
+		let load = values["LOAD"] ?? "n/a"
+		let level = alertLevel(cpu: cpu, memory: memory, disk: disk, monitor: monitor)
+		let detail = "Load \(load) / thresholds C\(monitor.cpuThreshold) M\(monitor.memoryThreshold) D\(monitor.diskThreshold)"
+
+		return ServerSnapshotSummary(id: monitor.id, name: monitor.label, cpuPercent: cpu, memoryPercent: memory, diskPercent: disk, latency: "SSH", alertLevel: level, detail: detail, lastChecked: Date())
+	}
+
+	private func alertLevel(cpu: Int?, memory: Int?, disk: Int?, monitor: ServerMonitorSummary) -> MonitorAlertLevel {
+		let isAlert = (cpu ?? 0) >= monitor.cpuThreshold || (memory ?? 0) >= monitor.memoryThreshold || (disk ?? 0) >= monitor.diskThreshold
+		if isAlert {
+			return .alert
+		}
+
+		let isWatch = (cpu ?? 0) >= monitor.cpuThreshold - 10 || (memory ?? 0) >= monitor.memoryThreshold - 10 || (disk ?? 0) >= monitor.diskThreshold - 10
+		if isWatch {
+			return .watch
+		}
+
+		return .healthy
+	}
+
+	private func updateSnapshot(for monitor: ServerMonitorSummary, snapshot: ServerSnapshotSummary) {
+		if let index = serverSnapshots.firstIndex(where: { $0.id == monitor.id }) {
+			serverSnapshots[index] = snapshot
+		} else {
+			serverSnapshots.append(snapshot)
+		}
+	}
+
+	func startMonitorAutoRefresh() {
+		guard monitorTimer == nil else {
+			return
+		}
+		monitorTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
+			self?.refreshMonitorSnapshots()
+		}
+	}
+
+	func stopMonitorAutoRefresh() {
+		monitorTimer?.invalidate()
+		monitorTimer = nil
+	}
+
+	func openFile(relativePath: String) {
+		let fileURL = DocumentManager.shared.activeDocumentsFolderURL.appendingPathComponent(relativePath)
+		guard let data = try? Data(contentsOf: fileURL) else {
+			statusMessage = "Could not load file"
+			return
+		}
+		guard let text = String(data: data, encoding: .utf8) else {
+			statusMessage = "Only UTF-8 text files are supported right now"
+			return
+		}
+
+		activeEditor = WorkspaceEditorDocument(title: fileURL.lastPathComponent, relativePath: relativePath, initialContent: text)
+		statusMessage = "Editing \(fileURL.lastPathComponent)"
+	}
+
+	func createFile(named name: String, initialContent: String = "") {
+		let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+		guard !trimmedName.isEmpty else {
+			statusMessage = "Enter a file name"
+			return
+		}
+
+		let newURL = DocumentManager.shared.activeDocumentsFolderURL.appendingPathComponent(trimmedName)
+		guard !fileManager.fileExists(atPath: newURL.path) else {
+			statusMessage = "A file with that name already exists"
+			return
+		}
+
+		guard let data = initialContent.data(using: .utf8) else {
+			statusMessage = "Could not encode file contents"
+			return
+		}
+
+		do {
+			try data.write(to: newURL, options: .atomic)
+			refreshLocalFiles()
+			openFile(relativePath: trimmedName)
+		} catch {
+			statusMessage = "Could not create file: \(error.localizedDescription)"
+		}
+	}
+
+	func saveEditorDocument(relativePath: String, content: String) {
+		let fileURL = DocumentManager.shared.activeDocumentsFolderURL.appendingPathComponent(relativePath)
+		guard let data = content.data(using: .utf8) else {
+			statusMessage = "Could not encode file contents"
+			return
+		}
+
+		do {
+			try data.write(to: fileURL, options: .atomic)
+			refreshLocalFiles()
+			statusMessage = "Saved \(fileURL.lastPathComponent)"
+		} catch {
+			statusMessage = "Could not save file: \(error.localizedDescription)"
+		}
+	}
+
+	func closeEditor() {
+		activeEditor = nil
+	}
+
+	func submitAssistantPrompt() {
+		let prompt = assistantDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+		guard !prompt.isEmpty else {
+			assistantStatus = "Enter a prompt first."
+			return
+		}
+
+		guard let url = URL(string: aiConfiguration.endpoint), !aiConfiguration.endpoint.isEmpty else {
+			assistantStatus = "Add an AI endpoint in Settings first."
+			return
+		}
+
+		assistantMessages.append(AssistantMessage(role: "user", content: prompt, createdAt: Date()))
+		assistantDraft = ""
+		assistantStatus = "Requesting \(aiConfiguration.model)â¦"
+		isSendingAssistantPrompt = true
+
+		var request = URLRequest(url: url)
+		request.httpMethod = "POST"
+		request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+		if !aiConfiguration.apiKey.isEmpty {
+			request.setValue("Bearer \(aiConfiguration.apiKey)", forHTTPHeaderField: "Authorization")
+		}
+
+		let body = AIChatRequest(model: aiConfiguration.model, messages: [
+			AIChatRequest.Message(role: "system", content: aiConfiguration.systemPrompt),
+			AIChatRequest.Message(role: "user", content: prompt)
+		])
+		request.httpBody = try? JSONEncoder().encode(body)
+
+		URLSession.shared.dataTask(with: request) { data, response, error in
+			DispatchQueue.main.async {
+				self.isSendingAssistantPrompt = false
+
+				if let error {
+					self.assistantStatus = "AI request failed: \(error.localizedDescription)"
+					self.assistantMessages.append(AssistantMessage(role: "assistant", content: self.assistantStatus, createdAt: Date()))
+					return
+				}
+
+				guard let httpResponse = response as? HTTPURLResponse else {
+					self.assistantStatus = "AI request failed: missing HTTP response"
+					return
+				}
+
+				guard let data else {
+					self.assistantStatus = "AI request failed: empty response"
+					return
+				}
+
+				guard (200..<300).contains(httpResponse.statusCode) else {
+					let bodyText = String(data: data, encoding: .utf8) ?? "Unknown error"
+					self.assistantStatus = "AI request failed: \(bodyText)"
+					self.assistantMessages.append(AssistantMessage(role: "assistant", content: self.assistantStatus, createdAt: Date()))
+					return
+				}
+
+				if let decoded = try? JSONDecoder().decode(AIChatResponse.self, from: data), let content = decoded.primaryContent {
+					self.assistantMessages.append(AssistantMessage(role: "assistant", content: content, createdAt: Date()))
+					self.assistantStatus = "Response received from \(self.aiConfiguration.model)"
+					self.aiUsageHistory.insert(AIUsageRecord(prompt: prompt, model: self.aiConfiguration.model, promptTokens: decoded.usage?.promptTokens ?? 0, completionTokens: decoded.usage?.completionTokens ?? 0), at: 0)
+					self.saveAIUsageHistory()
+				} else {
+					let fallback = String(data: data, encoding: .utf8) ?? "AI response could not be decoded"
+					self.assistantMessages.append(AssistantMessage(role: "assistant", content: fallback, createdAt: Date()))
+					self.assistantStatus = "Received a non-standard AI response"
+				}
+			}
+		}.resume()
+	}
+
+	private func rebuildRecentSessions() {
+		var sessions = [WorkspaceSession]()
+
+		for profile in sshProfiles.prefix(2) {
+			sessions.append(WorkspaceSession(title: profile.label, subtitle: "SSH / \(profile.username)@\(profile.host)", detail: "\(profile.authKind.title) / \(formatLastSeen(profile.lastSeen))", symbol: "server.rack", tint: Color(red: 0.31, green: 0.72, blue: 0.57)))
+		}
+
+		for repo in gitWorkspaces.prefix(2) {
+			sessions.append(WorkspaceSession(title: repo.name, subtitle: "Git / \(repo.branch)", detail: repo.status, symbol: "point.topleft.down.curvedto.point.bottomright.up", tint: Color(red: 0.29, green: 0.57, blue: 0.95)))
+		}
+
+		if let snapshot = serverSnapshots.sorted(by: { ($0.lastChecked ?? .distantPast) > ($1.lastChecked ?? .distantPast) }).first {
+			sessions.append(WorkspaceSession(title: snapshot.name, subtitle: "Monitor / \(snapshot.alertLevel.title)", detail: snapshot.detail, symbol: "waveform.path.ecg", tint: snapshot.alertLevel.tint))
+		}
+
+		recentSessions = Array(sessions.prefix(4))
+	}
+
+	func queueGitClone(remoteURL: String, folderName: String) {
+		let trimmedRemote = remoteURL.trimmingCharacters(in: .whitespacesAndNewlines)
+		guard !trimmedRemote.isEmpty else {
+			statusMessage = "Enter a repository URL"
+			return
+		}
+
+		var command = "git clone \(shellQuote(trimmedRemote))"
+		let trimmedFolder = folderName.trimmingCharacters(in: .whitespacesAndNewlines)
+		if !trimmedFolder.isEmpty {
+			command += " \(shellQuote(trimmedFolder))"
+		}
+		openTerminal(command: command, executeNow: true)
+		statusMessage = "Queued git clone in terminal"
+	}
+
+	func queueGitCommand(_ command: String, in repositoryPath: String) {
+		openTerminal(command: "cd \(shellQuote(repositoryPath)) && \(command)", executeNow: true)
+		statusMessage = "Queued git command in terminal"
+	}
+}
+
+private struct AIChatRequest: Encodable {
+	struct Message: Encodable {
+		let role: String
+		let content: String
+	}
+
+	let model: String
+	let messages: [Message]
+}
+
+private struct AIChatResponse: Decodable {
+	struct Choice: Decodable {
+		struct Message: Decodable {
+			let content: String?
+		}
+
+		let message: Message?
+		let text: String?
+	}
+
+	struct Usage: Decodable {
+		let promptTokens: Int?
+		let completionTokens: Int?
+
+		private enum CodingKeys: String, CodingKey {
+			case promptTokens = "prompt_tokens"
+			case completionTokens = "completion_tokens"
+		}
+	}
+
+	let choices: [Choice]?
+	let usage: Usage?
+
+	var primaryContent: String? {
+		choices?.compactMap { $0.message?.content ?? $0.text }.first
 	}
 }

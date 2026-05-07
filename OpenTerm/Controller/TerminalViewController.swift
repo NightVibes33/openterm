@@ -445,6 +445,10 @@ extension TerminalViewController: TerminalViewDelegate {
 		updateTitle()
 	}
 
+	func execute(command: String) {
+		terminalView.submitCommand(command)
+	}
+
 	private func processCommand(_ command: String) {
 
 		// Trim leading/trailing space

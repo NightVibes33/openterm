@@ -12,7 +12,11 @@ import TabView
 class TerminalTabViewController: TabViewController {
 
 	static weak var activeController: TerminalTabViewController?
-	private static var pendingCommand: String?
+	private struct PendingTerminalAction {
+		let command: String
+		let execute: Bool
+	}
+	private static var pendingAction: PendingTerminalAction?
 
 	required init(theme: TabViewTheme) {
 		super.init(theme: theme)
@@ -77,29 +81,33 @@ class TerminalTabViewController: TabViewController {
 		
 	}
 
-	static func focusOrQueue(command: String) {
-		pendingCommand = command
+	static func focusOrQueue(command: String, execute: Bool = false) {
+		pendingAction = PendingTerminalAction(command: command, execute: execute)
 		consumePendingCommandIfNeeded()
 	}
 
 	static func consumePendingCommandIfNeeded() {
 		guard
-			let command = pendingCommand,
+			let action = pendingAction,
 			let controller = activeController
 		else {
 			return
 		}
 
-		pendingCommand = nil
-		controller.focus(command: command)
+		pendingAction = nil
+		controller.focus(command: action.command, execute: action.execute)
 	}
 
-	private func focus(command: String) {
+	private func focus(command: String, execute: Bool) {
 		guard let viewController = visibleViewController as? TerminalViewController else {
 			return
 		}
 
-		viewController.terminalView.currentCommand = command
+		if execute {
+			viewController.execute(command: command)
+		} else {
+			viewController.terminalView.currentCommand = command
+		}
 
 		if viewController.presentedViewController == nil {
 			viewController.terminalView.becomeFirstResponder()
