@@ -3,7 +3,7 @@
 //  OpenTerm
 //
 //  Created by Anders Borum on 05/02/2018.
-//  Copyright © 2018 Silver Fox. All rights reserved.
+//  Copyright Â© 2018 Silver Fox. All rights reserved.
 //
 
 import UIKit
@@ -79,7 +79,7 @@ extension NSAttributedString {
                     if found {
                         // mark as link
                         let url = URL(fileURLWithPath: currentDirectory).appendingPathComponent(filename)
-						let attrs: [NSAttributedStringKey: Any] = [.link: url,
+						let attrs: [NSAttributedString.Key: Any] = [.link: url,
 																   .underlineStyle: NSUnderlineStyle.styleSingle.rawValue]
 						
                         let nsRange = NSRange(location: range.lowerBound.encodedOffset,

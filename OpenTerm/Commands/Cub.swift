@@ -3,7 +3,7 @@
 //  OpenTerm
 //
 //  Created by Louis D'hauwe on 03/02/2018.
-//  Copyright © 2018 Silver Fox. All rights reserved.
+//  Copyright Â© 2018 Silver Fox. All rights reserved.
 //
 
 import Foundation
@@ -18,7 +18,7 @@ public func cub(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int
 		return 1
 	}
 	
-	guard let tabViewContainer = UIApplication.shared.keyWindow?.rootViewController as? TabViewContainerViewController<TerminalTabViewController> else {
+	guard let tabViewContainer = activeTerminalTabContainer() else {
 		return 1
 	}
 

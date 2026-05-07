@@ -3,7 +3,7 @@
 //  OpenTerm
 //
 //  Created by Louis D'hauwe on 03/04/2018.
-//  Copyright © 2018 Silver Fox. All rights reserved.
+//  Copyright Â© 2018 Silver Fox. All rights reserved.
 //
 
 import UIKit
@@ -54,10 +54,14 @@ class CustomTextView: UITextView {
 		
 		setup()
 	}
+
+	deinit {
+		NotificationCenter.default.removeObserver(self)
+	}
 	
 	private func setup() {
 		
-		NotificationCenter.default.addObserver(self, selector: #selector(self.textDidChange), name: .UITextViewTextDidChange, object: nil)
+		NotificationCenter.default.addObserver(self, selector: #selector(textDidChange), name: UITextView.textDidChangeNotification, object: self)
 		
 		placeholderLabel.translatesAutoresizingMaskIntoConstraints = false
 		placeholderLabel.textColor = .lightGray

@@ -3,7 +3,7 @@
 //  OpenTerm
 //
 //  Created by Louis D'hauwe on 21/04/2018.
-//  Copyright © 2018 Silver Fox. All rights reserved.
+//  Copyright Â© 2018 Silver Fox. All rights reserved.
 //
 
 import UIKit
@@ -42,7 +42,7 @@ class CubDocumentationItemViewController: UIViewController {
 		paragraphStyle.paragraphSpacingBefore = 16
 		paragraphStyle.paragraphSpacing = 8
 
-		let titleAttributes: [NSAttributedStringKey: Any] = [.foregroundColor: UIColor.white,
+		let titleAttributes: [NSAttributedString.Key: Any] = [.foregroundColor: UIColor.white,
 															 .font: titleFont,
 															 .paragraphStyle: paragraphStyle]
 		

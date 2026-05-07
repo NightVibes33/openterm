@@ -3,12 +3,25 @@
 //  OpenTerm
 //
 //  Created by Louis D'hauwe on 31/03/2018.
-//  Copyright © 2018 Silver Fox. All rights reserved.
+//  Copyright Â© 2018 Silver Fox. All rights reserved.
 //
 
 import Foundation
 import ios_system
 import TabView
+
+private func activeTerminalTabContainer() -> TabViewContainerViewController<TerminalTabViewController>? {
+	let windowScenes = UIApplication.shared.connectedScenes
+		.compactMap { $0 as? UIWindowScene }
+		.sorted { lhs, rhs in
+			lhs.activationState == .foregroundActive && rhs.activationState != .foregroundActive
+		}
+	let rootViewController = windowScenes
+		.flatMap(\.windows)
+		.first(where: \.isKeyWindow)?
+		.rootViewController
+	return rootViewController as? TabViewContainerViewController<TerminalTabViewController>
+}
 
 @_cdecl("credits")
 public func credits(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
@@ -19,7 +32,7 @@ public func credits(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer
 	// which makes it unsafe to access any UI.
 //	if Thread.isMainThread {
 	
-		guard let tabViewContainer = UIApplication.shared.keyWindow?.rootViewController as? TabViewContainerViewController<TerminalTabViewController> else {
+		guard let tabViewContainer = activeTerminalTabContainer() else {
 			return 1
 		}
 		

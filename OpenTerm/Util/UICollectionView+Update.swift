@@ -3,7 +3,7 @@
 //  OpenTerm
 //
 //  Created by Louis D'hauwe on 06/04/2018.
-//  Copyright © 2018 Silver Fox. All rights reserved.
+//  Copyright Â© 2018 Silver Fox. All rights reserved.
 //
 
 import Foundation
@@ -49,7 +49,7 @@ extension CollectionView {
 			if let prevElement = prevElement {
 				
 				// if prev element still exists: move
-				if let newRow = newElements.index(where: { sameIdentityClosure(prevElement, $0) }) {
+				if let newRow = newElements.firstIndex(where: { sameIdentityClosure(prevElement, $0) }) {
 					let indexPathTo = IndexPath(item: newRow, section: section)
 					
 					if indexPath != indexPathTo {
@@ -118,7 +118,7 @@ extension UICollectionView: CollectionView {
 				
 				let indexPath = IndexPath(item: i, section: section)
 				
-				if let oldI = oldElements.index(where: { sameIdentityClosure($0, element) }) {
+				if let oldI = oldElements.firstIndex(where: { sameIdentityClosure($0, element) }) {
 					
 					if !sameValueClosure(oldElements[oldI], element) {
 						self.reloadItems(at: [indexPath])
@@ -147,7 +147,7 @@ extension UITableView: CollectionView {
 	///   - oldElements: The elements in the table view before the update.
 	///   - newElements: The elements in the table view after the update.
 	///   - animation: Row animation to use. Default is `automatic`.
-	func update<T: Equatable>(section: Int, from oldElements: [T], to newElements: [T], animation: UITableViewRowAnimation = .automatic) {
+	func update<T: Equatable>(section: Int, from oldElements: [T], to newElements: [T], animation: UITableView.RowAnimation = .automatic) {
 
 		update(section: section, from: oldElements, to: newElements, onMoveItem: { (atIndexPath, toIndexPath) in
 

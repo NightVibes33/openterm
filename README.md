@@ -66,7 +66,7 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 
 ### CI
 - `.github/workflows/ios-unsigned-ipa.yml` builds an unsigned archive and packages an IPA artifact.
-- The workflow also patches several older vendored dependencies to keep the project compatible with modern Xcode/iOS SDKs.
+- The workflow raises stale vendored deployment targets, patches several older dependencies for modern Swift/iOS SDKs, and builds with an iOS 18.0 floor to avoid `libarclite` failures on current Xcode.
 - Unsigned IPAs are for build verification and sideload-style testing only.
 
 ## Product Direction
@@ -104,10 +104,10 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 | uptime     | wc         | whoami     |            |
 
 ## Local Setup
-- Run `bootstrap.sh` if you need to restore local dependencies.
+- Run `bootstrap.sh` if you need to restore local dependencies, Apple OSS sources, frameworks, and pods in one pass.
 - Open `OpenTerm.xcworkspace`.
 - Build the `OpenTerm` scheme.
-- If you want to run on a real device locally, you still need your own signing identity/provisioning and any framework resigning required by the legacy stack.
+- If you want to run on a real device locally, you still need your own signing identity/provisioning. `resign-frameworks.sh` now uses the signing identity you provide instead of an old hard-coded developer certificate.
 
 ## GitHub Actions
 The CI workflow at `.github/workflows/ios-unsigned-ipa.yml` produces an unsigned IPA artifact.

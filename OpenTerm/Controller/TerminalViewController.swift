@@ -133,9 +133,9 @@ class TerminalViewController: UIViewController {
 		
 		updateTitle()
 
-		NotificationCenter.default.addObserver(self, selector: #selector(didDismissKeyboard), name: .UIKeyboardDidHide, object: nil)
+		NotificationCenter.default.addObserver(self, selector: #selector(didDismissKeyboard), name: UIResponder.keyboardDidHideNotification, object: nil)
 
-		NotificationCenter.default.addObserver(self, selector: #selector(applicationDidEnterBackground), name: .UIApplicationDidEnterBackground, object: nil)
+		NotificationCenter.default.addObserver(self, selector: #selector(applicationDidEnterBackground), name: UIApplication.didEnterBackgroundNotification, object: nil)
 
 		initializeEnvironment()
 		replaceCommand("open-url", "openUrl", true)

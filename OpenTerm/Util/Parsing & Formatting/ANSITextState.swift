@@ -3,13 +3,13 @@
 //  OpenTerm
 //
 //  Created by Ian McDowell on 1/31/18.
-//  Copyright © 2018 Silver Fox. All rights reserved.
+//  Copyright Â© 2018 Silver Fox. All rights reserved.
 //
 
 import UIKit
 
-// 0-  7:  standard colors (as in ESC [ 30–37 m)
-// 8- 15:  high intensity colors (as in ESC [ 90–97 m)
+// 0-  7:  standard colors (as in ESC [ 30â37 m)
+// 8- 15:  high intensity colors (as in ESC [ 90â97 m)
 private let colors: [(r: Int, g: Int, b: Int)] = [
 	/* Normal colors */
 	(0x00, 0x00, 0x00), /* Black   */
@@ -185,7 +185,7 @@ struct ANSITextState {
 		}
 	}
 
-	var attributes: [NSAttributedStringKey: Any] {
+	var attributes: [NSAttributedString.Key: Any] {
 		return [
 			.foregroundColor: foregroundColor,
 			.underlineStyle: isUnderlined ? NSUnderlineStyle.styleSingle.rawValue : NSUnderlineStyle.styleNone.rawValue,

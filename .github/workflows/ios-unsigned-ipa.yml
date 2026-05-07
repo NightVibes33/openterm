@@ -117,6 +117,15 @@ jobs:
           gem install cocoapods
           pod install
 
+      - name: Raise deployment targets for modern Xcode
+        shell: bash
+        run: |
+          set -euo pipefail
+          find OpenTerm.xcodeproj Pods Dependencies -name project.pbxproj -print0 | while IFS= read -r -d '' project
+          do
+            perl -0pi -e 's/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]+;/IPHONEOS_DEPLOYMENT_TARGET = 18.0;/g' "$project"
+          done
+
       - name: Patch vendored dependencies for modern Swift and iOS SDKs
         shell: bash
         run: |
@@ -202,6 +211,7 @@ jobs:
               -configuration Release \
               -archivePath "$ARCHIVE_PATH" \
               -destination "generic/platform=iOS" \
+              IPHONEOS_DEPLOYMENT_TARGET=18.0 \
               CODE_SIGNING_ALLOWED=NO \
               CODE_SIGNING_REQUIRED=NO \
               CODE_SIGN_IDENTITY="" \
@@ -213,6 +223,7 @@ jobs:
               -configuration Release \
               -archivePath "$ARCHIVE_PATH" \
               -destination "generic/platform=iOS" \
+              IPHONEOS_DEPLOYMENT_TARGET=18.0 \
               CODE_SIGNING_ALLOWED=NO \
               CODE_SIGNING_REQUIRED=NO \
               CODE_SIGN_IDENTITY="" \

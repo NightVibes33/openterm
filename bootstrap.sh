@@ -1,4 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
 
 git submodule update --init --recursive
 
@@ -10,3 +15,7 @@ popd
 pushd Dependencies/network_ios
 ./get_frameworks.sh
 popd
+
+if command -v pod >/dev/null 2>&1; then
+  pod install
+fi

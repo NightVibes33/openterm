@@ -3,7 +3,7 @@
 //  OpenTerm
 //
 //  Created by iamcdowe on 1/30/18.
-//  Copyright © 2018 Silver Fox. All rights reserved.
+//  Copyright Â© 2018 Silver Fox. All rights reserved.
 //
 
 import Foundation
@@ -62,7 +62,7 @@ struct CommandExecutionContext {
 			return char == UInt8(ascii: "\\") || char == UInt8(ascii: "\"")
 		}
 
-		guard let pos = string.utf8.index(where: needsEscape) else {
+		guard let pos = string.utf8.firstIndex(where: needsEscape) else {
 			return string
 		}
 		var newString = String(string[..<pos])
