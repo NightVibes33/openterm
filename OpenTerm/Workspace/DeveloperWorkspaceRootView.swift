@@ -610,6 +610,7 @@ private struct MoreWorkspaceView: View {
 	@Binding var selection: WorkspaceDestination
 	@AppStorage("workspace.onboarding.completed") private var hasCompletedOnboarding = false
 	@State private var showsOnboarding = false
+	@State private var showsSettings = false
 
 	var body: some View {
 		WorkspaceScroll(title: "More") {
@@ -618,7 +619,7 @@ private struct MoreWorkspaceView: View {
 			AdaptiveGrid {
 				ActionTile(title: "AI Assistant", subtitle: "Requires your provider or proxy", symbol: "sparkles", tint: AppColor.violet) { selection = .assistant }
 				ActionTile(title: "Git Workspace", subtitle: "Terminal-driven repo actions", symbol: "point.topleft.down.curvedto.point.bottomright.up", tint: AppColor.blue) { selection = .git }
-				ActionTile(title: "Settings", subtitle: "Theme, terminal, AI, and defaults", symbol: "slider.horizontal.3", tint: store.workspaceAccentColor) { selection = .more }
+				ActionTile(title: "Settings", subtitle: "Theme, terminal, AI, and defaults", symbol: "slider.horizontal.3", tint: store.workspaceAccentColor) { showsSettings = true }
 				ActionTile(title: "Refresh", subtitle: "Files, repos, and monitors", symbol: "arrow.clockwise", tint: AppColor.green) {
 					store.refreshLocalFiles()
 					store.refreshGitWorkspaces()
@@ -626,19 +627,53 @@ private struct MoreWorkspaceView: View {
 				}
 			}
 
+			SettingsAccessCard(store: store) {
+				showsSettings = true
+			}
+
 			AboutSupportCard(tint: store.workspaceAccentColor) {
 				hasCompletedOnboarding = false
 				showsOnboarding = true
 			}
-
-			SettingsWorkspaceView(store: store)
 		}
 		.sheet(isPresented: $showsOnboarding) {
 			WorkspaceOnboardingView(store: store, selection: $selection, hasCompletedOnboarding: $hasCompletedOnboarding)
 		}
+		.sheet(isPresented: $showsSettings) {
+			NavigationStack {
+				WorkspaceScroll(title: "Settings") {
+					SettingsWorkspaceView(store: store)
+				}
+				.toolbar {
+					ToolbarItem(placement: .cancellationAction) {
+						Button("Done") { showsSettings = false }
+					}
+				}
+			}
+		}
 	}
 }
 
+
+
+private struct SettingsAccessCard: View {
+	@ObservedObject var store: WorkspaceStore
+	let openSettings: () -> Void
+
+	var body: some View {
+		VStack(alignment: .leading, spacing: 14) {
+			SectionHeader(title: "Workspace Setup", subtitle: "Settings are real controls for theme, terminal appearance, AI routing, optional backend bootstrap, vault sync, and backup export.")
+			AdaptiveGrid {
+				MetricCard(title: "Theme", value: store.activeThemeName, symbol: "paintpalette", tint: store.workspaceAccentColor)
+				MetricCard(title: "AI", value: store.isAIConfigured ? "Configured" : "Off", symbol: "sparkles", tint: AppColor.violet)
+				MetricCard(title: "Vault", value: store.isVaultSyncConfigured ? "Sync Ready" : "Local", symbol: "lock.shield", tint: AppColor.green)
+			}
+			PrimaryWorkspaceButton(title: "Open Settings", symbol: "slider.horizontal.3", tint: store.workspaceAccentColor, action: openSettings)
+		}
+		.padding(18)
+		.background(WorkspaceCardBackground(tint: store.workspaceAccentColor))
+	}
+}
 
 private struct WorkspaceOnboardingView: View {
 
