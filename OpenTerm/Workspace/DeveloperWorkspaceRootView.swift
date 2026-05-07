@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct DeveloperWorkspaceRootView: View {
 
@@ -907,19 +908,129 @@ private struct WorkspaceEditorSheet: View {
 
 	var body: some View {
 		NavigationStack {
-			TextEditor(text: $text)
-				.font(.system(.body, design: .monospaced))
-				.padding()
-				.navigationTitle(document.title)
-				.navigationBarTitleDisplayMode(.inline)
-				.toolbar {
-					ToolbarItem(placement: .cancellationAction) {
-						Button("Close") { store.closeEditor() }
-					}
-					ToolbarItem(placement: .confirmationAction) {
-						Button("Save") { store.saveEditorDocument(relativePath: document.relativePath, content: text) }
-					}
+			VStack(spacing: 0) {
+				HStack(spacing: 10) {
+					MetricPill(title: "Language", value: languageName)
+					MetricPill(title: "Lines", value: "\(text.components(separatedBy: .newlines).count)")
+					MetricPill(title: "File", value: document.relativePath)
+					Spacer()
 				}
+				.padding(.horizontal, 16)
+				.padding(.vertical, 12)
+				.background(AppColor.ink.opacity(0.96))
+
+				HighlightedCodeEditor(text: $text, language: languageName)
+			}
+			.background(AppColor.ink.ignoresSafeArea())
+			.navigationTitle(document.title)
+			.navigationBarTitleDisplayMode(.inline)
+			.toolbar {
+				ToolbarItem(placement: .cancellationAction) {
+					Button("Close") { store.closeEditor() }
+				}
+				ToolbarItem(placement: .confirmationAction) {
+					Button("Save") { store.saveEditorDocument(relativePath: document.relativePath, content: text) }
+				}
+			}
+		}
+	}
+
+	private var languageName: String {
+		let ext = (document.title as NSString).pathExtension.lowercased()
+		switch ext {
+		case "sh", "bash", "zsh": return "Shell"
+		case "swift": return "Swift"
+		case "js", "mjs", "cjs": return "JavaScript"
+		case "json": return "JSON"
+		case "md", "markdown": return "Markdown"
+		case "py": return "Python"
+		case "yml", "yaml": return "YAML"
+		default: return "Text"
+		}
+	}
+}
+
+private struct HighlightedCodeEditor: UIViewRepresentable {
+	@Binding var text: String
+	let language: String
+
+	func makeCoordinator() -> Coordinator {
+		Coordinator(self)
+	}
+
+	func makeUIView(context: Context) -> UITextView {
+		let textView = UITextView()
+		textView.delegate = context.coordinator
+		textView.backgroundColor = UIColor(red: 0.06, green: 0.08, blue: 0.11, alpha: 1)
+		textView.keyboardAppearance = .dark
+		textView.autocorrectionType = .no
+		textView.autocapitalizationType = .none
+		textView.smartDashesType = .no
+		textView.smartQuotesType = .no
+		textView.textContainerInset = UIEdgeInsets(top: 18, left: 16, bottom: 28, right: 16)
+		textView.font = UIFont.monospacedSystemFont(ofSize: 15, weight: .regular)
+		textView.alwaysBounceVertical = true
+		context.coordinator.applyHighlighting(to: textView, text: text, language: language)
+		return textView
+	}
+
+	func updateUIView(_ textView: UITextView, context: Context) {
+		guard textView.text != text || context.coordinator.language != language else {
+			return
+		}
+		context.coordinator.applyHighlighting(to: textView, text: text, language: language)
+	}
+
+	final class Coordinator: NSObject, UITextViewDelegate {
+		private let parent: HighlightedCodeEditor
+		var language: String
+		private var isApplyingHighlighting = false
+
+		init(_ parent: HighlightedCodeEditor) {
+			self.parent = parent
+			self.language = parent.language
+		}
+
+		func textViewDidChange(_ textView: UITextView) {
+			parent.text = textView.text
+			applyHighlighting(to: textView, text: textView.text, language: parent.language)
+		}
+
+		func applyHighlighting(to textView: UITextView, text: String, language: String) {
+			guard !isApplyingHighlighting else { return }
+			isApplyingHighlighting = true
+			self.language = language
+
+			let selectedRange = textView.selectedRange
+			let attributed = NSMutableAttributedString(string: text)
+			let fullRange = NSRange(location: 0, length: attributed.length)
+			let baseFont = UIFont.monospacedSystemFont(ofSize: 15, weight: .regular)
+			attributed.addAttributes([
+				.font: baseFont,
+				.foregroundColor: UIColor(white: 0.86, alpha: 1)
+			], range: fullRange)
+
+			apply(pattern: "\\b(func|let|var|if|else|for|while|return|struct|class|enum|case|switch|import|private|public|final|guard|throw|throws|try|catch|do|in)\\b", color: UIColor(red: 0.46, green: 0.70, blue: 1.0, alpha: 1), to: attributed)
+			apply(pattern: "\\b(true|false|null|nil|self|super)\\b", color: UIColor(red: 0.96, green: 0.58, blue: 0.70, alpha: 1), to: attributed)
+			apply(pattern: "\"(?:\\\\.|[^\"\\\\])*\"|'(?:\\\\.|[^'\\\\])*'", color: UIColor(red: 0.62, green: 0.86, blue: 0.64, alpha: 1), to: attributed)
+			apply(pattern: "(?m)#.*$|//.*$", color: UIColor(white: 0.52, alpha: 1), to: attributed)
+			apply(pattern: "\\b[0-9]+(?:\\.[0-9]+)?\\b", color: UIColor(red: 0.98, green: 0.72, blue: 0.42, alpha: 1), to: attributed)
+			apply(pattern: "(?m)^\\s*[-*#]+.*$", color: UIColor(red: 0.76, green: 0.66, blue: 1.0, alpha: 1), to: attributed)
+
+			textView.attributedText = attributed
+			textView.selectedRange = NSRange(location: min(selectedRange.location, attributed.length), length: min(selectedRange.length, max(0, attributed.length - min(selectedRange.location, attributed.length))))
+			isApplyingHighlighting = false
+		}
+
+		private func apply(pattern: String, color: UIColor, to attributed: NSMutableAttributedString) {
+			guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else {
+				return
+			}
+			let range = NSRange(location: 0, length: attributed.length)
+			regex.enumerateMatches(in: attributed.string, options: [], range: range) { match, _, _ in
+				guard let match else { return }
+				attributed.addAttribute(.foregroundColor, value: color, range: match.range)
+			}
 		}
 	}
 }

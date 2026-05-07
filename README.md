@@ -32,7 +32,7 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - Terminal appearance has a modernized canvas with live font, cursor, keyboard, text color, background color, and app accent controls.
 - SSH profiles persist locally with label, host, username, port, auth type, key path, startup path, notes, and last-used timestamps.
 - SSH quick connect now builds and runs real `ssh` commands through the terminal instead of only switching screens.
-- Local files are scanned from `DocumentManager.shared.activeDocumentsFolderURL`; UTF-8 files can open in an in-app text editor and save back to disk.
+- Local files are scanned from `DocumentManager.shared.activeDocumentsFolderURL`; UTF-8 files can open in an in-app syntax-highlighted editor and save back to disk.
 - Command snippets persist locally and can run directly in the terminal.
 - Git repositories are detected by scanning for `.git` folders, and clone/status/pull/commit/push actions are terminal-driven.
 - Server monitors persist locally and can poll Linux CPU, memory, disk, and load snapshots over noninteractive SSH.
@@ -47,12 +47,12 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - SSH profile storage is local only. Encrypted cloud vault sync is not connected yet.
 - Server monitoring works for noninteractive SSH profiles; password-based profiles still require manual terminal sessions.
 - Git actions are terminal-driven because this fork does not currently bundle a native Git engine.
-- The editor is a real UTF-8 text editor, but full syntax highlighting, language tooling, and diff views are not finished.
+- The editor has lightweight syntax highlighting and language detection, but full language-server tooling, completions, and diff views are not finished.
 - The AI assistant supports a configurable provider endpoint, but production auth, rate limits, hosted usage enforcement, and billing are deferred.
 
 ### Not implemented yet
 - End-to-end encrypted SSH key vault sync.
-- Full syntax highlighting and language tooling in the code editor.
+- Full language-server tooling, completions, and diff views in the code editor.
 - Native Git engine integration with structured conflict handling.
 - Production AI request proxy, rate limits, and server-side usage controls.
 - StoreKit/subscription entitlements and server-side purchase verification.
@@ -64,7 +64,7 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - `OpenTerm/AppDelegate.swift` launches the SwiftUI workspace shell.
 - `OpenTerm/Workspace/DeveloperWorkspaceRootView.swift` drives the main multi-surface experience.
 - `OpenTerm/Workspace/LegacyTerminalContainerView.swift` wraps the legacy terminal controller.
-- `OpenTerm/Workspace/WorkspaceStore.swift` owns local workspace state, persistence, terminal actions, SSH profile commands, monitor refresh, Git command queuing, file editing, snippets, app accent state, and AI provider configuration.
+- `OpenTerm/Workspace/WorkspaceStore.swift` owns local workspace state, persistence, terminal actions, SSH profile commands, monitor refresh, Git command queuing, file editing, snippets, app accent state, and AI provider configuration. The SwiftUI workspace owns the lightweight highlighted editor surface.
 
 ### Backend foundation
 - `supabase/migrations/20260506_workspace_foundation.sql` creates the initial hosted-data shape.
@@ -133,7 +133,8 @@ Important:
 - [x] Add backend schema foundation
 - [x] Replace mock SSH manager with local profiles and real terminal connect flow
 - [x] Add local UTF-8 text editor
-- [ ] Add syntax highlighting and language tooling
+- [x] Add lightweight syntax highlighting and language detection
+- [ ] Add language tooling, completions, and diff views
 - [x] Add terminal-driven Git clone/status/pull/commit/push actions
 - [ ] Add native Git engine integration
 - [x] Connect configurable AI provider endpoint and local usage history
