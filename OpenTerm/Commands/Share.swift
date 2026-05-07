@@ -3,7 +3,7 @@
 //  OpenTerm
 //
 //  Created by Anders Borum on 28/01/2018.
-//  Copyright © 2018 Silver Fox. All rights reserved.
+//  Copyright Â© 2018 Silver Fox. All rights reserved.
 //
 
 import Foundation
@@ -42,7 +42,11 @@ public func shareFile(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePoint
 
 	// all arguments are files we want to share
 	for k in 1..<Int(argc) {
-		let path = String(cString: argv![k]!)
+		guard let arg = argv?[k] else {
+			fputs("Missing share argument\n", thread_stderr)
+			return 1
+		}
+		let path = String(cString: arg)
 		guard FileManager.default.fileExists(atPath: path) else {
 			fputs("Missing file \(path)\n", thread_stderr)
 			return 1

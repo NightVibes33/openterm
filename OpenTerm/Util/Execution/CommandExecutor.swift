@@ -106,7 +106,7 @@ class CommandExecutor {
 				returnCode = 1
 				// If an error was thrown while running, send it to the stderr
 				self.delegateQueue.async {
-					self.delegate?.commandExecutor(self, receivedStderr: error.localizedDescription.data(using: .utf8)!)
+					self.delegate?.commandExecutor(self, receivedStderr: error.localizedDescription.data(using: .utf8) ?? Data())
 				}
 			}
 
@@ -123,7 +123,7 @@ class CommandExecutor {
 
 			// Write the end code to stdout_pipe
 			// TODO: Also need to send to stderr?
-			self.stdout_pipe.fileHandleForWriting.write(Parser.Code.endOfTransmission.rawValue.data(using: .utf8)!)
+			self.stdout_pipe.fileHandleForWriting.write(Parser.Code.endOfTransmission.rawValue.data(using: .utf8) ?? Data())
 
 			self.state = .idle
 		}

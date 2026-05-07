@@ -181,6 +181,7 @@ Important:
 - [x] Harden legacy terminal storyboard panel loading against bad casts
 - [x] Replace safe legacy coder fatal errors with failable initializers
 - [x] Move Spotlight indexing identity off the old `com.silverfox.Terminal` domain
+- [x] Harden command execution/share command force unwraps
 - [ ] Remove remaining legacy `fatalError` and force-cast paths from storyboard factory/controllers
 
 ## Next Engineering Priorities

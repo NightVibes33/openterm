@@ -3,7 +3,7 @@
 //  OpenTerm
 //
 //  Created by Louis D'hauwe on 09/04/2018.
-//  Copyright © 2018 Silver Fox. All rights reserved.
+//  Copyright Â© 2018 Silver Fox. All rights reserved.
 //
 
 import Foundation
@@ -20,7 +20,7 @@ struct SystemExecutorCommand: CommandExecutorCommand {
 		thread_stdout = nil
 		thread_stderr = nil
 		// Pass the value of the string to system, return its exit code.
-		let returnCode = ios_system(command.utf8CString)
+		let returnCode = command.withCString { ios_system(UnsafeMutablePointer(mutating: $0)) }
 		
 		// Flush pipes to make sure all data is read
 		fflush(stdout)

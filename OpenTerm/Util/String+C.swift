@@ -3,7 +3,7 @@
 //  OpenTerm
 //
 //  Created by Louis D'hauwe on 08/04/2018.
-//  Copyright © 2018 Silver Fox. All rights reserved.
+//  Copyright Â© 2018 Silver Fox. All rights reserved.
 //
 
 import Foundation
@@ -15,10 +15,6 @@ extension String {
 		return nsSelf.cString(using: String.Encoding.utf8.rawValue)
 	}
 
-	var utf8CString: UnsafeMutablePointer<Int8> {
-		return UnsafeMutablePointer(mutating: (self as NSString).utf8String!)
-	}
-	
 }
 
 func convertCArguments(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> [String]? {
