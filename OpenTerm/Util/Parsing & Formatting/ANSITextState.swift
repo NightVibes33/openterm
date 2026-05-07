@@ -33,7 +33,7 @@ private let colors: [(r: Int, g: Int, b: Int)] = [
 ]
 
 func indexedColor(atIndex index: Int) -> UIColor {
-	guard index >= 0 && index <= 255 else { fatalError("Index out of bounds.") }
+	guard index >= 0 && index <= 255 else { return .clear }
 	let r, g, b: Int
 	if index < 16 {
 		(r, g, b) = colors[index]
@@ -66,7 +66,7 @@ func customColor(codes: [Int]) -> (color: UIColor, readCount: Int) {
 		guard codes.count >= expectedCodes else { return invalidResponse }
 		let value = codes[1]
 
-		guard value <= 255 else { return invalidResponse }
+		guard value >= 0 && value <= 255 else { return invalidResponse }
 		let color = indexedColor(atIndex: value)
 		return (color, expectedCodes)
 	case 2:
@@ -114,7 +114,7 @@ enum ANSIForegroundColor: Int {
 		case 90...97:
 			return indexedColor(atIndex: self.rawValue - 80)
 		default:
-			fatalError("Invalid value")
+				return UserDefaultsController.shared.terminalTextColor
 		}
 	}
 }
@@ -151,7 +151,7 @@ enum ANSIBackgroundColor: Int {
 		case 100...107:
 			return indexedColor(atIndex: self.rawValue - 90)
 		default:
-			fatalError("Invalid value")
+				return .clear
 		}
 	}
 }

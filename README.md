@@ -41,7 +41,7 @@ The current design target is real-tool clarity first: fewer marketing cards, cle
 - Backend settings now store Supabase URL, anon key, access token, user/device identifiers, device label, and vault sync secret locally for hosted AI proxy routing, encrypted vault sync, and remote config refresh.
 - A Supabase schema foundation exists for users, subscriptions, devices, snippet sync, AI usage, monitors, audit logs, AI rate-limit windows, encrypted vault sync items, and monitor alerts.
 - GitHub Actions includes a green unsigned IPA workflow for CI artifact generation.
-- Vendored dependency compatibility patches have been added for modern Xcode/iOS SDK builds. Several old utility and settings crash paths have been hardened, but legacy controller cleanup is still ongoing.
+- Vendored dependency compatibility patches have been added for modern Xcode/iOS SDK builds. Several old utility, settings, and ANSI parsing crash paths have been hardened, but legacy controller cleanup is still ongoing.
 
 ### Partially implemented
 - SSH profile and key-vault storage are local first. App-side encrypted vault push/pull, newer-wins conflict handling, local repair, and app-active refresh are wired; production migration rollout and real multi-device testing still need validation.
