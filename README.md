@@ -183,6 +183,7 @@ Important:
 - [x] Move Spotlight indexing identity off the old `com.silverfox.Terminal` domain
 - [x] Harden command execution/share command force unwraps
 - [x] Remove remaining scanned `fatalError`, `as!`, `try!`, and obvious force-unwrap crash paths from app Swift source
+- [x] Make Home capability badges use local/configured/terminal-driven labels instead of broad ready/live claims
 - [ ] Replace optional-fallback legacy storyboard flows with real SwiftUI screens
 
 ## Next Engineering Priorities

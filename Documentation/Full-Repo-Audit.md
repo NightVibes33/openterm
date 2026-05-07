@@ -68,7 +68,7 @@ This audit covers the whole checked-in repo, not only the new SwiftUI workspace.
 ## Next Concrete Fixes
 
 - Replace the remaining marketing/card-heavy UI with compact operational surfaces. Home now has the first version of a real capability dashboard.
-- Add a real capability/status screen that shows configured/missing requirements for AI, vault sync, Git, monitors, SSH, files, and terminal.
+- Keep capability/status labels strict: local, configured, terminal-driven, or missing; avoid broad ready/live claims unless the app has verified them.
 - Add file rename/move and folder export.
 - Replace or quarantine the old storyboard scripting/documentation screens before calling the UI modern.
 - Replace the optional-fallback legacy storyboard flows with real SwiftUI screens instead of relying on old Interface Builder scenes.

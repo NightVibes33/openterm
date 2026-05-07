@@ -129,13 +129,13 @@ private struct WorkspaceHomeView: View {
 
 	private var capabilityStatuses: [CapabilityStatus] {
 		[
-			CapabilityStatus(title: "Terminal", detail: "Built-in ios_system command runner is available.", state: "Ready", symbol: "terminal", tint: store.workspaceAccentColor),
-			CapabilityStatus(title: "Files", detail: "Browse/import/edit/export app documents.", state: "Ready", symbol: "folder", tint: AppColor.amber),
-			CapabilityStatus(title: "SSH", detail: store.sshProfiles.isEmpty ? "Add a real profile before connecting." : "\(store.sshProfiles.count) saved profile(s).", state: store.sshProfiles.isEmpty ? "Setup" : "Ready", symbol: "server.rack", tint: AppColor.green),
+			CapabilityStatus(title: "Terminal", detail: "Built-in ios_system command runner is available.", state: "Local", symbol: "terminal", tint: store.workspaceAccentColor),
+			CapabilityStatus(title: "Files", detail: "Browse/import/edit/export app documents.", state: "Local", symbol: "folder", tint: AppColor.amber),
+			CapabilityStatus(title: "SSH", detail: store.sshProfiles.isEmpty ? "Add a real profile before connecting." : "\(store.sshProfiles.count) saved profile(s).", state: store.sshProfiles.isEmpty ? "Setup" : "Saved", symbol: "server.rack", tint: AppColor.green),
 			CapabilityStatus(title: "Git", detail: store.gitWorkspaces.isEmpty ? "No repositories found. Commands require git in the terminal environment." : "\(store.gitWorkspaces.count) detected repo(s).", state: store.gitWorkspaces.isEmpty ? "No repos" : "Terminal", symbol: "point.topleft.down.curvedto.point.bottomright.up", tint: AppColor.blue),
-			CapabilityStatus(title: "AI", detail: store.isAIConfigured ? "Provider/proxy configured." : "Endpoint/key or proxy/token missing.", state: store.isAIConfigured ? "Ready" : "Config", symbol: "sparkles", tint: AppColor.violet),
-			CapabilityStatus(title: "Vault Sync", detail: store.isVaultSyncConfigured ? "Backend settings present." : "Supabase/auth/secret missing.", state: store.isVaultSyncConfigured ? "Ready" : "Config", symbol: "lock.shield", tint: AppColor.coral),
-			CapabilityStatus(title: "Monitoring", detail: store.serverSnapshots.isEmpty ? "No live SSH poll result yet." : "Latest SSH monitor data available.", state: store.serverSnapshots.isEmpty ? "No data" : "Live", symbol: "waveform.path.ecg", tint: AppColor.green)
+			CapabilityStatus(title: "AI", detail: store.isAIConfigured ? "Provider/proxy configured." : "Endpoint/key or proxy/token missing.", state: store.isAIConfigured ? "Configured" : "Config", symbol: "sparkles", tint: AppColor.violet),
+			CapabilityStatus(title: "Vault Sync", detail: store.isVaultSyncConfigured ? "Backend settings present." : "Supabase/auth/secret missing.", state: store.isVaultSyncConfigured ? "Configured" : "Config", symbol: "lock.shield", tint: AppColor.coral),
+			CapabilityStatus(title: "Monitoring", detail: store.serverSnapshots.isEmpty ? "No live SSH poll result yet." : "Latest SSH monitor data available.", state: store.serverSnapshots.isEmpty ? "No data" : "SSH data", symbol: "waveform.path.ecg", tint: AppColor.green)
 		]
 	}
 

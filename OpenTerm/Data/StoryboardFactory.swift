@@ -3,7 +3,7 @@
 //  OpenTerm
 //
 //  Created by Louis D'hauwe on 04/04/2018.
-//  Copyright © 2018 Silver Fox. All rights reserved.
+//  Copyright Â© 2018 Silver Fox. All rights reserved.
 //
 
 import Foundation
@@ -30,26 +30,26 @@ class MainStoryboard: StoryboardWrapper {
 		uiStoryboard = UIStoryboard(name: "Main", bundle: nil)
 	}
 	
-	func scriptMetadataViewController(state: ScriptMetadataState) -> ScriptMetadataViewController {
-		let vc: ScriptMetadataViewController = instantiateViewController()
-		vc.state = state
+	func scriptMetadataViewController(state: ScriptMetadataState) -> ScriptMetadataViewController? {
+		let vc: ScriptMetadataViewController? = instantiateViewController()
+		vc?.state = state
 		return vc
 	}
 	
-	func manualWebViewController(htmlURL: URL) -> ManualWebViewController {
-		let vc: ManualWebViewController = instantiateViewController()
-		vc.htmlURL = htmlURL
+	func manualWebViewController(htmlURL: URL) -> ManualWebViewController? {
+		let vc: ManualWebViewController? = instantiateViewController()
+		vc?.htmlURL = htmlURL
 		return vc
 	}
 	
-	func cubDocumentationViewController() -> CubDocumentationViewController {
-		let vc: CubDocumentationViewController = instantiateViewController()
+	func cubDocumentationViewController() -> CubDocumentationViewController? {
+		let vc: CubDocumentationViewController? = instantiateViewController()
 		return vc
 	}
 	
-	func cubDocumentationItemViewController(item: DocumentationItem) -> CubDocumentationItemViewController {
-		let vc: CubDocumentationItemViewController = instantiateViewController()
-		vc.item = item
+	func cubDocumentationItemViewController(item: DocumentationItem) -> CubDocumentationItemViewController? {
+		let vc: CubDocumentationItemViewController? = instantiateViewController()
+		vc?.item = item
 		return vc
 	}
 	
@@ -73,13 +73,8 @@ extension StoryboardWrapper {
 	// With the convenience functions, you can write:
 	// let fooVC = UIStoryboard.main.fooViewController()
 	
-	func instantiateViewController<T: UIViewController>() -> T where T: StoryboardIdentifiable {
-		
-		guard let vc: T = instantiateViewController(withIdentifier: T.storyboardIdentifier) else {
-			fatalError("Could not instantiate view controller \"\(T.self)\" for identifier: \"\(T.storyboardIdentifier)\"")
-		}
-		
-		return vc
+	func instantiateViewController<T: UIViewController>() -> T? where T: StoryboardIdentifiable {
+		return instantiateViewController(withIdentifier: T.storyboardIdentifier)
 	}
 	
 	private func instantiateViewController<T: UIViewController>(withIdentifier identifier: String) -> T? {
