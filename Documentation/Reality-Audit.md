@@ -18,13 +18,14 @@ This fork should not pretend to be a native full IDE yet. The real product direc
 
 ## Previously Fake Or Misleading Areas Fixed
 
+- Hard-coded white-on-light workspace text was replaced with semantic foreground colors so the SwiftUI shell is readable across light, dark, and glass-style backgrounds.
 - Removed seeded fake SSH hosts, seeded demo monitors, and generic seeded command snippets. Blank SSH profiles and invalid monitor records are rejected before persistence.
 - Home recent activity no longer shows saved SSH profiles until they have actually been used.
 - Monitor snapshots are no longer created just because a monitor was configured.
 - Empty Home, Git, Server, Vault, Monitor, and AI states now state what real setup is required.
 - The AI panel no longer says it is ready before a real provider/proxy is configured.
 - The add-monitor button now opens SSH profile setup when no profile exists instead of silently doing nothing.
-- The terminal overflow now labels the old scripts surface as legacy and no longer exposes bundled example scripts as if they were current workspace content.
+- The Scripts panel remains available because it works; bundled examples were expanded with practical runnable workflows instead of being removed.
 
 ## Still Terminal-Driven, Not Native
 

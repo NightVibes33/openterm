@@ -45,6 +45,8 @@ This audit covers the whole checked-in repo, not only the new SwiftUI workspace.
 - Added honest empty states for Home, Git, Servers, AI, Files, monitors, vault, alerts, and snippets, plus a Home capability dashboard for configured/missing states.
 - Added global workspace status feedback.
 - Added runnable bundled script examples for system snapshots, website/API probes, archives, text search, and SSH command templates.
+- Replaced hard-coded white text on light system cards with semantic foreground colors across the SwiftUI workspace shell.
+- Reworded inflated Live Workspace/Command Center copy to describe real activity and terminal-driven/configuration-gated tools.
 - Disabled live AI sending until a real endpoint/key or hosted proxy/token is configured.
 - Added `git` preflight before terminal-driven Git commands.
 - Rejected blank SSH profiles and invalid monitor records before persistence.
@@ -55,7 +57,7 @@ This audit covers the whole checked-in repo, not only the new SwiftUI workspace.
 
 ## Still Bad / High Priority
 
-1. The visual design has been moved away from the dark generic AI-card look, but still needs a deeper information-architecture pass to reduce card count and make each surface feel more like a focused tool.
+1. The visual design no longer uses the worst white-on-light card mismatch, but still needs a deeper information-architecture pass to reduce card count and make each surface feel more like a focused tool.
 2. The terminal screen is still the 2017/2018 UIKit terminal embedded inside SwiftUI. It needs a modern toolbar, session switcher, and terminal-specific status/action surface.
 3. Legacy storyboards and scripting panels remain old. They are real legacy features, but visually inconsistent and still need replacement even after force-cast/fatal crash paths were removed from the app source scan.
 4. Git is still terminal-driven, not native. That is acceptable only if the UI keeps saying so.

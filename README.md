@@ -37,6 +37,8 @@ The current design target is real-tool clarity first: fewer marketing cards, lig
 - Server monitors persist locally, poll Linux CPU/memory/disk/load snapshots over noninteractive SSH, and keep a local acknowledgeable alert history when thresholds change; monitors are user-created and monitor cards appear only after real poll results.
 - The AI assistant can call a configurable OpenAI-compatible chat endpoint or hosted Supabase proxy, records local usage history, includes prompt shortcuts for errors, commands, scripts, SSH, remote dev setup, Docker, Git conflicts, and regex, and can insert assistant output back into the terminal. Live sending is disabled until a real endpoint/key or proxy/token is configured.
 - The iPhone More tab is custom now, not Apple's automatic overflow list, and contains real AI, Git, settings, theme, and terminal controls.
+- The SwiftUI workspace now uses semantic text colors instead of hard-coded white labels, fixing the broken white-on-light card look across the main shell.
+- The home and More copy now avoids inflated âlive/command centerâ language and labels Git/AI as terminal-driven or configuration-gated where appropriate.
 - Settings are free-preview focused with real AI/provider controls and live appearance controls instead of placeholder billing screens.
 - Workspace backup export writes a JSON manifest for profiles, snippets, monitors, vault metadata, and AI routing metadata without raw private-key contents.
 - Backend settings store non-secret routing metadata locally, while AI provider keys, Supabase anon/access tokens, and vault sync secrets are routed through Keychain-backed local storage for hosted AI proxy routing, encrypted vault sync, and remote config refresh.
@@ -181,12 +183,13 @@ Important:
 - [x] Harden legacy scripting/examples/documentation panels against missing resources and bad cell casts
 - [x] Keep the working Scripts panel available and expand bundled runnable examples for system checks, HTTP/API probes, archives, grep notes, and SSH command templates
 - [x] Replace the darkest generic AI-card backdrop with lighter system-native workspace surfaces
+- [x] Replace hard-coded white workspace labels with semantic text colors for readable light/dark/glass surfaces
 - [x] Harden legacy terminal storyboard panel loading against bad casts
 - [x] Replace safe legacy coder fatal errors with failable initializers
 - [x] Move Spotlight indexing identity off the old `com.silverfox.Terminal` domain
 - [x] Harden command execution/share command force unwraps
 - [x] Remove remaining scanned `fatalError`, `as!`, `try!`, and obvious force-unwrap crash paths from app Swift source
-- [x] Make Home capability badges use local/configured/terminal-driven labels instead of broad ready/live claims
+- [x] Make Home capability badges and main workspace copy use local/configured/terminal-driven labels instead of broad ready/live claims
 - [ ] Replace optional-fallback legacy storyboard flows with real SwiftUI screens
 
 ## Next Engineering Priorities
