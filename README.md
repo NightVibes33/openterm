@@ -40,7 +40,7 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - The AI assistant can call a configurable OpenAI-compatible chat endpoint, records local usage history, includes prompt shortcuts, and can insert assistant output back into the terminal.
 - The iPhone More tab is custom now, not Apple's automatic overflow list, and contains real AI, Git, settings, theme, and terminal controls.
 - Settings are free-preview focused with real AI/provider controls and live appearance controls instead of placeholder billing screens.
-- A Supabase schema foundation exists for users, subscriptions, devices, snippet sync, AI usage, monitors, and audit logs.
+- A Supabase schema foundation exists for users, subscriptions, devices, snippet sync, AI usage, monitors, audit logs, AI rate-limit windows, encrypted vault sync items, and monitor alerts.
 - GitHub Actions includes a green unsigned IPA workflow for CI artifact generation.
 - Vendored dependency compatibility patches have been added for modern Xcode/iOS SDK builds.
 
@@ -49,13 +49,13 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - Server monitoring works for noninteractive SSH profiles; password-based profiles still require manual terminal sessions.
 - Git actions are terminal-driven because this fork does not currently bundle a native Git engine.
 - The editor has lightweight syntax highlighting and language detection, but full language-server tooling, completions, and diff views are not finished.
-- The AI assistant supports a configurable provider endpoint, prompt shortcuts, terminal handoff, and local usage history, but production auth, rate limits, hosted usage enforcement, and billing are deferred.
+- The AI assistant supports a configurable provider endpoint, prompt shortcuts, terminal handoff, and local usage history. Backend tables/functions and an Edge Function scaffold exist for hosted rate-limit enforcement, but the app still calls the configured endpoint directly until proxy routing is enabled in-app.
 
 ### Not implemented yet
 - End-to-end encrypted SSH key vault sync across devices.
 - Full language-server tooling, completions, and diff views in the code editor.
 - Native Git engine integration with structured conflict handling.
-- Production AI request proxy, rate limits, and server-side usage controls.
+- Production AI request proxy deployment and app-side proxy routing.
 - StoreKit/subscription entitlements and server-side purchase verification.
 - Signed App Store distribution workflow.
 
@@ -69,7 +69,9 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 
 ### Backend foundation
 - `supabase/migrations/20260506_workspace_foundation.sql` creates the initial hosted-data shape.
-- Tables currently defined: `users`, `subscriptions`, `devices`, `ssh_profiles_metadata`, `snippets`, `ai_usage`, `server_monitors`, `audit_logs`.
+- `supabase/migrations/20260507_ai_vault_limits.sql` adds AI rate-limit windows, encrypted vault sync storage, monitor alert records, and rate-limit helper functions.
+- `supabase/functions/ai-proxy/index.ts` is a deployable Edge Function scaffold for authenticated AI requests, rate-limit checks, OpenAI forwarding, and usage recording.
+- Tables currently defined: `users`, `subscriptions`, `devices`, `ssh_profiles_metadata`, `snippets`, `ai_usage`, `server_monitors`, `audit_logs`, `ai_rate_limits`, `vault_sync_items`, `server_monitor_alerts`.
 - Sensitive SSH material should remain end-to-end encrypted before upload. Raw private keys should not be stored server-side in plaintext.
 - The active app direction is free until the core SSH, Git, editor, AI, and monitoring workflows are stable.
 
@@ -139,9 +141,12 @@ Important:
 - [x] Add terminal-driven Git clone/status/pull/commit/push actions
 - [ ] Add native Git engine integration
 - [x] Connect configurable AI provider endpoint, prompt shortcuts, terminal handoff, and local usage history
-- [ ] Add hosted AI proxy, rate limits, and server-side usage controls
+- [x] Add backend AI rate-limit and usage-control schema
+- [x] Add hosted AI proxy scaffold
+- [ ] Add app-side hosted proxy routing and deployment secrets
 - [x] Add local protected SSH key vault foundation
-- [ ] Add encrypted vault sync across devices
+- [x] Add backend encrypted vault sync tables
+- [ ] Connect app-side encrypted vault sync across devices
 - [ ] Add signed App Store distribution when needed
 
 ## Documentation
