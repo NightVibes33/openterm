@@ -270,77 +270,40 @@ private struct FilesWorkspaceView: View {
 
 	var body: some View {
 		WorkspaceScroll(title: "Files") {
-			WorkspaceSummaryBanner(title: "Local Files", detail: "Browse real iOS app documents, import from Files, edit UTF-8 files, create folders, rename items, delete items, and export files or folder archives through the share sheet.", tint: AppColor.amber)
+			FileWorkspaceHeader(
+				path: store.currentFolderDisplayPath,
+				fileCount: store.localFiles.filter { !$0.isDirectory }.count,
+				folderCount: store.localFiles.filter(\.isDirectory).count,
+				canNavigateUp: store.canNavigateUpInFiles,
+				goUp: { store.navigateUpInFiles() },
+				importFiles: { showingImporter = true },
+				newFile: { showingNewFile = true },
+				newFolder: { showingNewFolder = true },
+				refresh: { store.refreshLocalFiles() }
+			)
 
 			VStack(alignment: .leading, spacing: 12) {
 				HStack(spacing: 10) {
-					SectionHeader(title: store.currentFolderDisplayPath, subtitle: "Tap folders to navigate. Tap text files to edit.")
+					SectionHeader(title: "Current Folder", subtitle: "Open text files, drill into folders, or use row actions for export, rename, and delete.")
 					Spacer()
-					if store.canNavigateUpInFiles {
-						Button {
-							store.navigateUpInFiles()
-						} label: {
-							Label("Up", systemImage: "arrow.up.folder")
-						}
-						.buttonStyle(.bordered)
-						.tint(.white.opacity(0.24))
-					}
+					Text("\(store.localFiles.count) item\(store.localFiles.count == 1 ? "" : "s")")
+						.font(.system(.caption, design: .default, weight: .bold))
+						.foregroundStyle(AppColor.amber)
+						.padding(.horizontal, 10)
+						.padding(.vertical, 6)
+						.background(AppColor.amber.opacity(0.14), in: Capsule())
 				}
 				if store.localFiles.isEmpty {
-					EmptyStateCard(title: "No Files Here", detail: "Import files from iOS Files, create a folder, or create a new text file in this folder.", symbol: "folder")
+					EmptyStateCard(title: "Folder Is Empty", detail: "Import files from iOS Files, create a project folder, or create a text file. This folder is real app document storage, not seeded demo data.", symbol: "folder")
 				}
 				ForEach(store.localFiles) { file in
-					FileRow(file: file) {
-						if file.isDirectory {
-							store.navigateToFolder(relativePath: file.relativePath)
-						} else {
-							store.openFile(relativePath: file.relativePath)
-						}
-					}
-					.contextMenu {
-						Button {
-							renameName = file.name
-							renamingFile = file
-							showingRename = true
-						} label: {
-							Label("Rename", systemImage: "pencil")
-						}
-						Button {
-							if let url = store.exportLocalItem(file) {
-								shareItem = WorkspaceShareItem(url: url)
-							}
-						} label: {
-							Label(file.isDirectory ? "Export Folder Archive" : "Share / Export", systemImage: "square.and.arrow.up")
-						}
-						Button(role: .destructive) {
-							store.deleteLocalFile(file)
-						} label: {
-							Label("Delete", systemImage: "trash")
-						}
-					}
-					.swipeActions(edge: .trailing, allowsFullSwipe: false) {
-						Button(role: .destructive) {
-							store.deleteLocalFile(file)
-						} label: {
-							Label("Delete", systemImage: "trash")
-						}
-						Button {
-							renameName = file.name
-							renamingFile = file
-							showingRename = true
-						} label: {
-							Label("Rename", systemImage: "pencil")
-						}
-						.tint(.orange)
-						Button {
-							if let url = store.exportLocalItem(file) {
-								shareItem = WorkspaceShareItem(url: url)
-							}
-						} label: {
-							Label("Share", systemImage: "square.and.arrow.up")
-						}
-						.tint(.blue)
-					}
+					FileRow(
+						file: file,
+						open: { open(file) },
+						rename: { beginRename(file) },
+						export: { export(file) },
+						delete: { store.deleteLocalFile(file) }
+					)
 				}
 			}
 
@@ -420,6 +383,26 @@ private struct FilesWorkspaceView: View {
 				renameName = ""
 				renamingFile = nil
 			}
+		}
+	}
+
+	private func open(_ file: LocalWorkspaceFile) {
+		if file.isDirectory {
+			store.navigateToFolder(relativePath: file.relativePath)
+		} else {
+			store.openFile(relativePath: file.relativePath)
+		}
+	}
+
+	private func beginRename(_ file: LocalWorkspaceFile) {
+		renameName = file.name
+		renamingFile = file
+		showingRename = true
+	}
+
+	private func export(_ file: LocalWorkspaceFile) {
+		if let url = store.exportLocalItem(file) {
+			shareItem = WorkspaceShareItem(url: url)
 		}
 	}
 }
@@ -1248,32 +1231,131 @@ private struct WorkspaceFeatureCard: View {
 	}
 }
 
-private struct FileRow: View {
-	let file: LocalWorkspaceFile
+private struct FileWorkspaceHeader: View {
+	let path: String
+	let fileCount: Int
+	let folderCount: Int
+	let canNavigateUp: Bool
+	let goUp: () -> Void
+	let importFiles: () -> Void
+	let newFile: () -> Void
+	let newFolder: () -> Void
+	let refresh: () -> Void
+
+	var body: some View {
+		VStack(alignment: .leading, spacing: 18) {
+			HStack(alignment: .top, spacing: 16) {
+				VStack(alignment: .leading, spacing: 8) {
+					Text("Files")
+						.font(.system(.largeTitle, design: .default, weight: .bold))
+						.foregroundStyle(.primary)
+					Text(path)
+						.font(.system(.callout, design: .monospaced, weight: .semibold))
+						.foregroundStyle(AppColor.amber)
+						.lineLimit(2)
+					Text("Real iOS document storage: import from Files, create folders, edit UTF-8 text, rename, delete, and export through the share sheet.")
+						.font(.system(.subheadline, design: .default))
+						.foregroundStyle(.secondary)
+				}
+				Spacer(minLength: 0)
+				VStack(alignment: .trailing, spacing: 8) {
+					MetricPill(title: "Files", value: "\(fileCount)")
+					MetricPill(title: "Folders", value: "\(folderCount)")
+				}
+			}
+
+			LazyVGrid(columns: [GridItem(.adaptive(minimum: 138), spacing: 10)], spacing: 10) {
+				FileHeaderButton(title: "Import", symbol: "square.and.arrow.down", tint: AppColor.amber, action: importFiles)
+				FileHeaderButton(title: "New File", symbol: "doc.badge.plus", tint: AppColor.blue, action: newFile)
+				FileHeaderButton(title: "New Folder", symbol: "folder.badge.plus", tint: AppColor.green, action: newFolder)
+				FileHeaderButton(title: "Refresh", symbol: "arrow.clockwise", tint: AppColor.violet, action: refresh)
+				if canNavigateUp {
+					FileHeaderButton(title: "Parent", symbol: "arrow.up.folder", tint: AppColor.coral, action: goUp)
+				}
+			}
+		}
+		.padding(22)
+		.frame(maxWidth: .infinity, alignment: .leading)
+		.background(WorkspaceCardBackground(tint: AppColor.amber))
+	}
+}
+
+private struct FileHeaderButton: View {
+	let title: String
+	let symbol: String
+	let tint: Color
 	let action: () -> Void
 
 	var body: some View {
 		Button(action: action) {
-			HStack(spacing: 12) {
-				Image(systemName: file.isDirectory ? "folder.fill" : "doc.text")
-					.foregroundStyle(file.isDirectory ? AppColor.blue : .white.opacity(0.78))
-				VStack(alignment: .leading, spacing: 4) {
-					Text(file.name)
-						.font(.system(.headline, design: .default, weight: .semibold))
-						.foregroundStyle(.primary)
-					Text(file.relativePath)
-						.font(.system(.footnote, design: .monospaced))
-						.foregroundStyle(.secondary)
-					Text("\(file.sizeDescription) / \(file.modifiedDescription)")
-						.font(.system(.footnote, design: .default))
-						.foregroundStyle(.secondary)
-				}
-				Spacer()
-			}
-			.padding(16)
-			.background(WorkspaceCardBackground(tint: file.isDirectory ? AppColor.blue : AppColor.amber))
+			Label(title, systemImage: symbol)
+				.font(.system(.subheadline, design: .default, weight: .bold))
+				.frame(maxWidth: .infinity)
+				.padding(.vertical, 10)
 		}
-		.buttonStyle(.plain)
+		.buttonStyle(.borderedProminent)
+		.tint(tint)
+	}
+}
+
+private struct FileRow: View {
+	let file: LocalWorkspaceFile
+	let open: () -> Void
+	let rename: () -> Void
+	let export: () -> Void
+	let delete: () -> Void
+
+	private var tint: Color { file.isDirectory ? AppColor.blue : AppColor.amber }
+
+	var body: some View {
+		HStack(alignment: .center, spacing: 14) {
+			Button(action: open) {
+				HStack(spacing: 14) {
+					ZStack {
+						RoundedRectangle(cornerRadius: 14, style: .continuous)
+							.fill(tint.opacity(0.16))
+						Image(systemName: file.isDirectory ? "folder.fill" : "doc.text.fill")
+							.font(.system(size: 22, weight: .semibold))
+							.foregroundStyle(tint)
+					}
+					.frame(width: 50, height: 50)
+
+					VStack(alignment: .leading, spacing: 6) {
+						Text(file.name)
+							.font(.system(.headline, design: .default, weight: .semibold))
+							.foregroundStyle(.primary)
+							.lineLimit(1)
+						Text(file.relativePath.isEmpty ? file.name : file.relativePath)
+							.font(.system(.caption, design: .monospaced, weight: .medium))
+							.foregroundStyle(.secondary)
+							.lineLimit(1)
+						HStack(spacing: 8) {
+							Text(file.isDirectory ? "Folder" : file.sizeDescription)
+							Text(file.modifiedDescription)
+						}
+						.font(.system(.caption, design: .default))
+						.foregroundStyle(.secondary)
+					}
+					Spacer(minLength: 0)
+				}
+			}
+			.buttonStyle(.plain)
+
+			HStack(spacing: 8) {
+				Button(action: export) { Image(systemName: "square.and.arrow.up") }
+				Button(action: rename) { Image(systemName: "pencil") }
+				Button(role: .destructive, action: delete) { Image(systemName: "trash") }
+			}
+			.buttonStyle(.bordered)
+		}
+		.padding(14)
+		.background(WorkspaceCardBackground(tint: tint))
+		.contextMenu {
+			Button(action: open) { Label(file.isDirectory ? "Open Folder" : "Open Editor", systemImage: file.isDirectory ? "folder" : "doc.text") }
+			Button(action: rename) { Label("Rename", systemImage: "pencil") }
+			Button(action: export) { Label(file.isDirectory ? "Export Folder Archive" : "Share / Export", systemImage: "square.and.arrow.up") }
+			Button(role: .destructive, action: delete) { Label("Delete", systemImage: "trash") }
+		}
 	}
 }
 

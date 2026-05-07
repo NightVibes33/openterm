@@ -83,5 +83,6 @@ This audit covers the whole checked-in repo, not only the new SwiftUI workspace.
 - Add SSH monitor preflight command that checks `ssh`, auth type, `top`, `awk`, `df`, `uptime`, and `/proc/meminfo` before creating monitor expectations.
 
 ## Current Findings
+- Reworked the Files tab from generic rows into a visible file-manager workspace with import/new/refresh actions, folder/file counts, explicit row actions, and honest real-storage copy.
 - Added first-run onboarding and a SwiftUI About/Support card with Buy Me a Coffee, GitHub, X, and contact links so the modern app shell no longer hides those legacy About links.
 - Validated network_ios header downloads in CI/local bootstrap so a transient GitHub HTML error page cannot be compiled as `ios_error.h`.
