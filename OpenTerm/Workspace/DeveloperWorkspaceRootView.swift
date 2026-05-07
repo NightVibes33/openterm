@@ -318,6 +318,9 @@ private struct ServersWorkspaceView: View {
 			WorkspaceSummaryBanner(title: "SSH + Monitoring", detail: "Profiles persist locally, quick connect runs real ssh commands, and monitors poll Linux hosts over noninteractive SSH.", tint: AppColor.green)
 
 			SectionHeader(title: "SSH Profiles", subtitle: "Manage hosts, ports, auth type, key path, and startup folder.")
+			if store.sshProfiles.isEmpty {
+				EmptyStateCard(title: "No SSH Profiles", detail: "Add a real VPS, homelab, or server profile. OpenTerm no longer seeds fake example hosts.", symbol: "server.rack")
+			}
 			ForEach(store.sshProfiles) { profile in
 					SSHProfileCard(profile: profile, lastSeen: store.formatLastSeen(profile.lastSeen)) {
 						store.connect(to: profile)
@@ -336,6 +339,9 @@ private struct ServersWorkspaceView: View {
 				}
 
 			SectionHeader(title: "SSH Key Vault", subtitle: "Local protected key storage. Cloud E2E sync is still a later backend step.")
+			if store.sshVaultItems.isEmpty {
+				EmptyStateCard(title: "No Keys Imported", detail: "Import SSH keys into the protected local vault, then attach them to profiles when needed.", symbol: "key")
+			}
 			ForEach(store.sshVaultItems) { item in
 				SSHVaultItemCard(item: item, profiles: store.sshProfiles) { profile in
 					store.attachVaultItem(item, to: profile)
@@ -351,6 +357,9 @@ private struct ServersWorkspaceView: View {
 					.foregroundStyle(.white)
 
 			}
+			if store.serverSnapshots.isEmpty && !store.isRefreshingMonitors {
+				EmptyStateCard(title: "No Monitor Data", detail: "Create an SSH profile, add a monitor, then refresh to poll real CPU, memory, disk, and load data over SSH.", symbol: "waveform.path.ecg")
+			}
 			AdaptiveGrid {
 				ForEach(store.serverSnapshots) { snapshot in
 					ServerSnapshotCard(snapshot: snapshot)
@@ -359,6 +368,9 @@ private struct ServersWorkspaceView: View {
 			}
 
 				SectionHeader(title: "Server Alerts", subtitle: "Local alert history from monitor threshold changes.")
+				if store.serverAlerts.filter({ !$0.isAcknowledged }).isEmpty {
+					EmptyStateCard(title: "No Active Alerts", detail: "Alerts appear only after a real monitor crosses a configured threshold.", symbol: "bell")
+				}
 				ForEach(store.serverAlerts.filter { !$0.isAcknowledged }.prefix(6)) { alert in
 					ServerAlertCard(alert: alert) {
 						store.acknowledgeServerAlert(alert)

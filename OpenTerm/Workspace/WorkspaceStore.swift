@@ -594,10 +594,7 @@ final class WorkspaceStore: ObservableObject {
 	}
 
 	private func defaultSSHProfiles() -> [SSHProfileSummary] {
-		[
-			SSHProfileSummary(label: "Prod API", host: "api-1.example.com", username: "ubuntu", authKind: .key, port: 22, privateKeyPath: "", startupPath: "/srv/api", notes: "Primary production app node"),
-			SSHProfileSummary(label: "Home Lab", host: "192.168.1.44", username: "dev", authKind: .agent, port: 22, privateKeyPath: "", startupPath: "~/projects", notes: "LAN development machine")
-		]
+		[]
 	}
 
 	private func defaultSnippets() -> [WorkspaceSnippet] {
@@ -613,9 +610,7 @@ final class WorkspaceStore: ObservableObject {
 	}
 
 	private func defaultServerMonitors(from profiles: [SSHProfileSummary]) -> [ServerMonitorSummary] {
-		profiles.prefix(2).map {
-			ServerMonitorSummary(sshProfileID: $0.id, label: $0.label, path: "/")
-		}
+		[]
 	}
 
 	private func saveSSHProfiles() {
