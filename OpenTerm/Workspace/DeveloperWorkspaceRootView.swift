@@ -130,7 +130,7 @@ private struct WorkspaceHomeView: View {
 	private var capabilityStatuses: [CapabilityStatus] {
 		[
 			CapabilityStatus(title: "Terminal", detail: "Built-in ios_system command runner is available.", state: "Local", symbol: "terminal", tint: store.workspaceAccentColor),
-			CapabilityStatus(title: "Files", detail: "Browse/import/edit/export app documents.", state: "Local", symbol: "folder", tint: AppColor.amber),
+			CapabilityStatus(title: "Files", detail: "Browse/import/edit/rename/export app documents.", state: "Local", symbol: "folder", tint: AppColor.amber),
 			CapabilityStatus(title: "SSH", detail: store.sshProfiles.isEmpty ? "Add a real profile before connecting." : "\(store.sshProfiles.count) saved profile(s).", state: store.sshProfiles.isEmpty ? "Setup" : "Saved", symbol: "server.rack", tint: AppColor.green),
 			CapabilityStatus(title: "Git", detail: store.gitWorkspaces.isEmpty ? "No repositories found. Commands require git in the terminal environment." : "\(store.gitWorkspaces.count) detected repo(s).", state: store.gitWorkspaces.isEmpty ? "No repos" : "Terminal", symbol: "point.topleft.down.curvedto.point.bottomright.up", tint: AppColor.blue),
 			CapabilityStatus(title: "AI", detail: store.isAIConfigured ? "Provider/proxy configured." : "Endpoint/key or proxy/token missing.", state: store.isAIConfigured ? "Configured" : "Config", symbol: "sparkles", tint: AppColor.violet),
@@ -211,11 +211,14 @@ private struct FilesWorkspaceView: View {
 	@State private var showingNewFolder = false
 	@State private var showingImporter = false
 	@State private var shareItem: WorkspaceShareItem?
+	@State private var renamingFile: LocalWorkspaceFile?
+	@State private var renameName = ""
+	@State private var showingRename = false
 	@State private var editingSnippet: SnippetDraft?
 
 	var body: some View {
 		WorkspaceScroll(title: "Files") {
-			WorkspaceSummaryBanner(title: "Local Files", detail: "Browse real iOS app documents, import from Files, edit UTF-8 files, create folders, delete items, and export files through the share sheet.", tint: AppColor.amber)
+			WorkspaceSummaryBanner(title: "Local Files", detail: "Browse real iOS app documents, import from Files, edit UTF-8 files, create folders, rename items, delete items, and export files or folder archives through the share sheet.", tint: AppColor.amber)
 
 			VStack(alignment: .leading, spacing: 12) {
 				HStack(spacing: 10) {
@@ -243,12 +246,19 @@ private struct FilesWorkspaceView: View {
 						}
 					}
 					.contextMenu {
-						if !file.isDirectory {
-							Button {
-								shareItem = WorkspaceShareItem(url: store.urlForLocalFile(relativePath: file.relativePath))
-							} label: {
-								Label("Share / Export", systemImage: "square.and.arrow.up")
+						Button {
+							renameName = file.name
+							renamingFile = file
+							showingRename = true
+						} label: {
+							Label("Rename", systemImage: "pencil")
+						}
+						Button {
+							if let url = store.exportLocalItem(file) {
+								shareItem = WorkspaceShareItem(url: url)
 							}
+						} label: {
+							Label(file.isDirectory ? "Export Folder Archive" : "Share / Export", systemImage: "square.and.arrow.up")
 						}
 						Button(role: .destructive) {
 							store.deleteLocalFile(file)
@@ -262,14 +272,22 @@ private struct FilesWorkspaceView: View {
 						} label: {
 							Label("Delete", systemImage: "trash")
 						}
-						if !file.isDirectory {
-							Button {
-								shareItem = WorkspaceShareItem(url: store.urlForLocalFile(relativePath: file.relativePath))
-							} label: {
-								Label("Share", systemImage: "square.and.arrow.up")
-							}
-							.tint(.blue)
+						Button {
+							renameName = file.name
+							renamingFile = file
+							showingRename = true
+						} label: {
+							Label("Rename", systemImage: "pencil")
 						}
+						.tint(.orange)
+						Button {
+							if let url = store.exportLocalItem(file) {
+								shareItem = WorkspaceShareItem(url: url)
+							}
+						} label: {
+							Label("Share", systemImage: "square.and.arrow.up")
+						}
+						.tint(.blue)
 					}
 				}
 			}
@@ -336,6 +354,20 @@ private struct FilesWorkspaceView: View {
 				newFolderName = ""
 			}
 			Button("Cancel", role: .cancel) { newFolderName = "" }
+		}
+		.alert("Rename Item", isPresented: $showingRename) {
+			TextField("Name", text: $renameName)
+			Button("Rename") {
+				if let file = renamingFile {
+					store.renameLocalFile(file, to: renameName)
+				}
+				renameName = ""
+				renamingFile = nil
+			}
+			Button("Cancel", role: .cancel) {
+				renameName = ""
+				renamingFile = nil
+			}
 		}
 	}
 }

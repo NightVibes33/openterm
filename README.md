@@ -30,7 +30,7 @@ The current design target is real-tool clarity first: fewer marketing cards, lig
 - SSH profiles include remote Tool Audit and Dev Stack actions that verify package managers/tool versions, then queue safe package-manager commands for Git, Python 3, pip, Node.js, npm, htop, nano, vim, and tmux on Debian/Ubuntu, Alpine, Fedora/RHEL, or auto-detected Linux hosts.
 - A local SSH key vault foundation exists with protected on-device key files, metadata, import/delete actions, and attach-to-profile flow.
 - Encrypted SSH vault push/pull is wired through Supabase RPC with AES-GCM payload encryption, a user-provided vault sync secret, newer-wins conflict handling, local metadata repair, and app-active background refresh; raw private keys are not sent as plaintext. The UI now blocks push/pull until the required Supabase/auth/secret configuration exists.
-- The Files tab now works as a real iOS document workspace: folder navigation, Files app import, create file/folder, delete, share/export, UTF-8 editing, syntax highlighting, search/match highlighting, lightweight completion chips, diff view against the opened version, and save back to disk.
+- The Files tab now works as a real iOS document workspace: folder navigation, Files app import, create file/folder, rename, delete, file share/export, folder tar archive export, UTF-8 editing, syntax highlighting, search/match highlighting, lightweight completion chips, diff view against the opened version, and save back to disk.
 - Command snippets persist locally and can be created, edited, deleted, and run directly in the terminal. New installs no longer seed generic fake deploy/server snippets.
 - Bundled Prideland script examples include runnable local workflows for system snapshots, website probes, API checks, tar archives, grep/sed notes, SSH command templates, dice, clipboard, regex, and cleanup tasks.
 - Git repositories are detected by scanning for `.git` folders, and clone/status/diff/log/pull/commit/push plus structured conflict actions are terminal-driven with a `git` availability preflight before commands run.
@@ -158,7 +158,7 @@ Important:
 - [x] Add repo reality audit documentation
 - [x] Add remote SSH Tool Audit and Dev Stack setup actions for common Linux package managers
 - [x] Add local server monitor alert history and acknowledgement
-- [x] Add real iOS file navigation, Files import, create folder/file, delete, share/export, and local UTF-8 text editing
+- [x] Add real iOS file navigation, Files import, create folder/file, rename, delete, file export, folder archive export, and local UTF-8 text editing
 - [x] Add lightweight syntax highlighting, language detection, and editor search
 - [x] Add lightweight editor completions and diff view
 - [ ] Add external LSP daemon integration
@@ -199,7 +199,7 @@ Important:
 - Replace terminal-driven Git helpers with a native Git engine only after the current terminal-based workflow stays reliable.
 - Add embedded local toolchains only where they are realistic: Git first, then Python/Node only after binary size, licensing, and sandbox behavior are validated.
 - Improve remote server onboarding with deeper preflight checks for sudo availability, shell, disk space, installed tool versions, and monitor alert delivery.
-- Expand the editor from lightweight highlighting into real developer tooling: richer file tree actions, completions, language intelligence, and optional LSP-style assistance.
+- Expand the editor from lightweight highlighting into real developer tooling: move/copy file actions, richer completions, language intelligence, and optional LSP-style assistance.
 - Keep payment/subscription code deferred until the free core product is stable.
 
 ## Documentation

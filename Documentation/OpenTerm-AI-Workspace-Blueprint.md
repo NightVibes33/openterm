@@ -46,7 +46,7 @@ Do not market it as a local unrestricted Linux distro. iOS sandboxing still appl
 - folder navigation
 - create/edit/delete/share files
 - syntax highlighting and lightweight search
-- future rename/move/binary preview/folder zip export
+- implemented rename and folder tar export; future move/copy, binary preview, and richer archive formats
 
 ### 3. Remote Infrastructure
 
@@ -88,6 +88,6 @@ The app should stop looking like a generic AI dashboard. The design should be ca
 2. Finish anti-fake cleanup: remove claims and controls that imply unimplemented behavior.
 3. Add capability checks before actions that depend on local/remote binaries.
 4. Validate Keychain-backed secret migration and redaction on real devices.
-5. Add file rename/move and folder export.
+5. Add file move/copy and richer binary preview. File rename and folder tar export are implemented.
 6. Add monitor profile validation and remote preflight output.
 7. Simplify the Home screen so it shows real state, not product marketing.

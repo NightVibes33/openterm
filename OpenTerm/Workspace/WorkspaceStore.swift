@@ -1612,6 +1612,119 @@ final class WorkspaceStore: ObservableObject {
 		}
 	}
 
+	func renameLocalFile(_ file: LocalWorkspaceFile, to newName: String) {
+		let trimmedName = newName.trimmingCharacters(in: .whitespacesAndNewlines)
+		guard !trimmedName.isEmpty, !trimmedName.contains("/") else {
+			statusMessage = "Enter a valid name for this item"
+			return
+		}
+
+		let sourceURL = urlForLocalFile(relativePath: file.relativePath)
+		guard sourceURL.path.hasPrefix(documentsRootURL.path) else {
+			statusMessage = "Item is outside the workspace"
+			return
+		}
+
+		let destinationURL = sourceURL.deletingLastPathComponent().appendingPathComponent(trimmedName, isDirectory: file.isDirectory)
+		guard !fileManager.fileExists(atPath: destinationURL.path) else {
+			statusMessage = "An item with that name already exists"
+			return
+		}
+
+		do {
+			try fileManager.moveItem(at: sourceURL, to: destinationURL)
+			refreshLocalFiles()
+			refreshGitWorkspaces()
+			statusMessage = "Renamed to \(trimmedName)"
+		} catch {
+			statusMessage = "Could not rename \(file.name): \(error.localizedDescription)"
+		}
+	}
+
+	func exportLocalItem(_ file: LocalWorkspaceFile) -> URL? {
+		let sourceURL = urlForLocalFile(relativePath: file.relativePath)
+		guard sourceURL.path.hasPrefix(documentsRootURL.path) else {
+			statusMessage = "Item is outside the workspace"
+			return nil
+		}
+
+		if !file.isDirectory {
+			statusMessage = "Ready to export \(file.name)"
+			return sourceURL
+		}
+
+		let safeName = file.name.replacingOccurrences(of: "/", with: "-")
+		let archiveURL = fileManager.temporaryDirectory.appendingPathComponent("\(safeName)-OpenTerm.tar")
+		do {
+			if fileManager.fileExists(atPath: archiveURL.path) {
+				try fileManager.removeItem(at: archiveURL)
+			}
+			let archiveData = try tarArchiveData(for: sourceURL, rootName: safeName)
+			try archiveData.write(to: archiveURL, options: .atomic)
+			statusMessage = "Created export archive for \(file.name)"
+			return archiveURL
+		} catch {
+			statusMessage = "Could not export \(file.name): \(error.localizedDescription)"
+			return nil
+		}
+	}
+
+	private func tarArchiveData(for folderURL: URL, rootName: String) throws -> Data {
+		var archive = Data()
+		try appendTarEntry(url: folderURL, entryName: rootName, to: &archive)
+		archive.append(Data(repeating: 0, count: 1024))
+		return archive
+	}
+
+	private func appendTarEntry(url: URL, entryName: String, to archive: inout Data) throws {
+		let values = try url.resourceValues(forKeys: [.isDirectoryKey, .fileSizeKey, .contentModificationDateKey])
+		let isDirectory = values.isDirectory ?? false
+		let normalizedName = isDirectory && !entryName.hasSuffix("/") ? entryName + "/" : entryName
+		let fileSize = isDirectory ? 0 : Int64(values.fileSize ?? 0)
+		let modifiedAt = Int64(values.contentModificationDate?.timeIntervalSince1970 ?? Date().timeIntervalSince1970)
+		archive.append(tarHeader(name: normalizedName, size: fileSize, modifiedAt: modifiedAt, isDirectory: isDirectory))
+
+		if isDirectory {
+			let children = try fileManager.contentsOfDirectory(at: url, includingPropertiesForKeys: [.isDirectoryKey, .fileSizeKey, .contentModificationDateKey], options: [.skipsHiddenFiles])
+			for child in children.sorted(by: { $0.lastPathComponent.localizedCaseInsensitiveCompare($1.lastPathComponent) == .orderedAscending }) {
+				try appendTarEntry(url: child, entryName: normalizedName + child.lastPathComponent, to: &archive)
+			}
+		} else {
+			let data = try Data(contentsOf: url)
+			archive.append(data)
+			let padding = (512 - (data.count % 512)) % 512
+			if padding > 0 { archive.append(Data(repeating: 0, count: padding)) }
+		}
+	}
+
+	private func tarHeader(name: String, size: Int64, modifiedAt: Int64, isDirectory: Bool) -> Data {
+		var header = [UInt8](repeating: 0, count: 512)
+		writeTarString(name, into: &header, offset: 0, length: 100)
+		writeTarOctal(0o644, into: &header, offset: 100, length: 8)
+		writeTarOctal(0, into: &header, offset: 108, length: 8)
+		writeTarOctal(0, into: &header, offset: 116, length: 8)
+		writeTarOctal(size, into: &header, offset: 124, length: 12)
+		writeTarOctal(modifiedAt, into: &header, offset: 136, length: 12)
+		for index in 148..<156 { header[index] = 32 }
+		header[156] = isDirectory ? 55 : 48
+		writeTarString("ustar", into: &header, offset: 257, length: 6)
+		writeTarString("00", into: &header, offset: 263, length: 2)
+		let checksum = header.reduce(0) { $0 + Int($1) }
+		writeTarOctal(Int64(checksum), into: &header, offset: 148, length: 8)
+		return Data(header)
+	}
+
+	private func writeTarString(_ value: String, into header: inout [UInt8], offset: Int, length: Int) {
+		let bytes = Array(value.utf8.prefix(length))
+		for (index, byte) in bytes.enumerated() { header[offset + index] = byte }
+	}
+
+	private func writeTarOctal(_ value: Int64, into header: inout [UInt8], offset: Int, length: Int) {
+		let string = String(value, radix: 8)
+		let padded = String(repeating: "0", count: max(0, length - string.count - 1)) + string
+		writeTarString(padded, into: &header, offset: offset, length: length - 1)
+	}
+
 	func deleteLocalFile(_ file: LocalWorkspaceFile) {
 		let url = urlForLocalFile(relativePath: file.relativePath)
 		guard url.path.hasPrefix(documentsRootURL.path) else { return }

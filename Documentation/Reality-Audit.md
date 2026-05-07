@@ -7,7 +7,7 @@ This fork should not pretend to be a native full IDE yet. The real product direc
 ## Real, Wired Behavior
 
 - Terminal core is real and still executes built-in OpenTerm commands.
-- Files tab now browses the app documents root, navigates folders, imports from iOS Files, creates files/folders, deletes items, exports files through the share sheet, and edits UTF-8 text files.
+- Files tab now browses the app documents root, navigates folders, imports from iOS Files, creates files/folders, renames items, deletes items, exports files, creates shareable tar archives for folders, and edits UTF-8 text files.
 - SSH profiles are persisted locally and generate real terminal `ssh` commands.
 - SSH key vault stores pasted keys as protected local files and metadata.
 - Server monitor refresh runs noninteractive SSH commands and only shows monitor cards after a real poll result.
@@ -49,7 +49,7 @@ This fork should not pretend to be a native full IDE yet. The real product direc
 ## Next Anti-Fake Work
 
 - Replace terminal-driven Git UI with capability checks that verify `git` exists before showing action buttons as ready.
-- Add real file rename/move, binary preview metadata, and folder export zip support.
+- Add real file move/copy, binary preview metadata, and deeper archive options beyond tar export.
 - Add monitor setup validation for SSH auth type and required remote tools.
 - Add explicit local-vs-remote labels everywhere a command depends on the active terminal environment.
 - Continue replacing terminal-wrapper UI with native capability checks before showing actions as ready.

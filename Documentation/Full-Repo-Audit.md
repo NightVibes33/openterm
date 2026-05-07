@@ -19,7 +19,7 @@ This audit covers the whole checked-in repo, not only the new SwiftUI workspace.
 
 - `TerminalViewController`, `TerminalView`, `CommandExecutor`, and `SystemExecutorCommand` run commands through `ios_system`.
 - Terminal tabs are real through `TerminalTabViewController`, but the UI is still old UIKit/TabView.
-- File import/export/editing is now real in the SwiftUI Files tab.
+- File import/export/rename/archive/editing is now real in the SwiftUI Files tab.
 - SSH profile actions queue real `ssh` commands into the terminal.
 - Server monitors run SSH command captures, but only work for noninteractive auth and compatible Linux tooling.
 - AI live requests are real `URLSession` calls only after the user configures a provider/proxy.
@@ -47,6 +47,7 @@ This audit covers the whole checked-in repo, not only the new SwiftUI workspace.
 - Added runnable bundled script examples for system snapshots, website/API probes, archives, text search, and SSH command templates.
 - Replaced hard-coded white text on light system cards with semantic foreground colors across the SwiftUI workspace shell.
 - Reworded inflated Live Workspace/Command Center copy to describe real activity and terminal-driven/configuration-gated tools.
+- Added real file/folder rename plus folder tar archive export from the Files tab.
 - Removed prototype wording like preview build/free preview and broad ready-state labels from the in-app workspace copy.
 - Disabled live AI sending until a real endpoint/key or hosted proxy/token is configured.
 - Added `git` preflight before terminal-driven Git commands.
@@ -73,7 +74,7 @@ This audit covers the whole checked-in repo, not only the new SwiftUI workspace.
 
 - Replace the remaining marketing/card-heavy UI with compact operational surfaces. Home now has the first version of a real capability dashboard.
 - Keep capability/status labels strict: local, configured, terminal-driven, or missing; avoid broad ready/live claims unless the app has verified them.
-- Add file rename/move and folder export.
+- Add file move/copy and richer binary preview metadata. Rename and folder tar export are now implemented.
 - Replace the old storyboard scripting/documentation screens before calling the UI modern; examples remain available because the scripting flow works, but the controller is still legacy UIKit.
 - Replace the optional-fallback legacy storyboard flows with real SwiftUI screens instead of relying on old Interface Builder scenes.
 - Add runtime command availability capture and surface it in Help/README.
