@@ -122,7 +122,10 @@ class SettingsViewController: UITableViewController {
 		case 1:
 			// Section 1: Appearance
 			let storyboard = UIStoryboard(name: "Main", bundle: nil)
-			let colorPickerViewController = storyboard.instantiateViewController(withIdentifier: "ColorPickerViewController") as! ColorPickerViewController
+			guard let colorPickerViewController = storyboard.instantiateViewController(withIdentifier: "ColorPickerViewController") as? ColorPickerViewController else {
+				showAlert("Settings Unavailable", message: "The legacy color picker could not be loaded.")
+				return
+			}
 
 			let setColor: (UIColor) -> Void
 			switch indexPath.row {
