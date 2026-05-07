@@ -422,7 +422,7 @@ private struct GitWorkspaceView: View {
 	@Binding var selection: WorkspaceDestination
 	@State private var cloneURL = ""
 	@State private var cloneFolder = ""
-	@State private var commitMessage = "Update from OpenTerm"
+	@State private var commitMessage = ""
 
 	var body: some View {
 		WorkspaceScroll(title: "Git") {
@@ -1159,14 +1159,15 @@ private struct GitRepoCard: View {
 				MetricPill(title: "Branch", value: repo.branch)
 				MetricPill(title: "State", value: repo.status)
 			}
-			TextField("Commit message", text: $commitMessage)
+			TextField("Required commit message", text: $commitMessage)
 				.textFieldStyle(.roundedBorder)
 			LazyVGrid(columns: [GridItem(.adaptive(minimum: 120), spacing: 10)], spacing: 10) {
 				PrimaryWorkspaceButton(title: "Status", symbol: "list.bullet", tint: AppColor.blue) { run("git status") }
 					PrimaryWorkspaceButton(title: "Diff", symbol: "doc.text.magnifyingglass", tint: AppColor.amber) { run("git diff --stat && git diff") }
 					PrimaryWorkspaceButton(title: "Log", symbol: "clock.arrow.circlepath", tint: AppColor.blue) { run("git log --oneline --decorate -n 20") }
 				PrimaryWorkspaceButton(title: "Pull", symbol: "arrow.down.circle", tint: AppColor.green) { run("git pull") }
-				PrimaryWorkspaceButton(title: "Commit", symbol: "checkmark.circle", tint: AppColor.amber) { run("git add -A && git commit -m '\(commitMessage.replacingOccurrences(of: "'", with: "'\\''"))'") }
+				PrimaryWorkspaceButton(title: "Commit", symbol: "checkmark.circle", tint: AppColor.amber) { run("git add -A && git commit -m '\(commitMessage.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: "'", with: "'\\''"))'") }
+					.disabled(commitMessage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
 				PrimaryWorkspaceButton(title: "Push", symbol: "arrow.up.circle", tint: AppColor.violet) { run("git push") }
 			}
 				Menu {
@@ -1223,7 +1224,7 @@ private struct SSHProfileCard: View {
 					Button("Alpine") { installDevStack("Alpine") }
 					Button("Fedora / RHEL") { installDevStack("Fedora/RHEL") }
 				} label: {
-					Label("Dev Stack", systemImage: "shippingbox.and.arrow.backward")
+					Label("Queue Dev Stack", systemImage: "shippingbox.and.arrow.backward")
 						.font(.system(.headline, design: .default, weight: .semibold))
 						.frame(maxWidth: .infinity)
 				}
@@ -1231,7 +1232,7 @@ private struct SSHProfileCard: View {
 				.tint(AppColor.amber)
 			}
 			HStack(spacing: 10) {
-				PrimaryWorkspaceButton(title: "Audit Tools", symbol: "checklist", tint: AppColor.violet, action: auditTools)
+				PrimaryWorkspaceButton(title: "Audit Remote Tools", symbol: "checklist", tint: AppColor.violet, action: auditTools)
 				PrimaryWorkspaceButton(title: "Edit", symbol: "slider.horizontal.3", tint: AppColor.blue, action: edit)
 			}
 		}

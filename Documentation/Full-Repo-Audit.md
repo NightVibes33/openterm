@@ -51,7 +51,7 @@ This audit covers the whole checked-in repo, not only the new SwiftUI workspace.
 - Added real file/folder rename plus folder tar archive export from the Files tab.
 - Removed prototype wording like preview build/free preview/live answers and broad ready-state labels from the in-app workspace copy.
 - Disabled live AI sending until a real endpoint/key or hosted proxy/token is configured.
-- Added `git` preflight before terminal-driven Git commands.
+- Added `git` preflight before terminal-driven Git commands and removed the default generated commit message from the Git UI.
 - Rejected blank SSH profiles and invalid monitor records before persistence.
 - Blocked vault push/pull UI until required Supabase configuration exists.
 - Rewrote active docs to mark billing/backend production work as deferred/scaffolded.

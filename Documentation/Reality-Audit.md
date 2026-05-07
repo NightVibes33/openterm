@@ -12,7 +12,7 @@ This fork should not pretend to be a native full IDE yet. The real product direc
 - SSH key vault stores pasted keys as protected local files and metadata.
 - Server monitor refresh runs noninteractive SSH commands and only shows monitor cards after a real poll result.
 - AI requests use `URLSession` against a configured OpenAI-compatible endpoint or Supabase proxy. Without configuration, live sending is disabled.
-- Git actions are real terminal commands queued in detected repositories. They are not a native embedded Git engine, and queued Git commands now preflight `git` availability before running.
+- Git actions are real terminal commands queued in detected repositories. They are not a native embedded Git engine, queued Git commands preflight `git` availability before running, and commits require a user-entered message.
 - Workspace status is surfaced globally as a top overlay only when there is a non-idle message, so it no longer sits permanently above the tab bar.
 - Bundled Prideland examples remain available and now include practical runnable local workflows instead of only toy demos.
 
