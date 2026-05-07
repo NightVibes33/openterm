@@ -20,7 +20,7 @@ The current design target is real-tool clarity first: fewer marketing cards, lig
 ## Current Repo Status
 
 ### Implemented in this fork right now
-- Legacy OpenTerm terminal core is still present and embedded inside the SwiftUI workspace. Several older storyboard/XIB scripting and documentation panels still exist and are tracked as modernization debt rather than finished 2026-quality UI.
+- Legacy OpenTerm terminal core is still present and embedded inside the SwiftUI workspace. Several older storyboard/XIB scripting and documentation panels still exist and are tracked as modernization debt rather than finished 2026-quality UI, but the Scripts panel remains functional and the bundled examples are maintained as runnable script samples.
 - `AppDelegate` launches the modern workspace shell with Home, Files, Terminal, Servers, and a custom More hub on iPhone, plus full workspace navigation on iPad. Home now shows a real capability check instead of marketing cards, and empty Home/Git/Server/AI states explicitly ask for real user data or provider configuration.
 - iOS 18.0 is the deployment floor, with Liquid Glass-style SwiftUI surfaces enabled conditionally when the SDK/runtime supports them instead of pretending unsupported devices have native iOS 26 materials.
 - Terminal commands can now be queued or executed from workspace actions, so SSH, Git, snippets, and generated commands can jump into the active terminal tab.
@@ -32,6 +32,7 @@ The current design target is real-tool clarity first: fewer marketing cards, lig
 - Encrypted SSH vault push/pull is wired through Supabase RPC with AES-GCM payload encryption, a user-provided vault sync secret, newer-wins conflict handling, local metadata repair, and app-active background refresh; raw private keys are not sent as plaintext. The UI now blocks push/pull until the required Supabase/auth/secret configuration exists.
 - The Files tab now works as a real iOS document workspace: folder navigation, Files app import, create file/folder, delete, share/export, UTF-8 editing, syntax highlighting, search/match highlighting, lightweight completion chips, diff view against the opened version, and save back to disk.
 - Command snippets persist locally and can be created, edited, deleted, and run directly in the terminal. New installs no longer seed generic fake deploy/server snippets.
+- Bundled Prideland script examples include runnable local workflows for system snapshots, website probes, API checks, tar archives, grep/sed notes, SSH command templates, dice, clipboard, regex, and cleanup tasks.
 - Git repositories are detected by scanning for `.git` folders, and clone/status/diff/log/pull/commit/push plus structured conflict actions are terminal-driven with a `git` availability preflight before commands run.
 - Server monitors persist locally, poll Linux CPU/memory/disk/load snapshots over noninteractive SSH, and keep a local acknowledgeable alert history when thresholds change; monitors are user-created and monitor cards appear only after real poll results.
 - The AI assistant can call a configurable OpenAI-compatible chat endpoint or hosted Supabase proxy, records local usage history, includes prompt shortcuts for errors, commands, scripts, SSH, remote dev setup, Docker, Git conflicts, and regex, and can insert assistant output back into the terminal. Live sending is disabled until a real endpoint/key or proxy/token is configured.
@@ -41,7 +42,7 @@ The current design target is real-tool clarity first: fewer marketing cards, lig
 - Backend settings store non-secret routing metadata locally, while AI provider keys, Supabase anon/access tokens, and vault sync secrets are routed through Keychain-backed local storage for hosted AI proxy routing, encrypted vault sync, and remote config refresh.
 - A Supabase schema foundation exists for users, subscriptions, devices, snippet sync, AI usage, monitors, audit logs, AI rate-limit windows, encrypted vault sync items, and monitor alerts.
 - GitHub Actions includes a green unsigned IPA workflow for CI artifact generation.
-- Vendored dependency compatibility patches have been added for modern Xcode/iOS SDK builds. Several old utility, settings, and ANSI parsing crash paths have been hardened, but legacy controller cleanup is still ongoing.
+- Vendored dependency compatibility patches have been added for modern Xcode/iOS SDK builds. Several old utility, settings, scripting, and ANSI parsing crash paths have been hardened, but legacy controller cleanup is still ongoing.
 
 ### Partially implemented
 - SSH profile and key-vault storage are local first. App-side encrypted vault push/pull, newer-wins conflict handling, local repair, and app-active refresh are wired; production migration rollout and real multi-device testing still need validation.
@@ -178,6 +179,7 @@ Important:
 - [x] Harden selected old utility force-cast crash paths
 - [ ] Replace legacy storyboard/XIB scripting and documentation panels with modern SwiftUI or remove them from the primary flow
 - [x] Harden legacy scripting/examples/documentation panels against missing resources and bad cell casts
+- [x] Keep the working Scripts panel available and expand bundled runnable examples for system checks, HTTP/API probes, archives, grep notes, and SSH command templates
 - [x] Replace the darkest generic AI-card backdrop with lighter system-native workspace surfaces
 - [x] Harden legacy terminal storyboard panel loading against bad casts
 - [x] Replace safe legacy coder fatal errors with failable initializers

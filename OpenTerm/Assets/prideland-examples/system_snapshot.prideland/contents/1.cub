@@ -1,0 +1,19 @@
+/// Show a quick local terminal snapshot using commands OpenTerm already includes.
+
+println("== OpenTerm System Snapshot ==")
+println("")
+
+println("User:")
+println(captureShell("whoami"))
+
+println("Device/kernel:")
+println(captureShell("uname -a"))
+
+println("Current folder:")
+println(captureShell("pwd"))
+
+println("Uptime:")
+println(captureShell("uptime"))
+
+println("Folder size:")
+println(captureShell("du -sh ."))

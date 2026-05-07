@@ -44,6 +44,7 @@ This audit covers the whole checked-in repo, not only the new SwiftUI workspace.
 - Removed seeded command snippets and added user snippet create/edit/delete.
 - Added honest empty states for Home, Git, Servers, AI, Files, monitors, vault, alerts, and snippets, plus a Home capability dashboard for configured/missing states.
 - Added global workspace status feedback.
+- Added runnable bundled script examples for system snapshots, website/API probes, archives, text search, and SSH command templates.
 - Disabled live AI sending until a real endpoint/key or hosted proxy/token is configured.
 - Added `git` preflight before terminal-driven Git commands.
 - Rejected blank SSH profiles and invalid monitor records before persistence.
@@ -70,7 +71,7 @@ This audit covers the whole checked-in repo, not only the new SwiftUI workspace.
 - Replace the remaining marketing/card-heavy UI with compact operational surfaces. Home now has the first version of a real capability dashboard.
 - Keep capability/status labels strict: local, configured, terminal-driven, or missing; avoid broad ready/live claims unless the app has verified them.
 - Add file rename/move and folder export.
-- Replace or quarantine the old storyboard scripting/documentation screens before calling the UI modern.
+- Replace the old storyboard scripting/documentation screens before calling the UI modern; examples remain available because the scripting flow works, but the controller is still legacy UIKit.
 - Replace the optional-fallback legacy storyboard flows with real SwiftUI screens instead of relying on old Interface Builder scenes.
 - Add runtime command availability capture and surface it in Help/README.
 - Validate Keychain secret migration on a real device and confirm legacy JSON fields are redacted after save.

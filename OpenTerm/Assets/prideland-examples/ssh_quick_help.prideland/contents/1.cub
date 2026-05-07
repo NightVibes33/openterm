@@ -1,0 +1,17 @@
+/// Print SSH command templates you can edit before running in the terminal.
+/// This does not connect automatically; it teaches the exact commands.
+
+host = "user@server-ip"
+
+println("== SSH quick commands ==")
+println("Connect:")
+println("ssh " + host)
+println("")
+println("Copy a local file to the server:")
+println("scp file.txt " + host + ":/home/user/")
+println("")
+println("Open an SFTP session:")
+println("sftp " + host)
+println("")
+println("Check server disk after connecting:")
+println("df -h")

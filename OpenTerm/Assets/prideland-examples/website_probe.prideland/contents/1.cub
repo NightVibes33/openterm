@@ -1,0 +1,11 @@
+/// Probe a website with host and curl.
+/// Change the domain below, then run the script.
+
+domain = "github.com"
+url = "https://" + domain
+
+println("== DNS lookup ==")
+println(captureShell("host " + domain))
+
+println("== HTTP headers ==")
+println(captureShell("curl -I " + url))

@@ -1,0 +1,15 @@
+/// Create a timestamped archive of the current folder.
+/// The archive is written beside the files in the current directory.
+
+stamp = formattedDate(currentDate(), "yyyy-MM-dd-HH-mm")
+archiveName = "openterm-backup-" + stamp + ".tar.gz"
+
+println("Creating " + archiveName)
+code = shell("tar -czf " + archiveName + " .")
+
+if code == 0 {
+	println("Archive created:")
+	println(captureShell("ls -lh " + archiveName))
+} else {
+	println("Archive failed with exit code " + format("%.f", code))
+}

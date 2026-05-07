@@ -14,6 +14,7 @@ This fork should not pretend to be a native full IDE yet. The real product direc
 - AI requests use `URLSession` against a configured OpenAI-compatible endpoint or Supabase proxy. Without configuration, live sending is disabled.
 - Git actions are real terminal commands queued in detected repositories. They are not a native embedded Git engine, and queued Git commands now preflight `git` availability before running.
 - Workspace status is surfaced globally so failed preconditions and queued work are visible.
+- Bundled Prideland examples remain available and now include practical runnable local workflows instead of only toy demos.
 
 ## Previously Fake Or Misleading Areas Fixed
 
@@ -23,12 +24,17 @@ This fork should not pretend to be a native full IDE yet. The real product direc
 - Empty Home, Git, Server, Vault, Monitor, and AI states now state what real setup is required.
 - The AI panel no longer says it is ready before a real provider/proxy is configured.
 - The add-monitor button now opens SSH profile setup when no profile exists instead of silently doing nothing.
+- The terminal overflow now labels the old scripts surface as legacy and no longer exposes bundled example scripts as if they were current workspace content.
 
 ## Still Terminal-Driven, Not Native
 
 - Git clone/status/diff/log/pull/commit/push run through terminal Git. This requires `git` to exist in the active local/remote shell environment.
 - Remote dev-stack setup runs package-manager commands over SSH. It does not install local iOS app binaries.
 - SSH password auth is interactive and cannot be polled for monitor snapshots without manual terminal interaction.
+
+## Still Old Or Legacy
+
+- The scripts and Cub documentation surfaces are still UIKit/storyboard-era features. They work and examples remain available, but the UI still needs a SwiftUI replacement.
 
 ## Still Not Implemented
 

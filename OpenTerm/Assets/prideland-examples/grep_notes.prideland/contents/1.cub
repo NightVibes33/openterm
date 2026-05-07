@@ -1,0 +1,15 @@
+/// Create a notes file, then search it with grep.
+/// This shows how scripts can chain echo, grep, and sed.
+
+shell("echo 'todo: update ssh profile' > openterm-notes.txt")
+shell("echo 'note: test remote server monitor' >> openterm-notes.txt")
+shell("echo 'todo: export workspace backup' >> openterm-notes.txt")
+
+println("All notes:")
+println(captureShell("cat openterm-notes.txt"))
+
+println("TODO lines:")
+println(captureShell("grep todo openterm-notes.txt"))
+
+println("Uppercase TODO preview:")
+println(captureShell("sed 's/todo/TODO/' openterm-notes.txt"))

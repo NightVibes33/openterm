@@ -1,0 +1,8 @@
+/// Fetch a small JSON API response.
+/// Useful for checking whether curl and network access are working.
+
+url = "https://api.github.com"
+response = captureShell("curl -L " + url)
+
+println("== API response preview ==")
+println(stringAtRange(response, Range(0, min(sizeOf(response), 800))))
