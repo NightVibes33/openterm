@@ -254,6 +254,7 @@ private struct FilesWorkspaceView: View {
 	@State private var showingNewFile = false
 	@State private var showingNewFolder = false
 	@State private var showingImporter = false
+	@State private var showingSystemBrowser = false
 	@State private var shareItem: WorkspaceShareItem?
 	@State private var renamingFile: LocalWorkspaceFile?
 	@State private var renameName = ""
@@ -271,6 +272,7 @@ private struct FilesWorkspaceView: View {
 				importFiles: { showingImporter = true },
 				newFile: { showingNewFile = true },
 				newFolder: { showingNewFolder = true },
+				openSystemBrowser: { showingSystemBrowser = true },
 				refresh: { store.refreshLocalFiles() }
 			)
 
@@ -332,6 +334,11 @@ private struct FilesWorkspaceView: View {
 		}
 		.sheet(isPresented: $showingImporter) {
 			DocumentImportPicker { urls in
+				store.importFiles(from: urls)
+			}
+		}
+		.sheet(isPresented: $showingSystemBrowser) {
+			NativeDocumentBrowserSheet { urls in
 				store.importFiles(from: urls)
 			}
 		}
@@ -1270,6 +1277,7 @@ private struct FileWorkspaceHeader: View {
 	let importFiles: () -> Void
 	let newFile: () -> Void
 	let newFolder: () -> Void
+	let openSystemBrowser: () -> Void
 	let refresh: () -> Void
 
 	var body: some View {
@@ -1283,7 +1291,7 @@ private struct FileWorkspaceHeader: View {
 						.font(.system(.callout, design: .monospaced, weight: .semibold))
 						.foregroundStyle(AppColor.amber)
 						.lineLimit(2)
-					Text("Real iOS document storage: import from Files, create folders, edit UTF-8 text, rename, delete, and export through the share sheet.")
+					Text("Use Appleâs document browser for real iOS Files access, then keep editable copies in OpenTermâs workspace for terminal, snippets, and exports.")
 						.font(.system(.subheadline, design: .default))
 						.foregroundStyle(.secondary)
 				}
@@ -1295,10 +1303,11 @@ private struct FileWorkspaceHeader: View {
 			}
 
 			LazyVGrid(columns: [GridItem(.adaptive(minimum: 138), spacing: 10)], spacing: 10) {
-				FileHeaderButton(title: "Import", symbol: "square.and.arrow.down", tint: AppColor.amber, action: importFiles)
-				FileHeaderButton(title: "New File", symbol: "doc.badge.plus", tint: AppColor.blue, action: newFile)
-				FileHeaderButton(title: "New Folder", symbol: "folder.badge.plus", tint: AppColor.green, action: newFolder)
-				FileHeaderButton(title: "Refresh", symbol: "arrow.clockwise", tint: AppColor.violet, action: refresh)
+				FileHeaderButton(title: "iOS Browser", symbol: "doc.viewfinder", tint: AppColor.amber, action: openSystemBrowser)
+				FileHeaderButton(title: "Import", symbol: "square.and.arrow.down", tint: AppColor.blue, action: importFiles)
+				FileHeaderButton(title: "New File", symbol: "doc.badge.plus", tint: AppColor.green, action: newFile)
+				FileHeaderButton(title: "New Folder", symbol: "folder.badge.plus", tint: AppColor.violet, action: newFolder)
+				FileHeaderButton(title: "Refresh", symbol: "arrow.clockwise", tint: AppColor.coral, action: refresh)
 				if canNavigateUp {
 					FileHeaderButton(title: "Parent", symbol: "arrow.up.folder", tint: AppColor.coral, action: goUp)
 				}
@@ -2204,6 +2213,41 @@ private struct EmptyStateCard: View {
 		.padding(18)
 		.frame(maxWidth: .infinity, alignment: .leading)
 		.background(WorkspaceCardBackground(tint: AppColor.amber))
+	}
+}
+
+
+private struct NativeDocumentBrowserSheet: UIViewControllerRepresentable {
+	let onPick: ([URL]) -> Void
+
+	func makeUIViewController(context: Context) -> UIDocumentBrowserViewController {
+		let browser = UIDocumentBrowserViewController(forOpeningFilesWithContentTypes: ["public.item"])
+		browser.delegate = context.coordinator
+		browser.allowsDocumentCreation = false
+		browser.allowsPickingMultipleItems = true
+		return browser
+	}
+
+	func updateUIViewController(_ uiViewController: UIDocumentBrowserViewController, context: Context) {}
+
+	func makeCoordinator() -> Coordinator {
+		Coordinator(onPick: onPick)
+	}
+
+	final class Coordinator: NSObject, UIDocumentBrowserViewControllerDelegate {
+		let onPick: ([URL]) -> Void
+
+		init(onPick: @escaping ([URL]) -> Void) {
+			self.onPick = onPick
+		}
+
+		func documentBrowser(_ controller: UIDocumentBrowserViewController, didPickDocumentsAt documentURLs: [URL]) {
+			onPick(documentURLs)
+		}
+
+		func documentBrowser(_ controller: UIDocumentBrowserViewController, didImportDocumentAt sourceURL: URL, toDestinationURL destinationURL: URL) {
+			onPick([destinationURL])
+		}
 	}
 }
 

@@ -32,7 +32,7 @@ Donations support development only: the app is currently free, and Buy Me a Coff
 - SSH profiles include remote Tool Audit and Dev Stack actions that verify package managers/tool versions, then queue safe package-manager commands for Git, Python 3, pip, Node.js, npm, htop, nano, vim, and tmux on Debian/Ubuntu, Alpine, Fedora/RHEL, or auto-detected Linux hosts.
 - A local SSH key vault foundation exists with protected on-device key files, metadata, import/delete actions, and attach-to-profile flow.
 - Encrypted SSH vault push/pull is wired through Supabase RPC with AES-GCM payload encryption, a user-provided vault sync secret, newer-wins conflict handling, local metadata repair, and app-active background refresh; raw private keys are not sent as plaintext. The UI now blocks push/pull until the required Supabase/auth/secret configuration exists.
-- The Files tab now works as a real iOS document workspace with a stronger file-manager UI: visible import/new/refresh actions, folder/file counts, folder navigation, Files app import, create file/folder, rename, delete, file share/export, folder tar archive export, UTF-8 editing, syntax highlighting, search/match highlighting, lightweight completion chips, diff view against the opened version, and save back to disk.
+- The Files tab now works as a real iOS document workspace with a stronger file-manager UI: Apple document-browser access, visible import/new/refresh actions, folder/file counts, folder navigation, Files app import, create file/folder, rename, delete, file share/export, folder tar archive export, UTF-8 editing, syntax highlighting, search/match highlighting, lightweight completion chips, diff view against the opened version, and save back to disk.
 - Command snippets persist locally and can be created, edited, deleted, and run directly in the terminal. New installs no longer seed generic fake deploy/server snippets.
 - Bundled Prideland script examples include runnable local workflows for system snapshots, website probes, API checks, tar archives, grep/sed notes, SSH command templates, dice, clipboard, regex, and cleanup tasks.
 - Git repositories are detected by scanning for `.git` folders, and clone/status/diff/log/pull/commit/push plus structured conflict actions are terminal-driven with a `git` availability preflight before commands run.
@@ -51,7 +51,7 @@ Donations support development only: the app is currently free, and Buy Me a Coff
 - Backend settings store non-secret routing metadata locally, while AI provider keys, Supabase anon/access tokens, and vault sync secrets are routed through Keychain-backed local storage for hosted AI proxy routing, encrypted vault sync, and remote config refresh.
 - A Supabase schema foundation exists for users, subscriptions, devices, snippet sync, AI usage, monitors, audit logs, AI rate-limit windows, encrypted vault sync items, and monitor alerts.
 - GitHub Actions includes a green unsigned IPA workflow for CI artifact generation. The dependency bootstrap now validates the legacy `ios_error.h` download so transient GitHub HTML error pages are not compiled as C headers.
-- Vendored dependency compatibility patches have been added for modern Xcode/iOS SDK builds. Several old utility, settings, scripting, and ANSI parsing crash paths have been hardened, stale TODO/FIXME comments in touched app code were cleaned up, but legacy controller cleanup is still ongoing.
+- Vendored dependency compatibility patches have been added for modern Xcode/iOS SDK builds. The checked-in Pods project has been normalized to the iOS 18 floor and Swift 5 build settings instead of old iOS 8/10/11 and Swift 4 values. Several old utility, settings, scripting, and ANSI parsing crash paths have been hardened, stale TODO/FIXME comments in touched app code were cleaned up, but legacy controller cleanup is still ongoing.
 
 ### Partially implemented
 - SSH profile and key-vault storage are local first. App-side encrypted vault push/pull, newer-wins conflict handling, local repair, and app-active refresh are wired; production migration rollout and real multi-device testing still need validation.
@@ -102,6 +102,9 @@ Donations support development only: the app is currently free, and Buy Me a Coff
 - Payment and entitlement work is intentionally deferred.
 - Buy Me a Coffee is currently a donation/support link only. Stripe, StoreKit, hosted subscription checks, and entitlement gates should be revisited only after the core workflows are reliable.
 - No device serial-number scheme should be used for entitlement checks. Future verification should be account-based and privacy-preserving.
+
+## Dependency modernization note
+- Legacy Pods are still present because the terminal, scripts, input assistant, and Cub editor paths still depend on them. The immediate modernization path is to keep the working terminal stack compiling on the iOS 18 floor, remove unused legacy UI usage as it is replaced, then delete Pods one by one only after their imports are gone.
 
 ## Runtime And Sandbox Reality
 - Sideloading does not automatically remove the iOS app sandbox. Without jailbreak-level changes or private Apple entitlements, OpenTerm still cannot behave like an unrestricted local Linux machine.
