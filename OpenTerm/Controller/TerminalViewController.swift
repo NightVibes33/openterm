@@ -50,9 +50,9 @@ class TerminalViewController: UIViewController {
 		contentWrapperView = UIView()
 
 		let storyboard = UIStoryboard(name: "Main", bundle: nil)
-		historyViewController = storyboard.instantiateViewController(withIdentifier: "HistoryViewController") as! HistoryViewController
-		scriptsViewController = storyboard.instantiateViewController(withIdentifier: "ScriptsViewController") as! ScriptsViewController
-		bookmarkViewController = storyboard.instantiateViewController(withIdentifier: "BookmarkViewController") as! BookmarkViewController
+		historyViewController = storyboard.instantiateViewController(withIdentifier: "HistoryViewController") as? HistoryViewController ?? HistoryViewController()
+		scriptsViewController = storyboard.instantiateViewController(withIdentifier: "ScriptsViewController") as? ScriptsViewController ?? ScriptsViewController()
+		bookmarkViewController = storyboard.instantiateViewController(withIdentifier: "BookmarkViewController") as? BookmarkViewController ?? BookmarkViewController()
 
 		super.init(nibName: nil, bundle: nil)
 		

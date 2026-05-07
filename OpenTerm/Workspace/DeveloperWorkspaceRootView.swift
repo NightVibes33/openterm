@@ -163,15 +163,15 @@ private struct CapabilityStatusRow: View {
 				.background(status.tint.opacity(0.16), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
 			VStack(alignment: .leading, spacing: 3) {
 				Text(status.title)
-					.font(.system(.headline, design: .rounded, weight: .semibold))
+					.font(.system(.headline, design: .default, weight: .semibold))
 					.foregroundStyle(.white)
 				Text(status.detail)
-					.font(.system(.footnote, design: .rounded))
+					.font(.system(.footnote, design: .default))
 					.foregroundStyle(.white.opacity(0.66))
 			}
 			Spacer()
 			Text(status.state)
-				.font(.system(.caption, design: .rounded, weight: .bold))
+				.font(.system(.caption, design: .default, weight: .bold))
 				.foregroundStyle(status.tint)
 				.padding(.horizontal, 10)
 				.padding(.vertical, 6)
@@ -613,7 +613,7 @@ private struct SettingsWorkspaceView: View {
 					store.updateTerminalFontSize(newValue)
 				}
 				Text("Font size: \(Int(terminalFontSize)) pt")
-					.font(.system(.footnote, design: .rounded, weight: .semibold))
+					.font(.system(.footnote, design: .default, weight: .semibold))
 					.foregroundStyle(.white.opacity(0.72))
 
 				Picker("Cursor", selection: $caretStyle) {
@@ -655,7 +655,7 @@ private struct SettingsWorkspaceView: View {
 					.tint(store.workspaceAccentColor)
 					.foregroundStyle(.white)
 				Text(useHostedProxy ? "Endpoint should be your Supabase ai-proxy function URL. API key should be the user's Supabase bearer token." : "Endpoint should be an OpenAI-compatible chat completions URL. API key is sent as a bearer token.")
-					.font(.system(.footnote, design: .rounded))
+					.font(.system(.footnote, design: .default))
 					.foregroundStyle(.white.opacity(0.62))
 				PrimaryWorkspaceButton(title: "Save AI Settings", symbol: "checkmark.seal", tint: store.workspaceAccentColor) {
 					store.updateAIConfiguration(endpoint: endpoint, model: model, apiKey: apiKey, systemPrompt: systemPrompt, useHostedProxy: useHostedProxy)
@@ -687,13 +687,13 @@ private struct SettingsWorkspaceView: View {
 					SecureField("Vault sync secret", text: $vaultSyncSecret)
 						.textFieldStyle(.roundedBorder)
 					Text("Vault payloads are AES-GCM encrypted on device before upload. The server only receives ciphertext, nonce, labels, and fingerprints.")
-						.font(.system(.footnote, design: .rounded))
+						.font(.system(.footnote, design: .default))
 						.foregroundStyle(.white.opacity(0.62))
 					PrimaryWorkspaceButton(title: "Save Backend", symbol: "lock.shield", tint: AppColor.green) {
 						store.updateBackendConfiguration(supabaseURL: supabaseURL, accessToken: backendAccessToken, deviceLabel: backendDeviceLabel, anonKey: backendAnonKey, userID: backendUserID, deviceID: backendDeviceID, vaultSyncSecret: vaultSyncSecret)
 					}
 					Text(store.remoteConfigStatus)
-						.font(.system(.footnote, design: .rounded))
+						.font(.system(.footnote, design: .default))
 						.foregroundStyle(.white.opacity(0.62))
 					PrimaryWorkspaceButton(title: "Refresh Remote Config", symbol: "icloud.and.arrow.down", tint: AppColor.blue) {
 						store.refreshRemoteConfiguration()
@@ -708,7 +708,7 @@ private struct SettingsWorkspaceView: View {
 						EmptyStateCard(title: "Vault Sync Not Configured", detail: "Add Supabase URL, anon key, user access token, user id, and a vault sync secret before push/pull can work.", symbol: "icloud.slash")
 					}
 					Text(store.vaultSyncStatus)
-						.font(.system(.footnote, design: .rounded, weight: .semibold))
+						.font(.system(.footnote, design: .default, weight: .semibold))
 						.foregroundStyle(.white.opacity(0.72))
 					HStack(spacing: 12) {
 						PrimaryWorkspaceButton(title: store.isSyncingVault ? "Syncingâ¦" : "Push Vault", symbol: "arrow.up.doc", tint: AppColor.green) {
@@ -809,7 +809,7 @@ private struct WorkspaceStatusStrip: View {
 				.lineLimit(2)
 			Spacer(minLength: 0)
 		}
-		.font(.system(.footnote, design: .rounded, weight: .semibold))
+		.font(.system(.footnote, design: .default, weight: .semibold))
 		.foregroundStyle(.white.opacity(0.86))
 		.padding(.horizontal, 14)
 		.padding(.vertical, 10)
@@ -844,10 +844,10 @@ private struct HeroPanel: View {
 	var body: some View {
 		VStack(alignment: .leading, spacing: 18) {
 			Text("OpenTerm")
-				.font(.system(.largeTitle, design: .rounded, weight: .bold))
+				.font(.system(.largeTitle, design: .default, weight: .bold))
 				.foregroundStyle(.white)
 			Text("A fast iPhone and iPad developer workspace for terminal sessions, SSH, files, Git, server checks, and command-aware AI.")
-				.font(.system(.body, design: .rounded))
+				.font(.system(.body, design: .default))
 				.foregroundStyle(.white.opacity(0.78))
 			HStack(spacing: 12) {
 				PrimaryWorkspaceButton(title: "Terminal", symbol: "terminal", tint: store.workspaceAccentColor) { selection = .terminal }
@@ -873,10 +873,10 @@ private struct SectionHeader: View {
 	var body: some View {
 		VStack(alignment: .leading, spacing: 6) {
 			Text(title)
-				.font(.system(.title3, design: .rounded, weight: .semibold))
+				.font(.system(.title3, design: .default, weight: .semibold))
 				.foregroundStyle(.white)
 			Text(subtitle)
-				.font(.system(.subheadline, design: .rounded))
+				.font(.system(.subheadline, design: .default))
 				.foregroundStyle(.white.opacity(0.72))
 		}
 	}
@@ -906,10 +906,10 @@ private struct ActionTile: View {
 					.font(.system(size: 20, weight: .semibold))
 					.foregroundStyle(tint)
 				Text(title)
-					.font(.system(.headline, design: .rounded, weight: .semibold))
+					.font(.system(.headline, design: .default, weight: .semibold))
 					.foregroundStyle(.white)
 				Text(subtitle)
-					.font(.system(.subheadline, design: .rounded))
+					.font(.system(.subheadline, design: .default))
 					.foregroundStyle(.white.opacity(0.70))
 			}
 			.padding(18)
@@ -929,7 +929,7 @@ private struct PrimaryWorkspaceButton: View {
 	var body: some View {
 		Button(action: action) {
 			Label(title, systemImage: symbol)
-				.font(.system(.headline, design: .rounded, weight: .semibold))
+				.font(.system(.headline, design: .default, weight: .semibold))
 				.frame(maxWidth: .infinity)
 		}
 		.buttonStyle(.borderedProminent)
@@ -945,10 +945,10 @@ private struct WorkspaceSummaryBanner: View {
 	var body: some View {
 		VStack(alignment: .leading, spacing: 10) {
 			Text(title)
-				.font(.system(.title2, design: .rounded, weight: .bold))
+				.font(.system(.title2, design: .default, weight: .bold))
 				.foregroundStyle(.white)
 			Text(detail)
-				.font(.system(.body, design: .rounded))
+				.font(.system(.body, design: .default))
 				.foregroundStyle(.white.opacity(0.74))
 		}
 		.padding(20)
@@ -966,13 +966,13 @@ private struct SessionCard: View {
 				.font(.system(size: 20, weight: .semibold))
 				.foregroundStyle(session.tint)
 			Text(session.title)
-				.font(.system(.headline, design: .rounded, weight: .semibold))
+				.font(.system(.headline, design: .default, weight: .semibold))
 				.foregroundStyle(.white)
 			Text(session.subtitle)
-				.font(.system(.subheadline, design: .rounded))
+				.font(.system(.subheadline, design: .default))
 				.foregroundStyle(.white.opacity(0.72))
 			Text(session.detail)
-				.font(.system(.footnote, design: .rounded))
+				.font(.system(.footnote, design: .default))
 				.foregroundStyle(.white.opacity(0.62))
 		}
 		.padding(18)
@@ -992,10 +992,10 @@ private struct WorkspaceFeatureCard: View {
 				.frame(width: 40, height: 40)
 				.background(feature.tint.opacity(0.18), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
 			Text(feature.title)
-				.font(.system(.headline, design: .rounded, weight: .semibold))
+				.font(.system(.headline, design: .default, weight: .semibold))
 				.foregroundStyle(.white)
 			Text(feature.detail)
-				.font(.system(.subheadline, design: .rounded))
+				.font(.system(.subheadline, design: .default))
 				.foregroundStyle(.white.opacity(0.74))
 		}
 		.padding(18)
@@ -1015,13 +1015,13 @@ private struct FileRow: View {
 					.foregroundStyle(file.isDirectory ? AppColor.blue : .white.opacity(0.78))
 				VStack(alignment: .leading, spacing: 4) {
 					Text(file.name)
-						.font(.system(.headline, design: .rounded, weight: .semibold))
+						.font(.system(.headline, design: .default, weight: .semibold))
 						.foregroundStyle(.white)
 					Text(file.relativePath)
 						.font(.system(.footnote, design: .monospaced))
 						.foregroundStyle(.white.opacity(0.62))
 					Text("\(file.sizeDescription) / \(file.modifiedDescription)")
-						.font(.system(.footnote, design: .rounded))
+						.font(.system(.footnote, design: .default))
 						.foregroundStyle(.white.opacity(0.56))
 				}
 				Spacer()
@@ -1043,11 +1043,11 @@ private struct SnippetRow: View {
 		VStack(alignment: .leading, spacing: 10) {
 			HStack {
 				Text(snippet.title)
-					.font(.system(.headline, design: .rounded, weight: .semibold))
+					.font(.system(.headline, design: .default, weight: .semibold))
 					.foregroundStyle(.white)
 				Spacer()
 				Text(snippet.category)
-					.font(.system(.caption, design: .rounded, weight: .semibold))
+					.font(.system(.caption, design: .default, weight: .semibold))
 					.foregroundStyle(AppColor.amber)
 			}
 			Text(snippet.body)
@@ -1075,7 +1075,7 @@ private struct GitRepoCard: View {
 	var body: some View {
 		VStack(alignment: .leading, spacing: 12) {
 			Text(repo.name)
-				.font(.system(.title3, design: .rounded, weight: .semibold))
+				.font(.system(.title3, design: .default, weight: .semibold))
 				.foregroundStyle(.white)
 			Text(repo.path)
 				.font(.system(.footnote, design: .monospaced))
@@ -1103,7 +1103,7 @@ private struct GitRepoCard: View {
 					Button("Use theirs for conflicted files") { run("git diff --name-only --diff-filter=U | xargs git checkout --theirs --") }
 				} label: {
 					Label("Conflict Tools", systemImage: "exclamationmark.triangle")
-						.font(.system(.headline, design: .rounded, weight: .semibold))
+						.font(.system(.headline, design: .default, weight: .semibold))
 						.frame(maxWidth: .infinity)
 				}
 				.buttonStyle(.borderedProminent)
@@ -1128,13 +1128,13 @@ private struct SSHProfileCard: View {
 			HStack(alignment: .top) {
 				VStack(alignment: .leading, spacing: 5) {
 					Text(profile.label)
-						.font(.system(.title3, design: .rounded, weight: .semibold))
+						.font(.system(.title3, design: .default, weight: .semibold))
 						.foregroundStyle(.white)
 					Text("\(profile.username)@\(profile.host):\(profile.port)")
 						.font(.system(.subheadline, design: .monospaced))
 						.foregroundStyle(.white.opacity(0.72))
 					Text("\(profile.authKind.title) / Last used \(lastSeen)")
-						.font(.system(.footnote, design: .rounded))
+						.font(.system(.footnote, design: .default))
 						.foregroundStyle(.white.opacity(0.62))
 				}
 				Spacer()
@@ -1149,7 +1149,7 @@ private struct SSHProfileCard: View {
 					Button("Fedora / RHEL") { installDevStack("Fedora/RHEL") }
 				} label: {
 					Label("Dev Stack", systemImage: "shippingbox.and.arrow.backward")
-						.font(.system(.headline, design: .rounded, weight: .semibold))
+						.font(.system(.headline, design: .default, weight: .semibold))
 						.frame(maxWidth: .infinity)
 				}
 				.buttonStyle(.borderedProminent)
@@ -1176,7 +1176,7 @@ private struct SSHVaultItemCard: View {
 			HStack(alignment: .top) {
 				VStack(alignment: .leading, spacing: 5) {
 					Text(item.label)
-						.font(.system(.headline, design: .rounded, weight: .semibold))
+						.font(.system(.headline, design: .default, weight: .semibold))
 						.foregroundStyle(.white)
 					Text(item.fingerprint)
 						.font(.system(.footnote, design: .monospaced))
@@ -1187,7 +1187,7 @@ private struct SSHVaultItemCard: View {
 			}
 			if profiles.isEmpty {
 				Text("Create an SSH profile before attaching this key.")
-					.font(.system(.footnote, design: .rounded))
+					.font(.system(.footnote, design: .default))
 					.foregroundStyle(.white.opacity(0.64))
 			} else {
 				Menu {
@@ -1196,7 +1196,7 @@ private struct SSHVaultItemCard: View {
 					}
 				} label: {
 					Label("Attach to Profile", systemImage: "link")
-						.font(.system(.headline, design: .rounded, weight: .semibold))
+						.font(.system(.headline, design: .default, weight: .semibold))
 						.frame(maxWidth: .infinity)
 				}
 				.buttonStyle(.borderedProminent)
@@ -1246,14 +1246,14 @@ private struct ServerAlertCard: View {
 		VStack(alignment: .leading, spacing: 10) {
 			HStack {
 				Label(alert.title, systemImage: "exclamationmark.triangle")
-					.font(.system(.headline, design: .rounded, weight: .semibold))
+					.font(.system(.headline, design: .default, weight: .semibold))
 					.foregroundStyle(.white)
 				Spacer()
 				Button("Acknowledge", action: acknowledge)
-					.font(.system(.caption, design: .rounded, weight: .semibold))
+					.font(.system(.caption, design: .default, weight: .semibold))
 			}
 			Text(alert.detail)
-				.font(.system(.footnote, design: .rounded))
+				.font(.system(.footnote, design: .default))
 				.foregroundStyle(.white.opacity(0.72))
 		}
 		.padding(16)
@@ -1268,11 +1268,11 @@ private struct ServerSnapshotCard: View {
 		VStack(alignment: .leading, spacing: 10) {
 			HStack {
 				Text(snapshot.name)
-					.font(.system(.headline, design: .rounded, weight: .semibold))
+					.font(.system(.headline, design: .default, weight: .semibold))
 					.foregroundStyle(.white)
 				Spacer()
 				Text(snapshot.alertLevel.title)
-					.font(.system(.caption, design: .rounded, weight: .bold))
+					.font(.system(.caption, design: .default, weight: .bold))
 					.foregroundStyle(snapshot.alertLevel.tint)
 			}
 			HStack(spacing: 8) {
@@ -1281,7 +1281,7 @@ private struct ServerSnapshotCard: View {
 				MetricPill(title: "Disk", value: percent(snapshot.diskPercent))
 			}
 			Text(snapshot.detail)
-				.font(.system(.footnote, design: .rounded))
+				.font(.system(.footnote, design: .default))
 				.foregroundStyle(.white.opacity(0.66))
 		}
 		.padding(18)
@@ -1303,13 +1303,13 @@ private struct AssistantBubble: View {
 		VStack(alignment: .leading, spacing: 10) {
 			HStack {
 				Text(message.role.uppercased())
-					.font(.system(.caption, design: .rounded, weight: .bold))
+					.font(.system(.caption, design: .default, weight: .bold))
 					.foregroundStyle(message.role == "assistant" ? AppColor.violet : AppColor.green)
 				Spacer()
 				if message.role == "assistant" {
 					Button(action: insertInTerminal) {
 						Label("Terminal", systemImage: "terminal")
-							.font(.system(.caption, design: .rounded, weight: .semibold))
+							.font(.system(.caption, design: .default, weight: .semibold))
 					}
 					.buttonStyle(.bordered)
 				}
@@ -1347,10 +1347,10 @@ private struct MetricCard: View {
 			Image(systemName: symbol)
 				.foregroundStyle(tint)
 			Text(value)
-				.font(.system(.title2, design: .rounded, weight: .bold))
+				.font(.system(.title2, design: .default, weight: .bold))
 				.foregroundStyle(.white)
 			Text(title)
-				.font(.system(.subheadline, design: .rounded))
+				.font(.system(.subheadline, design: .default))
 				.foregroundStyle(.white.opacity(0.64))
 		}
 		.padding(18)
@@ -1366,10 +1366,10 @@ private struct MetricPill: View {
 	var body: some View {
 		VStack(alignment: .leading, spacing: 3) {
 			Text(title.uppercased())
-				.font(.system(size: 10, weight: .bold, design: .rounded))
+				.font(.system(size: 10, weight: .bold, design: .default))
 				.foregroundStyle(.white.opacity(0.48))
 			Text(value)
-				.font(.system(.caption, design: .rounded, weight: .semibold))
+				.font(.system(.caption, design: .default, weight: .semibold))
 				.foregroundStyle(.white)
 		}
 		.padding(.horizontal, 10)
@@ -1838,10 +1838,10 @@ private struct EmptyStateCard: View {
 				.font(.system(size: 22, weight: .semibold))
 				.foregroundStyle(.white.opacity(0.84))
 			Text(title)
-				.font(.system(.headline, design: .rounded, weight: .semibold))
+				.font(.system(.headline, design: .default, weight: .semibold))
 				.foregroundStyle(.white)
 			Text(detail)
-				.font(.system(.subheadline, design: .rounded))
+				.font(.system(.subheadline, design: .default))
 				.foregroundStyle(.white.opacity(0.68))
 		}
 		.padding(18)
@@ -1895,27 +1895,27 @@ private struct WorkspaceCardBackground: View {
 	var body: some View {
 		Group {
 			if #available(iOS 26.0, *) {
-				RoundedRectangle(cornerRadius: 18, style: .continuous)
-					.fill(tint.opacity(0.10))
-					.overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Color.white.opacity(0.12), lineWidth: 0.8))
-					.glassEffect(.regular.tint(tint.opacity(0.18)), in: .rect(cornerRadius: 18))
+				RoundedRectangle(cornerRadius: 20, style: .continuous)
+					.fill(Color(uiColor: .secondarySystemGroupedBackground).opacity(0.72))
+					.overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(tint.opacity(0.18), lineWidth: 0.8))
+					.glassEffect(.regular.tint(tint.opacity(0.10)), in: .rect(cornerRadius: 20))
 			} else {
-				RoundedRectangle(cornerRadius: 18, style: .continuous)
-					.fill(.ultraThinMaterial)
-					.overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Color.white.opacity(0.10), lineWidth: 0.8))
+				RoundedRectangle(cornerRadius: 20, style: .continuous)
+					.fill(Color(uiColor: .secondarySystemGroupedBackground).opacity(0.92))
+					.overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.8))
 			}
 		}
 	}
 }
-
 private struct WorkspaceBackdrop: View {
 	var body: some View {
 		ZStack {
+			Color(uiColor: .systemGroupedBackground)
 			LinearGradient(
 				colors: [
-					Color(red: 0.07, green: 0.09, blue: 0.13),
-					Color(red: 0.12, green: 0.15, blue: 0.19),
-					Color(red: 0.06, green: 0.08, blue: 0.11)
+					Color(uiColor: .systemBackground).opacity(0.92),
+					Color(uiColor: .secondarySystemGroupedBackground).opacity(0.70),
+					Color(uiColor: .systemGroupedBackground).opacity(0.95)
 				],
 				startPoint: .topLeading,
 				endPoint: .bottomTrailing

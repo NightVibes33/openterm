@@ -15,7 +15,7 @@ The modern free SSH + terminal workspace for iPhone and iPad.
 ## About
 OpenTerm is being refocused from a standalone terminal app into a free SSH + terminal workspace for iPhone and iPad, with optional AI command assistance after the user configures a provider.
 
-The current design target is real-tool clarity first: fewer marketing cards, clear local-vs-remote labels, honest setup states, fast terminal access, and an interface that does not pretend unavailable features are ready.
+The current design target is real-tool clarity first: fewer marketing cards, lighter system-native surfaces, clear local-vs-remote labels, honest setup states, fast terminal access, and an interface that does not pretend unavailable features are ready.
 
 ## Current Repo Status
 
@@ -177,6 +177,8 @@ Important:
 - [x] Harden selected old utility force-cast crash paths
 - [ ] Replace legacy storyboard/XIB scripting and documentation panels with modern SwiftUI or remove them from the primary flow
 - [x] Harden legacy scripting/examples/documentation panels against missing resources and bad cell casts
+- [x] Replace the darkest generic AI-card backdrop with lighter system-native workspace surfaces
+- [x] Harden legacy terminal storyboard panel loading against bad casts
 - [ ] Remove remaining legacy `fatalError` and force-cast paths from controllers
 
 ## Next Engineering Priorities
