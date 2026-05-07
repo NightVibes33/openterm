@@ -62,7 +62,7 @@ class ScriptEditViewController: UIViewController {
 		cubDocsPanelViewController.panelNavigationController.view.backgroundColor = .panelBackgroundColor
 		cubDocsPanelViewController.view.backgroundColor = .clear
 		
-		autoCompleter = AutoCompleter(documentation: cubDocsVC.docBundle.items)
+		autoCompleter = AutoCompleter(documentation: cubDocsVC.docBundle?.items ?? [])
 		
 		if isExample {
 			

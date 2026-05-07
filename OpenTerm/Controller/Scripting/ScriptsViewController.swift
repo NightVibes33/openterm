@@ -496,7 +496,7 @@ extension ScriptsViewController: UICollectionViewDelegateFlowLayout {
 	func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
 		
 		guard let cellItem = cellItems?[safe: indexPath.row] else {
-			return UICollectionViewCell()
+			return
 		}
 		
 		switch cellItem {
@@ -517,7 +517,7 @@ extension ScriptsViewController: UICollectionViewDelegateFlowLayout {
 		}
 		
 		guard let cellItem = cellItems?[safe: indexPath.row] else {
-			return UICollectionViewCell()
+			return
 		}
 		
 		switch cellItem {
@@ -544,7 +544,7 @@ extension ScriptsViewController: UICollectionViewDelegateFlowLayout {
 		}
 		
 		guard let cellItem = cellItems?[safe: indexPath.row] else {
-			return UICollectionViewCell()
+			return
 		}
 		
 		switch cellItem {
