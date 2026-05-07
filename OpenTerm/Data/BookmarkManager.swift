@@ -63,21 +63,20 @@ class BookmarkManager {
 					var isStale = true
 
 					// Try to obtain the URL from the bookmark.
-					if let loadedBookmarkURL = try URL(resolvingBookmarkData: loadedBookmark, bookmarkDataIsStale: &isStale) {
+					let loadedBookmarkURL = try URL(resolvingBookmarkData: loadedBookmark, bookmarkDataIsStale: &isStale)
 
-						/**
-						*  If the bookmark is stale, we create a new bookmark
-						*  from the obtained URL.
-						*/
-						if isStale {
-							do {
-								try self.saveBookmarkURL(url: loadedBookmarkURL)
-							}
+					/**
+					*  If the bookmark is stale, we create a new bookmark
+					*  from the obtained URL.
+					*/
+					if isStale {
+						do {
+							try self.saveBookmarkURL(url: loadedBookmarkURL)
 						}
-
-						// Append the loaded URLs.
-						bookmarkURLs.append(loadedBookmarkURL)
 					}
+
+					// Append the loaded URLs.
+					bookmarkURLs.append(loadedBookmarkURL)
 				} catch {
 
 					// When loading a bookmark fails, we remove the corresponding file.

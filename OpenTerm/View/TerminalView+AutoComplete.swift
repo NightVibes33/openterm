@@ -3,7 +3,7 @@
 //  OpenTerm
 //
 //  Created by Ian McDowell on 1/28/18.
-//  Copyright © 2018 Silver Fox. All rights reserved.
+//  Copyright Â© 2018 Silver Fox. All rights reserved.
 //
 
 import Foundation
@@ -178,7 +178,7 @@ extension TerminalView: AutoCompleteManagerDataSource {
 		var flags: [String]
 		flags = []
 		let optionsFromCode = getoptString(command)
-		for c in optionsFromCode!.characters {
+		for c in optionsFromCode! {
 			if (c == ":") {
 				continue
 			}

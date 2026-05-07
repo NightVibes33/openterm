@@ -11,6 +11,19 @@ import Cub
 import ios_system
 import TabView
 
+private func activeTerminalTabContainer() -> TabViewContainerViewController<TerminalTabViewController>? {
+	let windowScenes = UIApplication.shared.connectedScenes
+		.compactMap { $0 as? UIWindowScene }
+		.sorted { lhs, rhs in
+			lhs.activationState == .foregroundActive && rhs.activationState != .foregroundActive
+		}
+	let rootViewController = windowScenes
+		.flatMap(\.windows)
+		.first(where: \.isKeyWindow)?
+		.rootViewController
+	return rootViewController as? TabViewContainerViewController<TerminalTabViewController>
+}
+
 @_cdecl("cub")
 public func cub(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> Int32 {
 

@@ -3,7 +3,7 @@
 //  OpenTerm
 //
 //  Created by Ian McDowell on 2/3/18.
-//  Copyright © 2018 Silver Fox. All rights reserved.
+//  Copyright Â© 2018 Silver Fox. All rights reserved.
 //
 
 import UIKit

@@ -80,10 +80,10 @@ extension NSAttributedString {
                         // mark as link
                         let url = URL(fileURLWithPath: currentDirectory).appendingPathComponent(filename)
 						let attrs: [NSAttributedString.Key: Any] = [.link: url,
-																   .underlineStyle: NSUnderlineStyle.styleSingle.rawValue]
+																   .underlineStyle: NSUnderlineStyle.single.rawValue]
 						
-                        let nsRange = NSRange(location: range.lowerBound.encodedOffset,
-                                              length: range.upperBound.encodedOffset -  range.lowerBound.encodedOffset)
+                        let nsRange = NSRange(location: range.lowerBound.utf16Offset(in: text),
+                                              length: range.upperBound.utf16Offset(in: text) - range.lowerBound.utf16Offset(in: text))
                         mutable.addAttributes(attrs, range: nsRange)
 
                         pos = range.upperBound

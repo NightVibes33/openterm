@@ -81,9 +81,11 @@ struct DeveloperWorkspaceRootView: View {
 
 	private var regularLayout: some View {
 		NavigationSplitView {
-			List(WorkspaceDestination.allCases, selection: $selection) { destination in
-				Label(destination.title, systemImage: destination.systemImage)
-					.tag(destination)
+			List(selection: $selection) {
+				ForEach(WorkspaceDestination.allCases) { destination in
+					Label(destination.title, systemImage: destination.systemImage)
+						.tag(destination)
+				}
 			}
 			.navigationTitle("OpenTerm")
 			.scrollContentBackground(.hidden)
