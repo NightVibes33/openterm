@@ -15,7 +15,6 @@
 <a href="https://github.com/NightVibes33/openterm/actions/workflows/ios-unsigned-ipa.yml"><img src="https://github.com/NightVibes33/openterm/actions/workflows/ios-unsigned-ipa.yml/badge.svg" alt="Build Status"/></a>
 <br>
 <a href="http://twitter.com/NightVibes33"><img src="https://img.shields.io/badge/Twitter-@NightVibes33-blue.svg?style=flat" alt="Twitter"/></a>
-<a href="https://www.buymeacoffee.com/ZYN3"><img src="https://img.shields.io/badge/Donate-Buy%20Me%20A%20Coffee-green.svg?style=flat" alt="Donate via Buy Me a Coffee"/></a>
 </p>
 
 ## About
@@ -42,8 +41,8 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - SSH manager UI is surfaced, but host connection management is still mostly mock/workspace-model driven.
 - Git workspace screens exist, but full in-app clone/pull/commit/push flows are not finished.
 - AI assistant surfaces and product affordances exist, but a real provider backend is not wired yet.
-- Server monitoring cards and premium plan surfaces exist, but live polling and alert delivery are not connected yet.
-- Payment architecture is documented, but entitlement verification is not connected to production billing.
+- Server monitoring cards exist, but live polling and alert delivery are not connected yet.
+- Some premium/account-oriented UI models still exist in the workspace state, but the app direction is temporarily free until the core product is stable. 
 
 ### Not implemented yet
 - Real encrypted SSH key vault sync.
@@ -76,25 +75,12 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - Modernize the UX with SwiftUI while preserving terminal reliability.
 - Add a real tabbed workspace for terminal, files, git, servers, and AI.
 - Keep the app friendly to both advanced users and newer developers.
-- Make premium features worth paying for because they save time or reduce risk.
+- Keep the product extensible for future paid features, but focus current work on quality, reliability, and core workflows.
 
-### Premium features worth paying for
-- Unlimited AI requests and deeper assistant context.
-- Encrypted SSH vault sync.
-- Server monitoring history and alerts.
-- GitHub/repo assistant features.
-- Theme packs, workspace personalization, and premium widgets.
-- Multi-device sync and export/import for workspace data.
-
-### Payment direction
-For App Store builds, digital product access should use Apple-compliant in-app purchase flows.
-
-For web or unsigned/sideload-oriented account upgrades, the repo direction is a server-side account system with remote feature flags and purchase verification. Buy Me a Coffee can be used as a lightweight external payment source for non-App-Store distribution paths, but access control still needs proper backend verification rather than just matching a device identifier.
-
-Recommended identity model:
-- Email-based account identity first.
-- Device registration as a secondary trust signal, not the primary proof of payment.
-- Server-side entitlement checks, rate limits, and audit logging.
+### Current release direction
+- The app is being treated as free until the terminal core, SwiftUI workspace shell, SSH flow, Git tools, AI features, and CI/build reliability are stable.
+- Payment and entitlement work is intentionally deferred so product quality can be validated before monetization.
+- Any old premium or billing-oriented references in the codebase should be treated as product placeholders, not finished billing behavior.
 
 ## Commands Included
 
