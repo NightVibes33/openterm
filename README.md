@@ -63,7 +63,7 @@ The current design target is real-tool clarity first: fewer marketing cards, lig
 ## Architecture Notes
 
 ### App shell
-- `OpenTerm/AppDelegate.swift` launches the SwiftUI workspace shell. Some signing/iCloud/UTI identity values still use legacy `com.silverfox.*` identifiers and need a deliberate entitlements migration before production distribution. Spotlight indexing has been moved to the fork identity.
+- `OpenTerm/AppDelegate.swift` launches the SwiftUI workspace shell. Bundle, iCloud container, document UTI, and Spotlight-style local identifiers have been moved to `com.nightvibes33.openterm*` fork-owned values. Real production signing still needs matching Apple team entitlements.
 - `OpenTerm/Workspace/DeveloperWorkspaceRootView.swift` drives the main multi-surface experience.
 - `OpenTerm/Workspace/LegacyTerminalContainerView.swift` wraps the legacy terminal controller.
 - `OpenTerm/Workspace/WorkspaceStore.swift` owns local workspace state, persistence, terminal actions, SSH profile commands, protected local vault metadata, monitor refresh, Git command queuing, file editing, snippets, backup export, backend bootstrap settings, app accent state, and AI provider/proxy configuration. The SwiftUI workspace owns the lightweight highlighted editor surface.
@@ -187,7 +187,7 @@ Important:
 - [x] Replace hard-coded white workspace labels with semantic text colors for readable light/dark/glass surfaces
 - [x] Harden legacy terminal storyboard panel loading against bad casts
 - [x] Replace safe legacy coder fatal errors with failable initializers
-- [x] Move Spotlight indexing identity off the old `com.silverfox.Terminal` domain
+- [x] Move Spotlight, bundle, iCloud container, and document UTI identity off old `com.silverfox.*` values
 - [x] Harden command execution/share command force unwraps
 - [x] Remove remaining scanned `fatalError`, `as!`, `try!`, and obvious force-unwrap crash paths from app Swift source
 - [x] Make Home capability badges and main workspace copy use local/configured/terminal-driven labels instead of broad ready/live claims

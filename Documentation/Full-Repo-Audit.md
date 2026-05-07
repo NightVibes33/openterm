@@ -35,7 +35,7 @@ This audit covers the whole checked-in repo, not only the new SwiftUI workspace.
 - Docs still presented monetization/premium/subscriptions as active product direction even though billing is deferred.
 - README still linked the old App Store listing and old Terminal for iOS branding.
 - Old App Store review prompt was still wired to keyboard-dismiss behavior.
-- Xcode project, iCloud, and UTI identifiers still carry `com.silverfox` legacy identity values. Spotlight indexing now uses the fork identity, but signing/iCloud container migration still needs a deliberate entitlements pass.
+- Xcode project, iCloud, and UTI identifiers previously carried `com.silverfox` legacy identity values. They now use `com.nightvibes33.openterm*`; production signing still needs matching Apple team entitlements.
 - The hero previously claimed a static iOS SDK version instead of runtime-conditional support.
 
 ## Fixed In Current Anti-Fake Pass
@@ -54,7 +54,7 @@ This audit covers the whole checked-in repo, not only the new SwiftUI workspace.
 - Rejected blank SSH profiles and invalid monitor records before persistence.
 - Blocked vault push/pull UI until required Supabase configuration exists.
 - Rewrote active docs to mark billing/backend production work as deferred/scaffolded.
-- Removed old App Store badge/Terminal for iOS README framing, disabled the legacy StoreKit review prompt call, replaced the old App Store review settings row with repo/support links, and removed the old Silver Fox copyright text from the legacy Settings footer.
+- Removed old App Store badge/Terminal for iOS README framing, disabled the legacy StoreKit review prompt call, replaced the old App Store review settings row with repo/support links, removed the old Silver Fox copyright text from the legacy Settings footer, and migrated active bundle/iCloud/UTI identifiers to fork-owned values.
 - Hardened several old crash-prone utility paths: bundle version/build lookup, directory file-size metadata, attributed file-link mutation, drag/drop URL paste handling, asset color lookup, legacy settings color picker loading, malformed ANSI color parsing, missing script examples, missing Cub docs, and legacy terminal storyboard panel loading, unsupported coder initializers, command execution data writes, share argv parsing, optional storyboard factory loading, and Spotlight identity now avoid stale/fatal behavior where safe. Stale TODO/FIXME comments in touched app code were removed where the behavior is now explicit.
 
 ## Still Bad / High Priority
@@ -68,7 +68,7 @@ This audit covers the whole checked-in repo, not only the new SwiftUI workspace.
 7. Supabase backend is not production deployed/validated from this repo alone.
 8. AI and backend secrets now use Keychain-backed storage, but older installs should be validated for one-time migration from legacy JSON fields.
 9. `extraCommandsDictionary.plist` advertises extra command entries, but the active app currently relies on `commandsAsArray()` from ios_system and selected replacements. Command availability should be verified at runtime before docs claim support.
-10. iCloud container identifiers are legacy-shaped and may not match the current bundle/team without signing validation.
+10. iCloud container identifiers are fork-shaped now, but still need validation with the actual Apple team and provisioning profile before production signing.
 
 ## Next Concrete Fixes
 

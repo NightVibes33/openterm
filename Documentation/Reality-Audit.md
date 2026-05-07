@@ -18,6 +18,7 @@ This fork should not pretend to be a native full IDE yet. The real product direc
 
 ## Previously Fake Or Misleading Areas Fixed
 
+- Active bundle/iCloud/document UTI identifiers were moved off old `com.silverfox.*` values and onto fork-owned `com.nightvibes33.openterm*` values.
 - Hard-coded white-on-light workspace text was replaced with semantic foreground colors so the SwiftUI shell is readable across light, dark, and glass-style backgrounds.
 - Prototype labels such as preview build/free preview/live answers and broad ready-state language were removed from the in-app workspace copy.
 - Removed seeded fake SSH hosts, seeded demo monitors, and generic seeded command snippets. Blank SSH profiles and invalid monitor records are rejected before persistence.

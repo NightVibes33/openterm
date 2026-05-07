@@ -34,7 +34,7 @@
 			<string>Alternate</string>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>be.silverfox.cub</string>
+				<string>com.nightvibes33.openterm.cub</string>
 			</array>
 		</dict>
 		<dict>
@@ -48,7 +48,7 @@
 			<string>Alternate</string>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>be.silverfox.prideland</string>
+				<string>com.nightvibes33.openterm.prideland</string>
 			</array>
 		</dict>
 	</array>
@@ -85,7 +85,7 @@
 	<string>Save photos (e.g. via the share command)</string>
 	<key>NSUbiquitousContainers</key>
 	<dict>
-		<key>iCloud.com.silverfox.Terminal</key>
+		<key>iCloud.com.nightvibes33.openterm</key>
 		<dict>
 			<key>NSUbiquitousContainerIsDocumentScopePublic</key>
 			<true/>
@@ -128,7 +128,7 @@
 			<key>UTTypeDescription</key>
 			<string>SVG</string>
 			<key>UTTypeIdentifier</key>
-			<string>com.silverfox.pixure.svg</string>
+			<string>com.nightvibes33.openterm.svg</string>
 			<key>UTTypeSize320IconFile</key>
 			<string>icon-320</string>
 			<key>UTTypeTagSpecification</key>
@@ -154,7 +154,7 @@
 				<string>cub-320</string>
 			</array>
 			<key>UTTypeIdentifier</key>
-			<string>be.silverfox.cub</string>
+			<string>com.nightvibes33.openterm.cub</string>
 			<key>UTTypeSize320IconFile</key>
 			<string>cub-320</string>
 			<key>UTTypeSize64IconFile</key>
@@ -180,7 +180,7 @@
 				<string>cub-320</string>
 			</array>
 			<key>UTTypeIdentifier</key>
-			<string>be.silverfox.prideland</string>
+			<string>com.nightvibes33.openterm.prideland</string>
 			<key>UTTypeSize320IconFile</key>
 			<string>cub-320</string>
 			<key>UTTypeSize64IconFile</key>

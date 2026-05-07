@@ -3,7 +3,7 @@
 //  OpenTerm
 //
 //  Created by Louis D'hauwe on 07/12/2017.
-//  Copyright © 2017 Silver Fox. All rights reserved.
+//  Copyright Â© 2017 Silver Fox. All rights reserved.
 //
 
 import Foundation
@@ -30,7 +30,7 @@ class DocumentManager {
 
 	}
 
-	private let ICLOUD_IDENTIFIER = "iCloud.com.silverfox.Terminal"
+	private let ICLOUD_IDENTIFIER = "iCloud.com.nightvibes33.openterm"
 
 	private var localDocumentsURL: URL {
 		return fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
