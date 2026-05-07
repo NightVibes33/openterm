@@ -305,6 +305,11 @@ struct LocalWorkspaceFile: Identifiable, Hashable {
 	let isDirectory: Bool
 }
 
+struct WorkspaceShareItem: Identifiable {
+	let id = UUID()
+	let url: URL
+}
+
 struct AIProviderConfiguration: Codable, Equatable {
 	var endpoint: String
 	var model: String
@@ -477,6 +482,7 @@ final class WorkspaceStore: ObservableObject {
 	@Published var serverSnapshots: [ServerSnapshotSummary] = []
 	@Published var serverAlerts: [ServerAlertEvent] = []
 	@Published var localFiles: [LocalWorkspaceFile] = []
+	@Published var currentFolderRelativePath: String = ""
 	@Published var activeEditor: WorkspaceEditorDocument?
 	@Published var assistantMessages: [AssistantMessage] = []
 	@Published var assistantDraft: String = "Turn my goal into commands"
@@ -679,42 +685,116 @@ final class WorkspaceStore: ObservableObject {
 		}
 	}
 
+	var currentFolderDisplayPath: String {
+		currentFolderRelativePath.isEmpty ? "Documents" : "Documents/\(currentFolderRelativePath)"
+	}
+
+	var canNavigateUpInFiles: Bool {
+		!currentFolderRelativePath.isEmpty
+	}
+
+	private var documentsRootURL: URL {
+		DocumentManager.shared.activeDocumentsFolderURL.standardizedFileURL
+	}
+
+	private var currentFolderURL: URL {
+		guard !currentFolderRelativePath.isEmpty else { return documentsRootURL }
+		return documentsRootURL.appendingPathComponent(currentFolderRelativePath, isDirectory: true).standardizedFileURL
+	}
+
 	func refreshLocalFiles() {
-		let rootURL = DocumentManager.shared.activeDocumentsFolderURL
-		guard let enumerator = fileManager.enumerator(at: rootURL, includingPropertiesForKeys: [.isDirectoryKey, .contentModificationDateKey, .fileSizeKey], options: [.skipsHiddenFiles]) else {
+		do {
+			let folderURL = currentFolderURL
+			let urls = try fileManager.contentsOfDirectory(at: folderURL, includingPropertiesForKeys: [.isDirectoryKey, .contentModificationDateKey, .fileSizeKey], options: [])
+			localFiles = urls.compactMap(localWorkspaceFile(for:)).sorted {
+				if $0.isDirectory == $1.isDirectory {
+					return $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+				}
+				return $0.isDirectory && !$1.isDirectory
+			}
+			statusMessage = "Browsing \(currentFolderDisplayPath)"
+		} catch {
 			localFiles = []
+			statusMessage = "Could not read folder: \(error.localizedDescription)"
+		}
+	}
+
+	private func localWorkspaceFile(for fileURL: URL) -> LocalWorkspaceFile? {
+		let values = try? fileURL.resourceValues(forKeys: [.isDirectoryKey, .contentModificationDateKey, .fileSizeKey])
+		let isDirectory = values?.isDirectory ?? false
+		let modified = values?.contentModificationDate ?? Date.distantPast
+		let sizeDescription: String
+		if isDirectory {
+			sizeDescription = "Folder"
+		} else {
+			let fileSize = Int64(values?.fileSize ?? 0)
+			sizeDescription = byteCountFormatter.string(fromByteCount: fileSize)
+		}
+		let relativePath = relativePath(for: fileURL)
+		return LocalWorkspaceFile(name: fileURL.lastPathComponent, relativePath: relativePath, sizeDescription: sizeDescription, modifiedDescription: dateFormatter.localizedString(for: modified, relativeTo: Date()), isDirectory: isDirectory)
+	}
+
+	private func relativePath(for url: URL) -> String {
+		let rootPath = documentsRootURL.path
+		let path = url.standardizedFileURL.path
+		guard path.hasPrefix(rootPath) else { return url.lastPathComponent }
+		let relative = path.dropFirst(rootPath.count).trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+		return String(relative)
+	}
+
+	func navigateToFolder(relativePath: String) {
+		let targetURL = documentsRootURL.appendingPathComponent(relativePath, isDirectory: true).standardizedFileURL
+		guard targetURL.path.hasPrefix(documentsRootURL.path), (try? targetURL.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true else {
+			statusMessage = "Folder is not available"
 			return
 		}
+		currentFolderRelativePath = relativePath
+		refreshLocalFiles()
+	}
 
-		var files = [LocalWorkspaceFile]()
+	func navigateUpInFiles() {
+		guard canNavigateUpInFiles else { return }
+		let parent = (currentFolderRelativePath as NSString).deletingLastPathComponent
+		currentFolderRelativePath = parent == "." ? "" : parent
+		refreshLocalFiles()
+	}
 
-		for case let fileURL as URL in enumerator {
-			guard files.count < 40 else {
-				break
+	func urlForLocalFile(relativePath: String) -> URL {
+		documentsRootURL.appendingPathComponent(relativePath).standardizedFileURL
+	}
+
+	func importFiles(from urls: [URL]) {
+		var imported = 0
+		for url in urls {
+			let didAccess = url.startAccessingSecurityScopedResource()
+			defer { if didAccess { url.stopAccessingSecurityScopedResource() } }
+			let destination = uniqueDestinationURL(for: url.lastPathComponent, in: currentFolderURL)
+			do {
+				if fileManager.fileExists(atPath: destination.path) {
+					try fileManager.removeItem(at: destination)
+				}
+				try fileManager.copyItem(at: url, to: destination)
+				imported += 1
+			} catch {
+				statusMessage = "Could not import \(url.lastPathComponent): \(error.localizedDescription)"
 			}
-
-			let values = try? fileURL.resourceValues(forKeys: [.isDirectoryKey, .contentModificationDateKey, .fileSizeKey])
-			let isDirectory = values?.isDirectory ?? false
-			let modified = values?.contentModificationDate ?? Date.distantPast
-			let sizeDescription: String
-
-			if isDirectory {
-				sizeDescription = "Folder"
-			} else {
-				let fileSize = Int64(values?.fileSize ?? 0)
-				sizeDescription = byteCountFormatter.string(fromByteCount: fileSize)
-			}
-
-			let relativePath = fileURL.path.replacingOccurrences(of: rootURL.path + "/", with: "")
-			files.append(LocalWorkspaceFile(name: fileURL.lastPathComponent, relativePath: relativePath, sizeDescription: sizeDescription, modifiedDescription: dateFormatter.localizedString(for: modified, relativeTo: Date()), isDirectory: isDirectory))
 		}
+		refreshLocalFiles()
+		if imported > 0 { statusMessage = "Imported \(imported) file(s)" }
+	}
 
-		localFiles = files.sorted {
-			if $0.isDirectory == $1.isDirectory {
-				return $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
-			}
-			return $0.isDirectory && !$1.isDirectory
+	private func uniqueDestinationURL(for fileName: String, in folderURL: URL) -> URL {
+		let cleanName = fileName.isEmpty ? "Imported File" : fileName
+		let base = (cleanName as NSString).deletingPathExtension
+		let ext = (cleanName as NSString).pathExtension
+		var candidate = folderURL.appendingPathComponent(cleanName)
+		var index = 2
+		while fileManager.fileExists(atPath: candidate.path) {
+			let suffix = ext.isEmpty ? " \(index)" : " \(index).\(ext)"
+			candidate = folderURL.appendingPathComponent(base + suffix)
+			index += 1
 		}
+		return candidate
 	}
 
 	func refreshGitWorkspaces() {
@@ -1328,7 +1408,11 @@ final class WorkspaceStore: ObservableObject {
 	}
 
 	func openFile(relativePath: String) {
-		let fileURL = DocumentManager.shared.activeDocumentsFolderURL.appendingPathComponent(relativePath)
+		let fileURL = urlForLocalFile(relativePath: relativePath)
+		guard fileURL.path.hasPrefix(documentsRootURL.path) else {
+			statusMessage = "File is outside the workspace"
+			return
+		}
 		guard let data = try? Data(contentsOf: fileURL) else {
 			statusMessage = "Could not load file"
 			return
@@ -1344,12 +1428,12 @@ final class WorkspaceStore: ObservableObject {
 
 	func createFile(named name: String, initialContent: String = "") {
 		let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
-		guard !trimmedName.isEmpty else {
-			statusMessage = "Enter a file name"
+		guard !trimmedName.isEmpty, !trimmedName.contains("/") else {
+			statusMessage = "Enter a file name for the current folder"
 			return
 		}
 
-		let newURL = DocumentManager.shared.activeDocumentsFolderURL.appendingPathComponent(trimmedName)
+		let newURL = currentFolderURL.appendingPathComponent(trimmedName)
 		guard !fileManager.fileExists(atPath: newURL.path) else {
 			statusMessage = "A file with that name already exists"
 			return
@@ -1363,14 +1447,46 @@ final class WorkspaceStore: ObservableObject {
 		do {
 			try data.write(to: newURL, options: .atomic)
 			refreshLocalFiles()
-			openFile(relativePath: trimmedName)
+			openFile(relativePath: relativePath(for: newURL))
 		} catch {
 			statusMessage = "Could not create file: \(error.localizedDescription)"
 		}
 	}
 
+	func createFolder(named name: String) {
+		let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+		guard !trimmedName.isEmpty, !trimmedName.contains("/") else {
+			statusMessage = "Enter a folder name for the current folder"
+			return
+		}
+		let folderURL = currentFolderURL.appendingPathComponent(trimmedName, isDirectory: true)
+		do {
+			try fileManager.createDirectory(at: folderURL, withIntermediateDirectories: false, attributes: nil)
+			refreshLocalFiles()
+			statusMessage = "Created folder \(trimmedName)"
+		} catch {
+			statusMessage = "Could not create folder: \(error.localizedDescription)"
+		}
+	}
+
+	func deleteLocalFile(_ file: LocalWorkspaceFile) {
+		let url = urlForLocalFile(relativePath: file.relativePath)
+		guard url.path.hasPrefix(documentsRootURL.path) else { return }
+		do {
+			try fileManager.removeItem(at: url)
+			refreshLocalFiles()
+			statusMessage = "Deleted \(file.name)"
+		} catch {
+			statusMessage = "Could not delete \(file.name): \(error.localizedDescription)"
+		}
+	}
+
 	func saveEditorDocument(relativePath: String, content: String) {
-		let fileURL = DocumentManager.shared.activeDocumentsFolderURL.appendingPathComponent(relativePath)
+		let fileURL = urlForLocalFile(relativePath: relativePath)
+		guard fileURL.path.hasPrefix(documentsRootURL.path) else {
+			statusMessage = "File is outside the workspace"
+			return
+		}
 		guard let data = content.data(using: .utf8) else {
 			statusMessage = "Could not encode file contents"
 			return

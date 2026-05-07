@@ -146,18 +146,68 @@ private struct FilesWorkspaceView: View {
 
 	@ObservedObject var store: WorkspaceStore
 	@State private var newFileName = ""
+	@State private var newFolderName = ""
 	@State private var showingNewFile = false
+	@State private var showingNewFolder = false
+	@State private var showingImporter = false
+	@State private var shareItem: WorkspaceShareItem?
 
 	var body: some View {
 		WorkspaceScroll(title: "Files") {
-			WorkspaceSummaryBanner(title: "Local Files", detail: "Browse the app documents folder, open UTF-8 files, save edits, and run reusable shell snippets.", tint: AppColor.amber)
+			WorkspaceSummaryBanner(title: "Local Files", detail: "Browse real iOS app documents, import from Files, edit UTF-8 files, create folders, delete items, and export files through the share sheet.", tint: AppColor.amber)
 
 			VStack(alignment: .leading, spacing: 12) {
-				SectionHeader(title: "Documents", subtitle: "Folders are shown for navigation context; text files open in the editor.")
+				HStack(spacing: 10) {
+					SectionHeader(title: store.currentFolderDisplayPath, subtitle: "Tap folders to navigate. Tap text files to edit.")
+					Spacer()
+					if store.canNavigateUpInFiles {
+						Button {
+							store.navigateUpInFiles()
+						} label: {
+							Label("Up", systemImage: "arrow.up.folder")
+						}
+						.buttonStyle(.bordered)
+						.tint(.white.opacity(0.24))
+					}
+				}
+				if store.localFiles.isEmpty {
+					EmptyStateCard(title: "No Files Here", detail: "Import files from iOS Files, create a folder, or create a new text file in this folder.", symbol: "folder")
+				}
 				ForEach(store.localFiles) { file in
 					FileRow(file: file) {
-						if !file.isDirectory {
+						if file.isDirectory {
+							store.navigateToFolder(relativePath: file.relativePath)
+						} else {
 							store.openFile(relativePath: file.relativePath)
+						}
+					}
+					.contextMenu {
+						if !file.isDirectory {
+							Button {
+								shareItem = WorkspaceShareItem(url: store.urlForLocalFile(relativePath: file.relativePath))
+							} label: {
+								Label("Share / Export", systemImage: "square.and.arrow.up")
+							}
+						}
+						Button(role: .destructive) {
+							store.deleteLocalFile(file)
+						} label: {
+							Label("Delete", systemImage: "trash")
+						}
+					}
+					.swipeActions(edge: .trailing, allowsFullSwipe: false) {
+						Button(role: .destructive) {
+							store.deleteLocalFile(file)
+						} label: {
+							Label("Delete", systemImage: "trash")
+						}
+						if !file.isDirectory {
+							Button {
+								shareItem = WorkspaceShareItem(url: store.urlForLocalFile(relativePath: file.relativePath))
+							} label: {
+								Label("Share", systemImage: "square.and.arrow.up")
+							}
+							.tint(.blue)
 						}
 					}
 				}
@@ -174,9 +224,19 @@ private struct FilesWorkspaceView: View {
 		}
 		.toolbar {
 			ToolbarItemGroup(placement: .topBarTrailing) {
+				Button { showingImporter = true } label: { Image(systemName: "square.and.arrow.down") }
+				Button { showingNewFolder = true } label: { Image(systemName: "folder.badge.plus") }
 				Button { showingNewFile = true } label: { Image(systemName: "doc.badge.plus") }
 				Button { store.refreshLocalFiles() } label: { Image(systemName: "arrow.clockwise") }
 			}
+		}
+		.sheet(isPresented: $showingImporter) {
+			DocumentImportPicker { urls in
+				store.importFiles(from: urls)
+			}
+		}
+		.sheet(item: $shareItem) { item in
+			ActivityShareSheet(url: item.url)
 		}
 		.sheet(item: $store.activeEditor) { document in
 			WorkspaceEditorSheet(document: document, store: store)
@@ -188,6 +248,14 @@ private struct FilesWorkspaceView: View {
 				newFileName = ""
 			}
 			Button("Cancel", role: .cancel) { newFileName = "" }
+		}
+		.alert("New Folder", isPresented: $showingNewFolder) {
+			TextField("Project", text: $newFolderName)
+			Button("Create") {
+				store.createFolder(named: newFolderName)
+				newFolderName = ""
+			}
+			Button("Cancel", role: .cancel) { newFolderName = "" }
 		}
 	}
 }
@@ -296,6 +364,7 @@ private struct ServersWorkspaceView: View {
 						store.acknowledgeServerAlert(alert)
 					}
 				}
+
 		}
 
 		.toolbar {
@@ -1563,6 +1632,69 @@ private struct ServerMonitorEditorSheet: View {
 			}
 		}
 	}
+}
+
+
+private struct EmptyStateCard: View {
+	let title: String
+	let detail: String
+	let symbol: String
+
+	var body: some View {
+		VStack(alignment: .leading, spacing: 10) {
+			Image(systemName: symbol)
+				.font(.system(size: 22, weight: .semibold))
+				.foregroundStyle(.white.opacity(0.84))
+			Text(title)
+				.font(.system(.headline, design: .rounded, weight: .semibold))
+				.foregroundStyle(.white)
+			Text(detail)
+				.font(.system(.subheadline, design: .rounded))
+				.foregroundStyle(.white.opacity(0.68))
+		}
+		.padding(18)
+		.frame(maxWidth: .infinity, alignment: .leading)
+		.background(WorkspaceCardBackground(tint: AppColor.amber))
+	}
+}
+
+private struct DocumentImportPicker: UIViewControllerRepresentable {
+	let onImport: ([URL]) -> Void
+
+	func makeCoordinator() -> Coordinator {
+		Coordinator(onImport: onImport)
+	}
+
+	func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
+		let picker = UIDocumentPickerViewController(documentTypes: ["public.item"], in: .import)
+		picker.allowsMultipleSelection = true
+		picker.delegate = context.coordinator
+		return picker
+	}
+
+	func updateUIViewController(_ uiViewController: UIDocumentPickerViewController, context: Context) {}
+
+	final class Coordinator: NSObject, UIDocumentPickerDelegate {
+		let onImport: ([URL]) -> Void
+
+		init(onImport: @escaping ([URL]) -> Void) {
+			self.onImport = onImport
+		}
+
+		func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+			onImport(urls)
+		}
+	}
+}
+
+private struct ActivityShareSheet: UIViewControllerRepresentable {
+	let url: URL
+
+	func makeUIViewController(context: Context) -> UIActivityViewController {
+		UIActivityViewController(activityItems: [url], applicationActivities: nil)
+	}
+
+	func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 private struct WorkspaceCardBackground: View {
