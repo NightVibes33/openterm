@@ -41,6 +41,7 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - The iPhone More tab is custom now, not Apple's automatic overflow list, and contains real AI, Git, settings, theme, and terminal controls.
 - Settings are free-preview focused with real AI/provider controls and live appearance controls instead of placeholder billing screens.
 - Workspace backup export writes a JSON manifest for profiles, snippets, monitors, vault metadata, and AI routing metadata without raw private-key contents.
+- Backend settings now store Supabase URL, access token, and device label locally for hosted AI proxy routing and future sync bootstrap.
 - A Supabase schema foundation exists for users, subscriptions, devices, snippet sync, AI usage, monitors, audit logs, AI rate-limit windows, encrypted vault sync items, and monitor alerts.
 - GitHub Actions includes a green unsigned IPA workflow for CI artifact generation.
 - Vendored dependency compatibility patches have been added for modern Xcode/iOS SDK builds.
@@ -145,7 +146,8 @@ Important:
 - [x] Add backend AI rate-limit and usage-control schema
 - [x] Add hosted AI proxy scaffold
 - [x] Add app-side hosted proxy routing toggle
-- [ ] Add deployment secrets and production auth bootstrap
+- [x] Add local production auth/backend bootstrap settings
+- [ ] Add deployment secrets and hosted auth hardening
 - [x] Add local protected SSH key vault foundation
 - [x] Add backend encrypted vault sync tables
 - [x] Add backup/export manifest for workspace metadata

@@ -304,6 +304,20 @@ struct AIProviderConfiguration: Codable, Equatable {
 	)
 }
 
+struct BackendConfiguration: Codable, Equatable {
+	var supabaseURL: String
+	var accessToken: String
+	var deviceLabel: String
+
+	static let `default` = BackendConfiguration(supabaseURL: "", accessToken: "", deviceLabel: UIDevice.current.name)
+
+	var aiProxyEndpoint: String {
+		let trimmed = supabaseURL.trimmingCharacters(in: .whitespacesAndNewlines).trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+		guard !trimmed.isEmpty else { return "" }
+		return "\(trimmed)/functions/v1/ai-proxy"
+	}
+}
+
 struct AssistantMessage: Identifiable, Hashable {
 	let id = UUID()
 	let role: String
@@ -344,6 +358,7 @@ struct WorkspaceBackupManifest: Encodable {
 	let serverMonitors: [ServerMonitorSummary]
 	let aiModel: String
 	let aiRoutingMode: String?
+	let backendURLConfigured: Bool
 	let appVersion: String
 }
 
@@ -424,6 +439,7 @@ final class WorkspaceStore: ObservableObject {
 	@Published var assistantStatus: String = "Configure an AI endpoint in Settings to enable live answers."
 	@Published var isSendingAssistantPrompt: Bool = false
 	@Published var aiConfiguration: AIProviderConfiguration = .default
+	@Published var backendConfiguration: BackendConfiguration = .default
 	@Published var aiUsageHistory: [AIUsageRecord] = []
 	@Published var isRefreshingMonitors: Bool = false
 	@Published var statusMessage: String = "Workspace ready"
@@ -494,6 +510,7 @@ final class WorkspaceStore: ObservableObject {
 		serverMonitors = load([ServerMonitorSummary].self, from: stateURL(for: "server-monitors.json")) ?? defaultServerMonitors(from: sshProfiles)
 		serverSnapshots = load([ServerSnapshotSummary].self, from: stateURL(for: "server-snapshots.json")) ?? []
 		aiConfiguration = load(AIProviderConfiguration.self, from: stateURL(for: "ai-configuration.json")) ?? .default
+		backendConfiguration = load(BackendConfiguration.self, from: stateURL(for: "backend-configuration.json")) ?? .default
 		aiUsageHistory = load([AIUsageRecord].self, from: stateURL(for: "ai-usage-history.json")) ?? []
 		assistantMessages = [AssistantMessage(role: "system", content: "Workspace assistant ready. Configure an endpoint in Settings, then ask for commands, error analysis, or SSH help.", createdAt: Date())]
 	}
@@ -567,6 +584,10 @@ final class WorkspaceStore: ObservableObject {
 		save(aiConfiguration, to: stateURL(for: "ai-configuration.json"))
 	}
 
+	private func saveBackendConfiguration() {
+		save(backendConfiguration, to: stateURL(for: "backend-configuration.json"))
+	}
+
 	private func saveAIUsageHistory() {
 		save(aiUsageHistory, to: stateURL(for: "ai-usage-history.json"))
 	}
@@ -580,6 +601,7 @@ final class WorkspaceStore: ObservableObject {
 			serverMonitors: serverMonitors,
 			aiModel: aiConfiguration.model,
 			aiRoutingMode: aiConfiguration.routingMode,
+			backendURLConfigured: !backendConfiguration.supabaseURL.isEmpty,
 			appVersion: Bundle.main.version
 		)
 		let encoder = JSONEncoder()
@@ -820,6 +842,16 @@ final class WorkspaceStore: ObservableObject {
 		saveAIConfiguration()
 		let route = aiConfiguration.usesHostedProxy ? "hosted proxy" : "direct provider"
 		assistantStatus = aiConfiguration.endpoint.isEmpty ? "Configure an AI endpoint in Settings to enable live answers." : "AI endpoint saved. Prompts will use \(aiConfiguration.model) through \(route)."
+	}
+
+	func updateBackendConfiguration(supabaseURL: String, accessToken: String, deviceLabel: String) {
+		backendConfiguration = BackendConfiguration(
+			supabaseURL: supabaseURL.trimmingCharacters(in: .whitespacesAndNewlines),
+			accessToken: accessToken.trimmingCharacters(in: .whitespacesAndNewlines),
+			deviceLabel: deviceLabel.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? UIDevice.current.name : deviceLabel.trimmingCharacters(in: .whitespacesAndNewlines)
+		)
+		saveBackendConfiguration()
+		statusMessage = "Backend settings saved"
 	}
 
 	func updateWorkspaceAccent(_ color: Color) {
@@ -1119,8 +1151,9 @@ final class WorkspaceStore: ObservableObject {
 			return
 		}
 
-		guard let url = URL(string: aiConfiguration.endpoint), !aiConfiguration.endpoint.isEmpty else {
-			assistantStatus = "Add an AI endpoint in Settings first."
+		let resolvedEndpoint = aiConfiguration.usesHostedProxy && aiConfiguration.endpoint.isEmpty ? backendConfiguration.aiProxyEndpoint : aiConfiguration.endpoint
+		guard let url = URL(string: resolvedEndpoint), !resolvedEndpoint.isEmpty else {
+			assistantStatus = "Add an AI endpoint or Supabase backend URL in Settings first."
 			return
 		}
 
@@ -1132,8 +1165,9 @@ final class WorkspaceStore: ObservableObject {
 		var request = URLRequest(url: url)
 		request.httpMethod = "POST"
 		request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-		if !aiConfiguration.apiKey.isEmpty {
-			request.setValue("Bearer \(aiConfiguration.apiKey)", forHTTPHeaderField: "Authorization")
+		let bearerToken = aiConfiguration.apiKey.isEmpty ? backendConfiguration.accessToken : aiConfiguration.apiKey
+		if !bearerToken.isEmpty {
+			request.setValue("Bearer \(bearerToken)", forHTTPHeaderField: "Authorization")
 		}
 
 		let messages = [
@@ -1141,7 +1175,7 @@ final class WorkspaceStore: ObservableObject {
 			AIChatRequest.Message(role: "user", content: prompt)
 		]
 		if aiConfiguration.usesHostedProxy {
-			let body = AIProxyRequest(featureCode: "assistant", model: aiConfiguration.model, messages: messages, estimatedTokens: estimateTokenCount(for: messages), deviceID: nil)
+			let body = AIProxyRequest(featureCode: "assistant", model: aiConfiguration.model, messages: messages, estimatedTokens: estimateTokenCount(for: messages), deviceID: backendConfiguration.deviceLabel)
 			request.httpBody = try? JSONEncoder().encode(body)
 		} else {
 			let body = AIChatRequest(model: aiConfiguration.model, messages: messages)

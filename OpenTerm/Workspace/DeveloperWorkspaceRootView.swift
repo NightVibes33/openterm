@@ -386,6 +386,9 @@ private struct SettingsWorkspaceView: View {
 	@State private var apiKey = ""
 	@State private var systemPrompt = ""
 	@State private var useHostedProxy = false
+	@State private var supabaseURL = ""
+	@State private var backendAccessToken = ""
+	@State private var backendDeviceLabel = ""
 	@State private var appAccent = Color(UserDefaultsController.shared.workspaceAccentColor)
 	@State private var terminalText = Color(UserDefaultsController.shared.terminalTextColor)
 	@State private var terminalBackground = Color(UserDefaultsController.shared.terminalBackgroundColor)
@@ -466,6 +469,23 @@ private struct SettingsWorkspaceView: View {
 			.background(WorkspaceCardBackground(tint: AppColor.violet))
 
 			VStack(alignment: .leading, spacing: 12) {
+				SectionHeader(title: "Backend", subtitle: "Supabase auth bootstrap for hosted AI proxy and future sync.")
+				TextField("Supabase project URL", text: $supabaseURL)
+					.textInputAutocapitalization(.never)
+					.autocorrectionDisabled()
+					.textFieldStyle(.roundedBorder)
+				SecureField("Access token", text: $backendAccessToken)
+					.textFieldStyle(.roundedBorder)
+				TextField("Device label", text: $backendDeviceLabel)
+					.textFieldStyle(.roundedBorder)
+				PrimaryWorkspaceButton(title: "Save Backend", symbol: "lock.shield", tint: AppColor.green) {
+					store.updateBackendConfiguration(supabaseURL: supabaseURL, accessToken: backendAccessToken, deviceLabel: backendDeviceLabel)
+				}
+			}
+			.padding(18)
+			.background(WorkspaceCardBackground(tint: AppColor.green))
+
+			VStack(alignment: .leading, spacing: 12) {
 				SectionHeader(title: "Backup", subtitle: "Export workspace metadata without raw private-key contents.")
 				Text(store.lastBackupPath)
 					.font(.system(.footnote, design: .monospaced))
@@ -490,6 +510,9 @@ private struct SettingsWorkspaceView: View {
 			apiKey = store.aiConfiguration.apiKey
 			systemPrompt = store.aiConfiguration.systemPrompt
 			useHostedProxy = store.aiConfiguration.usesHostedProxy
+			supabaseURL = store.backendConfiguration.supabaseURL
+			backendAccessToken = store.backendConfiguration.accessToken
+			backendDeviceLabel = store.backendConfiguration.deviceLabel
 			appAccent = store.workspaceAccentColor
 			terminalText = Color(UserDefaultsController.shared.terminalTextColor)
 			terminalBackground = Color(UserDefaultsController.shared.terminalBackgroundColor)
