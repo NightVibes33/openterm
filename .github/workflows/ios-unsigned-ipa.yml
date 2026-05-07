@@ -139,7 +139,7 @@ jobs:
           # HueKit has a Swift compatibility issue with UIAccessibilityTraits |= in newer Swift.
           # UIAccessibilityTraits no longer supports |= in modern Swift/iOS.
           if [ -f "Pods/HueKit/HueKit/View/ColorBarPicker.swift" ]; then
-            sed -i.bak 's/t |= UIAccessibilityTraitAdjustable/t.formUnion(UIAccessibilityTraitAdjustable)/g' Pods/HueKit/HueKit/View/ColorBarPicker.swift
+            sed -i.bak 's/t |= UIAccessibilityTraitAdjustable/t.formUnion(.adjustable)/g' Pods/HueKit/HueKit/View/ColorBarPicker.swift
           fi
 
       - name: Patch BezierPathLength for modern Swift
