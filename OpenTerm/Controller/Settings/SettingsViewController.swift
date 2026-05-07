@@ -3,7 +3,7 @@
 //  OpenTerm
 //
 //  Created by Louis D'hauwe on 04/01/2018.
-//  Copyright © 2018 Silver Fox. All rights reserved.
+//  Copyright Â© 2018 Silver Fox. All rights reserved.
 //
 
 import UIKit
@@ -98,11 +98,11 @@ class SettingsViewController: UITableViewController {
 
 				if year == startYear {
 
-					copyrightText = "© \(startYear) Silver Fox. OpenTerm v\(version) (build \(build))"
+					copyrightText = "Â© \(startYear) Silver Fox. OpenTerm v\(version) (build \(build))"
 
 				} else {
 
-					copyrightText = "© \(startYear)-\(year) Silver Fox. OpenTerm v\(version) (build \(build))"
+					copyrightText = "Â© \(startYear)-\(year) Silver Fox. OpenTerm v\(version) (build \(build))"
 
 				}
 

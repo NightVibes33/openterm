@@ -14,7 +14,7 @@ struct DeveloperWorkspaceRootView: View {
 				compactLayout
 			}
 		}
-		.tint(AppColor.blue)
+		.tint(store.workspaceAccentColor)
 		.onAppear {
 			store.refreshLocalFiles()
 			store.refreshGitWorkspaces()
@@ -22,11 +22,14 @@ struct DeveloperWorkspaceRootView: View {
 		.onReceive(NotificationCenter.default.publisher(for: .workspaceDidRequestTerminalFocus)) { _ in
 			selection = .terminal
 		}
+		.onReceive(NotificationCenter.default.publisher(for: .workspaceDidRequestSettingsFocus)) { _ in
+			selection = .more
+		}
 	}
 
 	private var compactLayout: some View {
 		TabView(selection: $selection) {
-			ForEach([WorkspaceDestination.home, .files, .terminal, .servers, .assistant, .git, .settings]) { destination in
+			ForEach([WorkspaceDestination.home, .files, .terminal, .servers, .more]) { destination in
 				detailView(for: destination)
 					.tag(destination)
 					.tabItem { Label(destination.title, systemImage: destination.systemImage) }
@@ -72,12 +75,14 @@ struct DeveloperWorkspaceRootView: View {
 			NavigationStack { WorkspaceAssistantView(store: store) }
 		case .settings:
 			NavigationStack { SettingsWorkspaceView(store: store) }
+		case .more:
+			NavigationStack { MoreWorkspaceView(store: store, selection: $selection) }
 		}
 	}
 }
 
 private enum AppColor {
-	static let blue = Color(red: 0.29, green: 0.57, blue: 0.95)
+	static var blue: Color { Color(UserDefaultsController.shared.workspaceAccentColor) }
 	static let green = Color(red: 0.31, green: 0.72, blue: 0.57)
 	static let amber = Color(red: 0.98, green: 0.67, blue: 0.24)
 	static let coral = Color(red: 0.91, green: 0.35, blue: 0.43)
@@ -92,7 +97,7 @@ private struct WorkspaceHomeView: View {
 
 	var body: some View {
 		WorkspaceScroll(title: "OpenTerm") {
-			HeroPanel(selection: $selection)
+			HeroPanel(store: store, selection: $selection)
 			QuickActionGrid(store: store, selection: $selection)
 			SectionHeader(title: "Live Workspace", subtitle: "Recent SSH, Git, monitor, and terminal activity.")
 			AdaptiveGrid {
@@ -327,6 +332,31 @@ private struct WorkspaceAssistantView: View {
 	}
 }
 
+private struct MoreWorkspaceView: View {
+
+	@ObservedObject var store: WorkspaceStore
+	@Binding var selection: WorkspaceDestination
+
+	var body: some View {
+		WorkspaceScroll(title: "More") {
+			WorkspaceSummaryBanner(title: "Command Center", detail: "AI, Git, Settings, themes, terminal appearance, and workspace maintenance live here instead of Apple's automatic overflow screen.", tint: store.workspaceAccentColor)
+
+			AdaptiveGrid {
+				ActionTile(title: "AI Assistant", subtitle: "Explain errors and generate commands", symbol: "sparkles", tint: AppColor.violet) { selection = .assistant }
+				ActionTile(title: "Git Workspace", subtitle: "Clone, pull, commit, and push", symbol: "point.topleft.down.curvedto.point.bottomright.up", tint: AppColor.blue) { selection = .git }
+				ActionTile(title: "Settings", subtitle: "Theme, terminal, AI, and defaults", symbol: "slider.horizontal.3", tint: store.workspaceAccentColor) { selection = .settings }
+				ActionTile(title: "Refresh", subtitle: "Files, repos, and monitors", symbol: "arrow.clockwise", tint: AppColor.green) {
+					store.refreshLocalFiles()
+					store.refreshGitWorkspaces()
+					store.refreshMonitorSnapshots()
+				}
+			}
+
+			SettingsWorkspaceView(store: store)
+		}
+	}
+}
+
 private struct SettingsWorkspaceView: View {
 
 	@ObservedObject var store: WorkspaceStore
@@ -334,10 +364,56 @@ private struct SettingsWorkspaceView: View {
 	@State private var model = ""
 	@State private var apiKey = ""
 	@State private var systemPrompt = ""
+	@State private var appAccent = Color(UserDefaultsController.shared.workspaceAccentColor)
+	@State private var terminalText = Color(UserDefaultsController.shared.terminalTextColor)
+	@State private var terminalBackground = Color(UserDefaultsController.shared.terminalBackgroundColor)
+	@State private var terminalFontSize = Double(UserDefaultsController.shared.terminalFontSize)
+	@State private var useDarkKeyboard = UserDefaultsController.shared.useDarkKeyboard
+	@State private var caretStyle = UserDefaultsController.shared.caretStyle
 
 	var body: some View {
-		WorkspaceScroll(title: "Settings") {
-			WorkspaceSummaryBanner(title: "Free Preview", detail: store.freeModeSummary, tint: AppColor.blue)
+		VStack(alignment: .leading, spacing: 22) {
+			WorkspaceSummaryBanner(title: "Settings", detail: store.freeModeSummary, tint: store.workspaceAccentColor)
+
+			ThemeSettingsCard(store: store, appAccent: $appAccent, terminalText: $terminalText, terminalBackground: $terminalBackground)
+
+			VStack(alignment: .leading, spacing: 14) {
+				SectionHeader(title: "Terminal", subtitle: "These controls update the actual shell, not a preview.")
+				Slider(value: $terminalFontSize, in: 10...28, step: 1) {
+					Text("Font size")
+				} minimumValueLabel: {
+					Text("10")
+						.foregroundStyle(.white.opacity(0.6))
+				} maximumValueLabel: {
+					Text("28")
+						.foregroundStyle(.white.opacity(0.6))
+				}
+				.onChange(of: terminalFontSize) { newValue in
+					store.updateTerminalFontSize(newValue)
+				}
+				Text("Font size: \(Int(terminalFontSize)) pt")
+					.font(.system(.footnote, design: .rounded, weight: .semibold))
+					.foregroundStyle(.white.opacity(0.72))
+
+				Picker("Cursor", selection: $caretStyle) {
+					Text("Bar").tag(CaretStyle.verticalBar)
+					Text("Block").tag(CaretStyle.block)
+					Text("Line").tag(CaretStyle.underline)
+				}
+				.pickerStyle(.segmented)
+				.onChange(of: caretStyle) { newValue in
+					store.updateCaretStyle(newValue)
+				}
+
+				Toggle("Dark keyboard", isOn: $useDarkKeyboard)
+					.tint(store.workspaceAccentColor)
+					.foregroundStyle(.white)
+					.onChange(of: useDarkKeyboard) { newValue in
+						store.updateUseDarkKeyboard(newValue)
+					}
+			}
+			.padding(18)
+			.background(WorkspaceCardBackground(tint: store.workspaceAccentColor))
 
 			VStack(alignment: .leading, spacing: 12) {
 				SectionHeader(title: "AI Provider", subtitle: "OpenAI-compatible chat endpoint. Keys stay local in this preview build.")
@@ -354,15 +430,15 @@ private struct SettingsWorkspaceView: View {
 				TextField("System prompt", text: $systemPrompt, axis: .vertical)
 					.textFieldStyle(.roundedBorder)
 					.lineLimit(3...6)
-				PrimaryWorkspaceButton(title: "Save AI Settings", symbol: "checkmark.seal", tint: AppColor.blue) {
+				PrimaryWorkspaceButton(title: "Save AI Settings", symbol: "checkmark.seal", tint: store.workspaceAccentColor) {
 					store.updateAIConfiguration(endpoint: endpoint, model: model, apiKey: apiKey, systemPrompt: systemPrompt)
 				}
 			}
 			.padding(18)
-			.background(WorkspaceCardBackground(tint: AppColor.blue))
+			.background(WorkspaceCardBackground(tint: AppColor.violet))
 
 			AdaptiveGrid {
-				MetricCard(title: "Theme", value: store.activeThemeName, symbol: "paintpalette", tint: AppColor.amber)
+				MetricCard(title: "Theme", value: store.activeThemeName, symbol: "paintpalette", tint: store.workspaceAccentColor)
 				MetricCard(title: "AI Requests", value: "\(store.aiUsageHistory.count)", symbol: "chart.bar", tint: AppColor.violet)
 				MetricCard(title: "SSH Profiles", value: "\(store.sshProfiles.count)", symbol: "server.rack", tint: AppColor.green)
 				MetricCard(title: "Git Repos", value: "\(store.gitWorkspaces.count)", symbol: "point.topleft.down.curvedto.point.bottomright.up", tint: AppColor.blue)
@@ -373,7 +449,43 @@ private struct SettingsWorkspaceView: View {
 			model = store.aiConfiguration.model
 			apiKey = store.aiConfiguration.apiKey
 			systemPrompt = store.aiConfiguration.systemPrompt
+			appAccent = store.workspaceAccentColor
+			terminalText = Color(UserDefaultsController.shared.terminalTextColor)
+			terminalBackground = Color(UserDefaultsController.shared.terminalBackgroundColor)
+			terminalFontSize = Double(UserDefaultsController.shared.terminalFontSize)
+			useDarkKeyboard = UserDefaultsController.shared.useDarkKeyboard
+			caretStyle = UserDefaultsController.shared.caretStyle
 		}
+	}
+}
+
+private struct ThemeSettingsCard: View {
+	@ObservedObject var store: WorkspaceStore
+	@Binding var appAccent: Color
+	@Binding var terminalText: Color
+	@Binding var terminalBackground: Color
+
+	var body: some View {
+		VStack(alignment: .leading, spacing: 14) {
+			SectionHeader(title: "Live Color System", subtitle: "This is the real app theme control. Drag the color wheels and the workspace updates immediately.")
+			ColorPicker("App accent", selection: $appAccent, supportsOpacity: false)
+				.foregroundStyle(.white)
+				.onChange(of: appAccent) { newValue in
+					store.updateWorkspaceAccent(newValue)
+				}
+			ColorPicker("Terminal text", selection: $terminalText, supportsOpacity: false)
+				.foregroundStyle(.white)
+				.onChange(of: terminalText) { newValue in
+					store.updateTerminalTextColor(newValue)
+				}
+			ColorPicker("Terminal background", selection: $terminalBackground, supportsOpacity: false)
+				.foregroundStyle(.white)
+				.onChange(of: terminalBackground) { newValue in
+					store.updateTerminalBackgroundColor(newValue)
+				}
+		}
+		.padding(18)
+		.background(WorkspaceCardBackground(tint: store.workspaceAccentColor))
 	}
 }
 
@@ -395,6 +507,7 @@ private struct WorkspaceScroll<Content: View>: View {
 }
 
 private struct HeroPanel: View {
+	@ObservedObject var store: WorkspaceStore
 	@Binding var selection: WorkspaceDestination
 
 	var body: some View {
@@ -406,7 +519,7 @@ private struct HeroPanel: View {
 				.font(.system(.body, design: .rounded))
 				.foregroundStyle(.white.opacity(0.78))
 			HStack(spacing: 12) {
-				PrimaryWorkspaceButton(title: "Terminal", symbol: "terminal", tint: AppColor.blue) { selection = .terminal }
+				PrimaryWorkspaceButton(title: "Terminal", symbol: "terminal", tint: store.workspaceAccentColor) { selection = .terminal }
 				PrimaryWorkspaceButton(title: "Servers", symbol: "server.rack", tint: AppColor.green) { selection = .servers }
 			}
 			HStack(spacing: 12) {
@@ -441,7 +554,7 @@ private struct AdaptiveGrid<Content: View>: View {
 	@ViewBuilder let content: Content
 
 	var body: some View {
-		LazyVGrid(columns: [GridItem(.adaptive(minimum: 210), spacing: 14)], spacing: 14) {
+		LazyVGrid(columns: [GridItem(.adaptive(minimum: 160), spacing: 12)], spacing: 12) {
 			content
 		}
 	}
@@ -945,14 +1058,14 @@ private struct WorkspaceCardBackground: View {
 	var body: some View {
 		Group {
 			if #available(iOS 26.0, *) {
-				RoundedRectangle(cornerRadius: 22, style: .continuous)
+				RoundedRectangle(cornerRadius: 18, style: .continuous)
 					.fill(tint.opacity(0.10))
-					.overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(Color.white.opacity(0.12), lineWidth: 0.8))
-					.glassEffect(.regular.tint(tint.opacity(0.18)), in: .rect(cornerRadius: 22))
+					.overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Color.white.opacity(0.12), lineWidth: 0.8))
+					.glassEffect(.regular.tint(tint.opacity(0.18)), in: .rect(cornerRadius: 18))
 			} else {
-				RoundedRectangle(cornerRadius: 22, style: .continuous)
+				RoundedRectangle(cornerRadius: 18, style: .continuous)
 					.fill(.ultraThinMaterial)
-					.overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(Color.white.opacity(0.10), lineWidth: 0.8))
+					.overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Color.white.opacity(0.10), lineWidth: 0.8))
 			}
 		}
 	}

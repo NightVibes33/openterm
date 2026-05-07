@@ -48,11 +48,7 @@ class TerminalTabViewController: TabViewController {
 	}
 
 	@objc private func showSettings() {
-		let settingsVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "SettingsViewController")
-		let nav = UINavigationController(rootViewController: settingsVC)
-		nav.navigationBar.barStyle = .black
-		nav.modalPresentationStyle = .formSheet
-		self.present(nav, animated: true, completion: nil)
+		NotificationCenter.default.post(name: .workspaceDidRequestSettingsFocus, object: nil)
 	}
 
 	@objc private func addTab() {

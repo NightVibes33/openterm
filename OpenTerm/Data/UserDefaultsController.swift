@@ -3,7 +3,7 @@
 //  OpenTerm
 //
 //  Created by Louis D'hauwe on 20/01/2018.
-//  Copyright © 2018 Silver Fox. All rights reserved.
+//  Copyright Â© 2018 Silver Fox. All rights reserved.
 //
 
 import Foundation
@@ -18,6 +18,17 @@ class UserDefaultsController {
 	init(userDefaults: UserDefaults) {
 		self.userDefaults = userDefaults
 	}
+
+	var workspaceAccentColor: UIColor {
+		get {
+			return userDefaults.color(forKey: "workspaceAccentColor") ?? UIColor.defaultMainTintColor
+		}
+		set {
+			userDefaults.set(newValue, forKey: "workspaceAccentColor")
+			userDefaults.synchronize()
+		}
+	}
+
 
 	var terminalTextColor: UIColor {
 		get {

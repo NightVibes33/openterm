@@ -58,6 +58,11 @@ class TerminalTextView: UITextView {
 		spellCheckingType = .no
 		indicatorStyle = .white
 		smartInsertDeleteType = .no
+		textContainerInset = UIEdgeInsets(top: 18, left: 16, bottom: 18, right: 16)
+		textContainer.lineFragmentPadding = 0
+		layer.cornerRadius = 18
+		layer.cornerCurve = .continuous
+		clipsToBounds = true
 		
 		updateAppearanceFromSettings()
 		setCaretStyle()
@@ -148,7 +153,7 @@ class TerminalTextView: UITextView {
 		let userDefaultsController = UserDefaultsController.shared
 
 		let terminalFontSize = userDefaultsController.terminalFontSize
-		self.font = UIFont(name: "Menlo", size: CGFloat(terminalFontSize))
+		self.font = UIFont.monospacedSystemFont(ofSize: CGFloat(terminalFontSize), weight: .regular)
 
 		let terminaltextColor = userDefaultsController.terminalTextColor
 		self.textColor = terminaltextColor

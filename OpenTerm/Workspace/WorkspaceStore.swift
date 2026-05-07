@@ -10,6 +10,7 @@ enum WorkspaceDestination: String, CaseIterable, Hashable, Identifiable {
 	case servers
 	case assistant
 	case settings
+	case more
 
 	var id: String { rawValue }
 
@@ -29,6 +30,8 @@ enum WorkspaceDestination: String, CaseIterable, Hashable, Identifiable {
 			return "AI"
 		case .settings:
 			return "Settings"
+		case .more:
+			return "More"
 		}
 	}
 
@@ -48,6 +51,8 @@ enum WorkspaceDestination: String, CaseIterable, Hashable, Identifiable {
 			return "sparkles"
 		case .settings:
 			return "slider.horizontal.3"
+		case .more:
+			return "ellipsis.circle"
 		}
 	}
 }
@@ -387,6 +392,7 @@ final class WorkspaceStore: ObservableObject {
 	@Published var isRefreshingMonitors: Bool = false
 	@Published var statusMessage: String = "Workspace ready"
 	@Published var activeThemeName: String = "Glass Slate"
+	@Published var workspaceAccentColor: Color = Color(UserDefaultsController.shared.workspaceAccentColor)
 	@Published var freeModeSummary: String = "Free preview while SSH, Git, AI, editor, and monitoring flows are hardened."
 
 	private let fileManager = FileManager.default
@@ -408,6 +414,9 @@ final class WorkspaceStore: ObservableObject {
 		refreshLocalFiles()
 		refreshGitWorkspaces()
 		rebuildRecentSessions()
+		NotificationCenter.default.addObserver(forName: .appearanceDidChange, object: nil, queue: .main) { [weak self] _ in
+			self?.workspaceAccentColor = Color(UserDefaultsController.shared.workspaceAccentColor)
+		}
 	}
 
 	private var workspaceSupportURL: URL {
@@ -681,6 +690,37 @@ final class WorkspaceStore: ObservableObject {
 		aiConfiguration = AIProviderConfiguration(endpoint: endpoint.trimmingCharacters(in: .whitespacesAndNewlines), model: model.trimmingCharacters(in: .whitespacesAndNewlines), apiKey: apiKey.trimmingCharacters(in: .whitespacesAndNewlines), systemPrompt: systemPrompt.trimmingCharacters(in: .whitespacesAndNewlines))
 		saveAIConfiguration()
 		assistantStatus = aiConfiguration.endpoint.isEmpty ? "Configure an AI endpoint in Settings to enable live answers." : "AI endpoint saved. Prompts will use \(aiConfiguration.model)."
+	}
+
+	func updateWorkspaceAccent(_ color: Color) {
+		workspaceAccentColor = color
+		UserDefaultsController.shared.workspaceAccentColor = UIColor(color)
+		NotificationCenter.default.post(name: .appearanceDidChange, object: nil)
+	}
+
+	func updateTerminalTextColor(_ color: Color) {
+		UserDefaultsController.shared.terminalTextColor = UIColor(color)
+		NotificationCenter.default.post(name: .appearanceDidChange, object: nil)
+	}
+
+	func updateTerminalBackgroundColor(_ color: Color) {
+		UserDefaultsController.shared.terminalBackgroundColor = UIColor(color)
+		NotificationCenter.default.post(name: .appearanceDidChange, object: nil)
+	}
+
+	func updateTerminalFontSize(_ size: Double) {
+		UserDefaultsController.shared.terminalFontSize = Int(size.rounded())
+		NotificationCenter.default.post(name: .appearanceDidChange, object: nil)
+	}
+
+	func updateUseDarkKeyboard(_ enabled: Bool) {
+		UserDefaultsController.shared.useDarkKeyboard = enabled
+		NotificationCenter.default.post(name: .appearanceDidChange, object: nil)
+	}
+
+	func updateCaretStyle(_ style: CaretStyle) {
+		UserDefaultsController.shared.caretStyle = style
+		NotificationCenter.default.post(name: .caretStyleDidChange, object: nil)
 	}
 
 	func openTerminal(command: String, executeNow: Bool) {

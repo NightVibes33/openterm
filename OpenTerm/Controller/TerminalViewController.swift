@@ -119,7 +119,7 @@ class TerminalViewController: UIViewController {
 			contentWrapperView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
 			])
 
-		contentWrapperView.backgroundColor = .black
+		contentWrapperView.backgroundColor = UserDefaultsController.shared.terminalBackgroundColor
 		
 		terminalView.translatesAutoresizingMaskIntoConstraints = false
 		contentWrapperView.addSubview(terminalView)
@@ -134,6 +134,7 @@ class TerminalViewController: UIViewController {
 		updateTitle()
 
 		NotificationCenter.default.addObserver(self, selector: #selector(didDismissKeyboard), name: UIResponder.keyboardDidHideNotification, object: nil)
+		NotificationCenter.default.addObserver(self, selector: #selector(updateTerminalAppearance), name: .appearanceDidChange, object: nil)
 
 		NotificationCenter.default.addObserver(self, selector: #selector(applicationDidEnterBackground), name: UIApplication.didEnterBackgroundNotification, object: nil)
 
@@ -246,6 +247,12 @@ class TerminalViewController: UIViewController {
 
 		}
 
+	}
+
+	@objc private func updateTerminalAppearance() {
+		UIView.animate(withDuration: 0.25) {
+			self.contentWrapperView.backgroundColor = UserDefaultsController.shared.terminalBackgroundColor
+		}
 	}
 
 	@objc

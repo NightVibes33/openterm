@@ -147,13 +147,21 @@ class TerminalView: UIView {
 		stderrParser.delegate = self
 		executor.delegate = self
 
+		backgroundColor = UserDefaultsController.shared.terminalBackgroundColor
+		layer.cornerRadius = 20
+		layer.cornerCurve = .continuous
+
 		textView.translatesAutoresizingMaskIntoConstraints = false
 		self.addSubview(textView)
 
-		textView.leadingAnchor.constraint(equalTo: self.leadingAnchor).isActive = true
-		textView.trailingAnchor.constraint(equalTo: self.trailingAnchor).isActive = true
-		textView.topAnchor.constraint(equalTo: self.topAnchor).isActive = true
-		textView.bottomAnchor.constraint(equalTo: self.bottomAnchor).isActive = true
+		NSLayoutConstraint.activate([
+			textView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 10),
+			textView.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -10),
+			textView.topAnchor.constraint(equalTo: self.topAnchor, constant: 10),
+			textView.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -10)
+		])
+
+		NotificationCenter.default.addObserver(self, selector: #selector(updateTerminalChrome), name: .appearanceDidChange, object: nil)
 
 		textView.delegate = self
 
@@ -174,6 +182,12 @@ class TerminalView: UIView {
 
 	}
 	
+	@objc private func updateTerminalChrome() {
+		UIView.animate(withDuration: 0.25) {
+			self.backgroundColor = UserDefaultsController.shared.terminalBackgroundColor
+		}
+	}
+
 	private func adjustInsets(for state: KeyboardEvent) {
 		
 		let rect = self.textView.convert(state.keyboardFrameEnd, from: nil).intersection(self.textView.bounds)

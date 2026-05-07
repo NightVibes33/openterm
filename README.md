@@ -26,9 +26,10 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 
 ### Implemented in this fork right now
 - Legacy OpenTerm terminal core is still present and embedded inside the SwiftUI workspace.
-- `AppDelegate` launches the modern workspace shell with Home, Terminal, Files, Git, Servers, AI, and Settings surfaces.
+- `AppDelegate` launches the modern workspace shell with Home, Files, Terminal, Servers, and a custom More hub on iPhone, plus full workspace navigation on iPad.
 - iOS 18.0 is the deployment floor, with iOS 26 Liquid Glass-style SwiftUI surfaces enabled when the SDK/runtime supports them.
 - Terminal commands can now be queued or executed from workspace actions, so SSH, Git, snippets, and generated commands can jump into the active terminal tab.
+- Terminal appearance has a modernized canvas with live font, cursor, keyboard, text color, background color, and app accent controls.
 - SSH profiles persist locally with label, host, username, port, auth type, key path, startup path, notes, and last-used timestamps.
 - SSH quick connect now builds and runs real `ssh` commands through the terminal instead of only switching screens.
 - Local files are scanned from `DocumentManager.shared.activeDocumentsFolderURL`; UTF-8 files can open in an in-app text editor and save back to disk.
@@ -36,7 +37,8 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - Git repositories are detected by scanning for `.git` folders, and clone/status/pull/commit/push actions are terminal-driven.
 - Server monitors persist locally and can poll Linux CPU, memory, disk, and load snapshots over noninteractive SSH.
 - The AI assistant can call a configurable OpenAI-compatible chat endpoint and records local usage history.
-- Settings are free-preview focused; payment, subscriptions, and entitlement UI are intentionally out of the active product surface.
+- The iPhone More tab is custom now, not Apple's automatic overflow list, and contains real AI, Git, settings, theme, and terminal controls.
+- Settings are free-preview focused with real AI/provider controls and live appearance controls instead of placeholder billing screens.
 - A Supabase schema foundation exists for users, subscriptions, devices, snippet sync, AI usage, monitors, and audit logs.
 - GitHub Actions includes a green unsigned IPA workflow for CI artifact generation.
 - Vendored dependency compatibility patches have been added for modern Xcode/iOS SDK builds.
@@ -62,7 +64,7 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - `OpenTerm/AppDelegate.swift` launches the SwiftUI workspace shell.
 - `OpenTerm/Workspace/DeveloperWorkspaceRootView.swift` drives the main multi-surface experience.
 - `OpenTerm/Workspace/LegacyTerminalContainerView.swift` wraps the legacy terminal controller.
-- `OpenTerm/Workspace/WorkspaceStore.swift` owns local workspace state, persistence, terminal actions, SSH profile commands, monitor refresh, Git command queuing, file editing, snippets, and AI provider configuration.
+- `OpenTerm/Workspace/WorkspaceStore.swift` owns local workspace state, persistence, terminal actions, SSH profile commands, monitor refresh, Git command queuing, file editing, snippets, app accent state, and AI provider configuration.
 
 ### Backend foundation
 - `supabase/migrations/20260506_workspace_foundation.sql` creates the initial hosted-data shape.
@@ -125,6 +127,8 @@ Important:
 ## Roadmap
 - [x] Preserve terminal core
 - [x] Add SwiftUI workspace shell
+- [x] Replace automatic iOS More overflow with a custom More hub
+- [x] Add live app accent and modern terminal appearance settings
 - [x] Add unsigned IPA CI pipeline
 - [x] Add backend schema foundation
 - [x] Replace mock SSH manager with local profiles and real terminal connect flow
