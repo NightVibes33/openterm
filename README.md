@@ -36,8 +36,8 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - A local SSH key vault foundation exists with protected on-device key files, metadata, import/delete actions, and attach-to-profile flow.
 - Encrypted SSH vault push/pull is wired through Supabase RPC with AES-GCM payload encryption, a user-provided vault sync secret, newer-wins conflict handling, local metadata repair, and app-active background refresh; raw private keys are not sent as plaintext.
 - The Files tab now works as a real iOS document workspace: folder navigation, Files app import, create file/folder, delete, share/export, UTF-8 editing, syntax highlighting, search/match highlighting, lightweight completion chips, diff view against the opened version, and save back to disk.
-- Command snippets persist locally and can run directly in the terminal, including remote Linux dev-stack setup snippets for Debian, Alpine, and Fedora servers.
-- Git repositories are detected by scanning for `.git` folders, and clone/status/diff/log/pull/commit/push plus structured conflict actions are terminal-driven.
+- Command snippets persist locally and can be created, edited, deleted, and run directly in the terminal. New installs no longer seed generic fake deploy/server snippets.
+- Git repositories are detected by scanning for `.git` folders, and clone/status/diff/log/pull/commit/push plus structured conflict actions are terminal-driven with a `git` availability preflight before commands run.
 - Server monitors persist locally, poll Linux CPU/memory/disk/load snapshots over noninteractive SSH, and keep a local acknowledgeable alert history when thresholds change; monitors are user-created and monitor cards appear only after real poll results.
 - The AI assistant can call a configurable OpenAI-compatible chat endpoint or hosted Supabase proxy, records local usage history, includes prompt shortcuts for errors, commands, scripts, SSH, remote dev setup, Docker, Git conflicts, and regex, and can insert assistant output back into the terminal. Live sending is disabled until a real endpoint/key or proxy/token is configured.
 - The iPhone More tab is custom now, not Apple's automatic overflow list, and contains real AI, Git, settings, theme, and terminal controls.
@@ -151,6 +151,8 @@ Important:
 - [x] Disable unconfigured AI live sends and show explicit provider/proxy setup state
 - [x] Stop showing monitor and recent-activity cards until real actions produce data
 - [x] Add global workspace status feedback for queued actions and failed preconditions
+- [x] Remove seeded fake snippets and add real snippet create/edit/delete flow
+- [x] Add terminal Git availability preflight before Git commands
 - [x] Add repo reality audit documentation
 - [x] Add remote SSH Tool Audit and Dev Stack setup actions for common Linux package managers
 - [x] Add local server monitor alert history and acknowledgement

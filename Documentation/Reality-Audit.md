@@ -12,12 +12,12 @@ This fork should not pretend to be a native full IDE yet. The real product direc
 - SSH key vault stores pasted keys as protected local files and metadata.
 - Server monitor refresh runs noninteractive SSH commands and only shows monitor cards after a real poll result.
 - AI requests use `URLSession` against a configured OpenAI-compatible endpoint or Supabase proxy. Without configuration, live sending is disabled.
-- Git actions are real terminal commands queued in detected repositories. They are not a native embedded Git engine.
+- Git actions are real terminal commands queued in detected repositories. They are not a native embedded Git engine, and queued Git commands now preflight `git` availability before running.
 - Workspace status is surfaced globally so failed preconditions and queued work are visible.
 
 ## Previously Fake Or Misleading Areas Fixed
 
-- Removed seeded fake SSH hosts and seeded demo monitors.
+- Removed seeded fake SSH hosts, seeded demo monitors, and generic seeded command snippets.
 - Home recent activity no longer shows saved SSH profiles until they have actually been used.
 - Monitor snapshots are no longer created just because a monitor was configured.
 - Empty Home, Git, Server, Vault, Monitor, and AI states now state what real setup is required.
@@ -44,3 +44,4 @@ This fork should not pretend to be a native full IDE yet. The real product direc
 - Add real file rename/move, binary preview metadata, and folder export zip support.
 - Add monitor setup validation for SSH auth type and required remote tools.
 - Add explicit local-vs-remote labels everywhere a command depends on the active terminal environment.
+- Continue replacing terminal-wrapper UI with native capability checks before showing actions as ready.

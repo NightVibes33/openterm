@@ -599,15 +599,7 @@ final class WorkspaceStore: ObservableObject {
 	}
 
 	private func defaultSnippets() -> [WorkspaceSnippet] {
-		[
-			WorkspaceSnippet(title: "Zero-downtime deploy", body: "git pull && docker compose pull && docker compose up -d", category: "Deploy"),
-			WorkspaceSnippet(title: "Top offenders", body: "ps aux --sort=-%mem | head -n 15", category: "Ops"),
-			WorkspaceSnippet(title: "Find big files", body: "du -ah . | sort -rh | head -n 20", category: "Storage"),
-			WorkspaceSnippet(title: "Tail recent errors", body: "journalctl -u nginx -n 200 --no-pager", category: "Logs"),
-			WorkspaceSnippet(title: "Debian dev stack", body: "sudo apt update && sudo apt install -y git python3 python3-pip nodejs npm htop nano vim tmux", category: "Remote Setup"),
-			WorkspaceSnippet(title: "Alpine dev stack", body: "sudo apk add --no-cache git python3 py3-pip nodejs npm htop nano vim tmux", category: "Remote Setup"),
-			WorkspaceSnippet(title: "Fedora dev stack", body: "sudo dnf install -y git python3 python3-pip nodejs npm htop nano vim tmux", category: "Remote Setup")
-		]
+		[]
 	}
 
 	private func defaultServerMonitors(from profiles: [SSHProfileSummary]) -> [ServerMonitorSummary] {
@@ -1053,12 +1045,23 @@ final class WorkspaceStore: ObservableObject {
 	}
 
 	func upsertSnippet(_ snippet: WorkspaceSnippet) {
-		if let index = snippets.firstIndex(where: { $0.id == snippet.id }) {
-			snippets[index] = snippet
+		let cleaned = WorkspaceSnippet(
+			id: snippet.id,
+			title: snippet.title.trimmingCharacters(in: .whitespacesAndNewlines),
+			body: snippet.body.trimmingCharacters(in: .whitespacesAndNewlines),
+			category: snippet.category.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Custom" : snippet.category.trimmingCharacters(in: .whitespacesAndNewlines)
+		)
+		guard !cleaned.title.isEmpty, !cleaned.body.isEmpty else {
+			statusMessage = "Snippet needs a title and command"
+			return
+		}
+		if let index = snippets.firstIndex(where: { $0.id == cleaned.id }) {
+			snippets[index] = cleaned
 		} else {
-			snippets.insert(snippet, at: 0)
+			snippets.insert(cleaned, at: 0)
 		}
 		saveSnippets()
+		statusMessage = "Saved snippet: \(cleaned.title)"
 	}
 
 	func deleteSnippet(_ snippet: WorkspaceSnippet) {
@@ -1659,13 +1662,17 @@ final class WorkspaceStore: ObservableObject {
 		if !trimmedFolder.isEmpty {
 			command += " \(shellQuote(trimmedFolder))"
 		}
-		openTerminal(command: command, executeNow: true)
-		statusMessage = "Queued git clone in terminal"
+		openTerminal(command: gitPreflightCommand(command), executeNow: true)
+		statusMessage = "Queued git clone in terminal after git availability check"
 	}
 
 	func queueGitCommand(_ command: String, in repositoryPath: String) {
-		openTerminal(command: "cd \(shellQuote(repositoryPath)) && \(command)", executeNow: true)
-		statusMessage = "Queued git command in terminal"
+		openTerminal(command: "cd \(shellQuote(repositoryPath)) && \(gitPreflightCommand(command))", executeNow: true)
+		statusMessage = "Queued git command in terminal after git availability check"
+	}
+
+	private func gitPreflightCommand(_ command: String) -> String {
+		"command -v git >/dev/null 2>&1 || { echo 'OpenTerm: git is not installed in this terminal environment. Use SSH remote dev setup or install/enable git first.'; exit 127; }; \(command)"
 	}
 
 	private func vaultSyncContext(from config: BackendConfiguration, updateStatus: Bool = true) -> VaultSyncContext? {

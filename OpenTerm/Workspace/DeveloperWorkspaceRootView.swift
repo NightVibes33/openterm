@@ -157,6 +157,7 @@ private struct FilesWorkspaceView: View {
 	@State private var showingNewFolder = false
 	@State private var showingImporter = false
 	@State private var shareItem: WorkspaceShareItem?
+	@State private var editingSnippet: SnippetDraft?
 
 	var body: some View {
 		WorkspaceScroll(title: "Files") {
@@ -220,10 +221,24 @@ private struct FilesWorkspaceView: View {
 			}
 
 			VStack(alignment: .leading, spacing: 12) {
-				SectionHeader(title: "Snippets", subtitle: "Saved commands can run straight in the active terminal tab.")
+				HStack {
+					SectionHeader(title: "Snippets", subtitle: "User-created commands that run in the active terminal tab.")
+					Spacer()
+					Button { editingSnippet = SnippetDraft(snippet: nil) } label: {
+						Label("New", systemImage: "plus")
+					}
+					.buttonStyle(.bordered)
+				}
+				if store.snippets.isEmpty {
+					EmptyStateCard(title: "No Snippets", detail: "Create your own command snippets. OpenTerm no longer seeds fake deploy or server commands.", symbol: "text.badge.plus")
+				}
 				ForEach(store.snippets) { snippet in
 					SnippetRow(snippet: snippet) {
 						store.runSnippetInTerminal(snippet)
+					} edit: {
+						editingSnippet = SnippetDraft(snippet: snippet)
+					} delete: {
+						store.deleteSnippet(snippet)
 					}
 				}
 			}
@@ -246,6 +261,11 @@ private struct FilesWorkspaceView: View {
 		}
 		.sheet(item: $store.activeEditor) { document in
 			WorkspaceEditorSheet(document: document, store: store)
+		}
+		.sheet(item: $editingSnippet) { draft in
+			SnippetEditorSheet(draft: draft) { snippet in
+				store.upsertSnippet(snippet)
+			}
 		}
 		.alert("New File", isPresented: $showingNewFile) {
 			TextField("script.sh", text: $newFileName)
@@ -959,6 +979,8 @@ private struct FileRow: View {
 private struct SnippetRow: View {
 	let snippet: WorkspaceSnippet
 	let run: () -> Void
+	let edit: () -> Void
+	let delete: () -> Void
 
 	var body: some View {
 		VStack(alignment: .leading, spacing: 10) {
@@ -974,7 +996,14 @@ private struct SnippetRow: View {
 			Text(snippet.body)
 				.font(.system(.footnote, design: .monospaced))
 				.foregroundStyle(.white.opacity(0.70))
-			PrimaryWorkspaceButton(title: "Run", symbol: "play.fill", tint: AppColor.amber, action: run)
+			HStack(spacing: 10) {
+				PrimaryWorkspaceButton(title: "Run", symbol: "play.fill", tint: AppColor.amber, action: run)
+				PrimaryWorkspaceButton(title: "Edit", symbol: "pencil", tint: AppColor.blue, action: edit)
+				Button(role: .destructive, action: delete) {
+					Image(systemName: "trash")
+				}
+				.buttonStyle(.bordered)
+			}
 		}
 		.padding(16)
 		.background(WorkspaceCardBackground(tint: AppColor.amber))
@@ -1556,6 +1585,57 @@ private struct HighlightedCodeEditor: UIViewRepresentable {
 			regex.enumerateMatches(in: attributed.string, options: [], range: range) { match, _, _ in
 				guard let match else { return }
 				attributed.addAttribute(.foregroundColor, value: color, range: match.range)
+			}
+		}
+	}
+}
+
+
+private struct SnippetDraft: Identifiable {
+	var id: UUID
+	var title: String
+	var body: String
+	var category: String
+
+	init(snippet: WorkspaceSnippet?) {
+		id = snippet?.id ?? UUID()
+		title = snippet?.title ?? ""
+		body = snippet?.body ?? ""
+		category = snippet?.category ?? "Custom"
+	}
+
+	var snippet: WorkspaceSnippet {
+		WorkspaceSnippet(id: id, title: title, body: body, category: category)
+	}
+}
+
+private struct SnippetEditorSheet: View {
+	@Environment(\.dismiss) private var dismiss
+	@State private var draft: SnippetDraft
+	let save: (WorkspaceSnippet) -> Void
+
+	init(draft: SnippetDraft, save: @escaping (WorkspaceSnippet) -> Void) {
+		_draft = State(initialValue: draft)
+		self.save = save
+	}
+
+	var body: some View {
+		NavigationStack {
+			Form {
+				TextField("Title", text: $draft.title)
+				TextField("Category", text: $draft.category)
+				TextField("Command", text: $draft.body, axis: .vertical)
+					.lineLimit(3...8)
+			}
+			.navigationTitle("Snippet")
+			.toolbar {
+				ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+				ToolbarItem(placement: .confirmationAction) {
+					Button("Save") {
+						save(draft.snippet)
+						dismiss()
+					}
+				}
 			}
 		}
 	}
