@@ -140,7 +140,7 @@ private struct WorkspaceHomeView: View {
 			CapabilityStatus(title: "Git", detail: store.gitWorkspaces.isEmpty ? "No repositories found. Commands require git in the terminal environment." : "\(store.gitWorkspaces.count) detected repo(s).", state: store.gitWorkspaces.isEmpty ? "No repos" : "Terminal", symbol: "point.topleft.down.curvedto.point.bottomright.up", tint: AppColor.blue),
 			CapabilityStatus(title: "AI", detail: store.isAIConfigured ? "Provider/proxy configured." : "Endpoint/key or proxy/token missing.", state: store.isAIConfigured ? "Configured" : "Config", symbol: "sparkles", tint: AppColor.violet),
 			CapabilityStatus(title: "Vault Sync", detail: store.isVaultSyncConfigured ? "Backend settings present." : "Supabase/auth/secret missing.", state: store.isVaultSyncConfigured ? "Configured" : "Config", symbol: "lock.shield", tint: AppColor.coral),
-			CapabilityStatus(title: "Monitoring", detail: store.serverSnapshots.isEmpty ? "No live SSH poll result yet." : "Latest SSH monitor data available.", state: store.serverSnapshots.isEmpty ? "No data" : "SSH data", symbol: "waveform.path.ecg", tint: AppColor.green)
+			CapabilityStatus(title: "Monitoring", detail: store.serverSnapshots.isEmpty ? "No SSH poll result yet." : "Latest SSH monitor data available.", state: store.serverSnapshots.isEmpty ? "No data" : "SSH data", symbol: "waveform.path.ecg", tint: AppColor.green)
 		]
 	}
 
@@ -193,17 +193,56 @@ private struct QuickActionGrid: View {
 
 	var body: some View {
 		VStack(alignment: .leading, spacing: 14) {
-			SectionHeader(title: "Quick Actions", subtitle: "One-tap entry points into the real workspace flows.")
+			SectionHeader(title: "Quick Actions", subtitle: "Actions change based on what is actually configured on this device.")
 			AdaptiveGrid {
 				ActionTile(title: "New Terminal", subtitle: "Open the shell", symbol: "terminal", tint: AppColor.blue) { selection = .terminal }
-				ActionTile(title: "Refresh Monitors", subtitle: "Poll SSH health", symbol: "waveform.path.ecg", tint: AppColor.green) { store.refreshMonitorSnapshots() }
-				ActionTile(title: "Git Status", subtitle: "Scan repos", symbol: "point.topleft.down.curvedto.point.bottomright.up", tint: AppColor.violet) {
+				ActionTile(title: monitorActionTitle, subtitle: monitorActionSubtitle, symbol: "waveform.path.ecg", tint: AppColor.green) {
+					if store.serverMonitors.isEmpty {
+						store.statusMessage = store.sshProfiles.isEmpty ? "Add an SSH profile before creating a monitor" : "Create a monitor before refreshing SSH health"
+						selection = .servers
+					} else {
+						store.refreshMonitorSnapshots()
+					}
+				}
+				ActionTile(title: gitActionTitle, subtitle: gitActionSubtitle, symbol: "point.topleft.down.curvedto.point.bottomright.up", tint: AppColor.violet) {
 					store.refreshGitWorkspaces()
 					selection = .git
 				}
-				ActionTile(title: "Ask AI", subtitle: "Command help", symbol: "sparkles", tint: AppColor.amber) { selection = .assistant }
+				ActionTile(title: aiActionTitle, subtitle: aiActionSubtitle, symbol: "sparkles", tint: AppColor.amber) {
+					selection = store.isAIConfigured ? .assistant : .more
+					if !store.isAIConfigured {
+						store.statusMessage = "Configure AI routing before sending prompts"
+					}
+				}
 			}
 		}
+	}
+
+	private var monitorActionTitle: String {
+		store.serverMonitors.isEmpty ? "Set Up Monitors" : "Refresh Monitors"
+	}
+
+	private var monitorActionSubtitle: String {
+		if store.serverMonitors.isEmpty {
+			return store.sshProfiles.isEmpty ? "Needs SSH profile" : "Create monitor"
+		}
+		return "Poll SSH health"
+	}
+
+	private var gitActionTitle: String {
+		store.gitWorkspaces.isEmpty ? "Find Repos" : "Open Git"
+	}
+
+	private var gitActionSubtitle: String {
+		store.gitWorkspaces.isEmpty ? "Scan Documents" : "Terminal Git actions"
+	}
+
+	private var aiActionTitle: String {
+		store.isAIConfigured ? "Ask AI" : "Configure AI"
+	}
+
+	private var aiActionSubtitle: String {
+		store.isAIConfigured ? "Use saved routing" : "Provider required"
 	}
 }
 

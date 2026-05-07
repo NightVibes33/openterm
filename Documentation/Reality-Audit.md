@@ -25,6 +25,7 @@ This fork should not pretend to be a native full IDE yet. The real product direc
 - Home recent activity no longer shows saved SSH profiles until they have actually been used.
 - Monitor snapshots are no longer created just because a monitor was configured.
 - Empty Home, Git, Server, Vault, Monitor, and AI states now state what real setup is required.
+- Home quick actions now route missing AI, monitor, and Git setup to the right workspace instead of pretending those flows are already configured.
 - The AI panel no longer says it is ready before a real provider/proxy is configured.
 - The add-monitor button now opens SSH profile setup when no profile exists instead of silently doing nothing.
 - The Scripts panel remains available because it works; bundled examples were expanded with practical runnable workflows instead of being removed.

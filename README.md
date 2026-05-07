@@ -40,6 +40,7 @@ The current design target is real-tool clarity first: fewer marketing cards, lig
 - The SwiftUI workspace now uses semantic text colors instead of hard-coded white labels, fixing the broken white-on-light card look across the main shell.
 - Workspace status feedback is now a temporary top overlay instead of a persistent bar sitting above the bottom tab bar.
 - The home and More copy now avoids inflated âlive/command centerâ language and labels Git/AI as terminal-driven or configuration-gated where appropriate.
+- Home quick actions are configuration-aware: AI routes to setup until configured, monitors route to SSH/server setup until monitors exist, and Git starts with repo discovery.
 - Prototype wording such as âpreview build,â âFree preview,â âlive answers,â and broad âreadyâ labels was removed from the in-app workspace copy.
 - Settings are free-app focused with real AI/provider controls and appearance controls instead of placeholder billing screens.
 - Workspace backup export writes a JSON manifest for profiles, snippets, monitors, vault metadata, and AI routing metadata without raw private-key contents.
