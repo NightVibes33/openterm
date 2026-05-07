@@ -101,6 +101,9 @@ private struct WorkspaceHomeView: View {
 			HeroPanel(store: store, selection: $selection)
 			QuickActionGrid(store: store, selection: $selection)
 			SectionHeader(title: "Live Workspace", subtitle: "Recent SSH, Git, monitor, and terminal activity.")
+			if store.recentSessions.isEmpty {
+				EmptyStateCard(title: "No Real Activity Yet", detail: "Add an SSH profile, import files, clone a repo, or refresh monitors to populate this section with real workspace activity.", symbol: "rectangle.stack")
+			}
 			AdaptiveGrid {
 				ForEach(store.recentSessions) { session in
 					SessionCard(session: session)
@@ -290,6 +293,9 @@ private struct GitWorkspaceView: View {
 			.padding(18)
 			.background(WorkspaceCardBackground(tint: AppColor.violet))
 
+			if store.gitWorkspaces.isEmpty {
+				EmptyStateCard(title: "No Repositories Found", detail: "Clone a repo from this screen or import a folder containing a .git directory, then refresh to show real Git actions.", symbol: "point.topleft.down.curvedto.point.bottomright.up")
+			}
 			ForEach(store.gitWorkspaces) { repo in
 				GitRepoCard(repo: repo, commitMessage: $commitMessage) { command in
 					store.queueGitCommand(command, in: repo.path)
@@ -386,6 +392,9 @@ private struct ServersWorkspaceView: View {
 				Button {
 					if let profile = store.sshProfiles.first {
 						editingMonitor = ServerMonitorDraft(profileID: profile.id)
+					} else {
+						store.statusMessage = "Add an SSH profile before creating a monitor"
+						editingProfile = SSHProfileDraft(profile: nil)
 					}
 				} label: { Image(systemName: "waveform.path.ecg") }
 				Button { store.refreshMonitorSnapshots() } label: { Image(systemName: "arrow.clockwise") }
