@@ -8,7 +8,7 @@
 
 import UIKit
 
-open class TabViewController: UIViewController {
+open class TabViewController: UIViewController, TabViewBarDataSource, TabViewBarDelegate {
 
     /// The container that this tab view resides in.
     internal weak var container: TabViewContainer?
@@ -238,8 +238,3 @@ open class TabViewController: UIViewController {
     }
 }
 
-extension TabViewController: TabViewBarDataSource {
-}
-
-extension TabViewController: TabViewBarDelegate {
-}
