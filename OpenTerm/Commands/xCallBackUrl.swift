@@ -3,7 +3,7 @@
 //  OpenTerm
 //
 //  Created by Anders Borum on 24/01/2018.
-//  Copyright © 2018 Silver Fox. All rights reserved.
+//  Copyright Â© 2018 Silver Fox. All rights reserved.
 //
 
 import Foundation
@@ -178,8 +178,9 @@ public func openUrl(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer
 	let returnText = (resultErrorCode == nil ? resultOkMessage : resultErrorMessage) ?? ""
 
 	// output results
-	let c_string = returnText.utf8CString
-	write(outputFile, c_string, strlen(c_string))
+	returnText.withCString { cString in
+		write(outputFile, cString, strlen(cString))
+	}
 	write(outputFile, "\n", 1)
 
 	return returnCode
