@@ -28,34 +28,62 @@ jobs:
           xcrun --sdk iphoneos --show-sdk-version
           xcrun --sdk iphoneos --show-sdk-path
 
-      - name: Patch get_sources.sh for GitHub archive format
+      - name: Download Apple OSS sources
         shell: bash
         run: |
           set -euo pipefail
+
           # Apple redirects opensource.apple.com tarballs to GitHub codeload.
           # GitHub archives extract to repo-tag/ instead of tag/.
-          # We patch get_sources.sh to handle both naming conventions.
-          sed -i.bak \
-            -e 's/mv \$file file_cmds/mv file_cmds-\$file file_cmds 2>\/dev\/null || mv \$file file_cmds/' \
-            -e 's/mv \$libutil libutil/mv libutil-\$libutil libutil 2>\/dev\/null || mv \$libutil libutil/' \
-            -e 's/mv \$libinfo libinfo/mv Libinfo-\$libinfo libinfo 2>\/dev\/null || mv \$libinfo libinfo/' \
-            -e 's/mv \$shell shell_cmds/mv shell_cmds-\$shell shell_cmds 2>\/dev\/null || mv \$shell shell_cmds/' \
-            -e 's/mv \$text text_cmds/mv text_cmds-\$text text_cmds 2>\/dev\/null || mv \$text text_cmds/' \
-            -e 's/mv \$archive libarchive/mv libarchive-\$archive libarchive 2>\/dev\/null || mv \$archive libarchive/' \
-            -e 's/mv \$curl curl/mv curl-\$curl curl 2>\/dev\/null || mv \$curl curl/' \
-            Dependencies/ios_system/get_sources.sh
-
-      - name: Download sources and frameworks
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          # Initialize submodules fully
-          git submodule update --init --recursive
-
-          # Download sources for ios_system (curl, openssl, libssh2, etc.)
+          # We download from GitHub directly and rename accordingly.
           pushd Dependencies/ios_system
-          ./get_sources.sh
+
+          # Clean up any previous attempts
+          rm -rf file_cmds shell_cmds text_cmds libutil libinfo libarchive curl
+          rm -rf file_cmds-* shell_cmds-* text_cmds-* libutil-* Libinfo-* libarchive-* curl-*
+
+          # file_cmds
+          echo "Getting file_cmds"
+          curl -sL https://github.com/apple-oss-distributions/file_cmds/archive/refs/tags/file_cmds-272.tar.gz | tar xz
+          mv file_cmds-file_cmds-272 file_cmds
+          (cd file_cmds && patch -p1 < ../file_cmds.patch)
+
+          # libutil
+          echo "Getting libutil"
+          curl -sL https://github.com/apple-oss-distributions/libutil/archive/refs/tags/libutil-51.tar.gz | tar xz
+          mv libutil-libutil-51 libutil
+          (cd libutil && patch -p1 < ../libutil.patch)
+
+          # libinfo
+          echo "Getting libinfo"
+          curl -sL https://github.com/apple-oss-distributions/Libinfo/archive/refs/tags/Libinfo-517.tar.gz | tar xz
+          mv Libinfo-Libinfo-517 libinfo
+          (cd libinfo && patch -p1 < ../libinfo.patch)
+
+          # shell_cmds
+          echo "Getting shell_cmds"
+          curl -sL https://github.com/apple-oss-distributions/shell_cmds/archive/refs/tags/shell_cmds-203.tar.gz | tar xz
+          mv shell_cmds-shell_cmds-203 shell_cmds
+          (cd shell_cmds && patch -p1 < ../shell_cmds.patch)
+
+          # text_cmds
+          echo "Getting text_cmds"
+          curl -sL https://github.com/apple-oss-distributions/text_cmds/archive/refs/tags/text_cmds-99.tar.gz | tar xz
+          mv text_cmds-text_cmds-99 text_cmds
+          (cd text_cmds && patch -p1 < ../text_cmds.patch)
+
+          # libarchive
+          echo "Getting libarchive"
+          curl -sL https://github.com/apple-oss-distributions/libarchive/archive/refs/tags/libarchive-54.tar.gz | tar xz
+          mv libarchive-libarchive-54 libarchive
+          (cd libarchive && patch -p1 < ../libarchive.patch)
+
+          # curl
+          echo "Getting curl"
+          curl -sL https://github.com/apple-oss-distributions/curl/archive/refs/tags/curl-105.tar.gz | tar xz
+          mv curl-curl-105 curl
+          (cd curl && patch -p1 < ../curl.patch)
+
           popd
 
       - name: Build/download frameworks for ios_system
