@@ -18,14 +18,6 @@ struct DeveloperWorkspaceRootView: View {
 			}
 		}
 		.tint(store.workspaceAccentColor)
-		.overlay(alignment: .top) {
-			if store.statusMessage != "Workspace idle" {
-				WorkspaceStatusStrip(message: store.statusMessage, tint: store.workspaceAccentColor)
-					.padding(.top, 10)
-					.transition(.move(edge: .top).combined(with: .opacity))
-			}
-		}
-		.animation(.spring(response: 0.34, dampingFraction: 0.86), value: store.statusMessage)
 		.sheet(isPresented: $showsOnboarding) {
 			WorkspaceOnboardingView(store: store, selection: $selection, hasCompletedOnboarding: $hasCompletedOnboarding)
 		}
@@ -1027,27 +1019,6 @@ private struct ThemeSettingsCard: View {
 	}
 }
 
-private struct WorkspaceStatusStrip: View {
-	let message: String
-	let tint: Color
-
-	var body: some View {
-		HStack(spacing: 8) {
-			Image(systemName: "info.circle")
-			Text(message)
-				.lineLimit(2)
-			Spacer(minLength: 0)
-		}
-		.font(.system(.footnote, design: .default, weight: .semibold))
-		.foregroundStyle(.primary)
-		.padding(.horizontal, 14)
-		.padding(.vertical, 10)
-		.background(.ultraThinMaterial, in: Capsule())
-		.overlay(Capsule().strokeBorder(tint.opacity(0.32), lineWidth: 1))
-		.padding(.horizontal, 16)
-	}
-}
-
 private struct WorkspaceScroll<Content: View>: View {
 	let title: String
 	@ViewBuilder let content: Content
@@ -1070,26 +1041,39 @@ private struct HeroPanel: View {
 	@Binding var selection: WorkspaceDestination
 
 	var body: some View {
-		VStack(alignment: .leading, spacing: 18) {
-			Text("OpenTerm")
-				.font(.system(.largeTitle, design: .default, weight: .bold))
-				.foregroundStyle(.primary)
-			Text("A fast iPhone and iPad workspace for terminal sessions, SSH, files, terminal-driven Git, server checks, and optional configured AI.")
-				.font(.system(.body, design: .default))
-				.foregroundStyle(.secondary)
-			HStack(spacing: 12) {
+		VStack(alignment: .leading, spacing: 20) {
+			HStack(alignment: .top, spacing: 16) {
+				VStack(alignment: .leading, spacing: 10) {
+					Text("OpenTerm")
+						.font(.system(size: 42, weight: .black, design: .rounded))
+						.foregroundStyle(.primary)
+					Text("Terminal, SSH, files, Git handoff, server checks, and optional AI without pretending your phone is an unrestricted Linux distro.")
+						.font(.system(.body, design: .rounded, weight: .medium))
+						.foregroundStyle(.secondary)
+				}
+				Spacer(minLength: 0)
+				Image(systemName: "terminal.fill")
+					.font(.system(size: 28, weight: .bold))
+					.foregroundStyle(store.workspaceAccentColor)
+					.frame(width: 58, height: 58)
+					.background(store.workspaceAccentColor.opacity(0.16), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+			}
+
+			LazyVGrid(columns: [GridItem(.adaptive(minimum: 142), spacing: 10)], spacing: 10) {
 				PrimaryWorkspaceButton(title: "Terminal", symbol: "terminal", tint: store.workspaceAccentColor) { selection = .terminal }
 				PrimaryWorkspaceButton(title: "Servers", symbol: "server.rack", tint: AppColor.green) { selection = .servers }
+				PrimaryWorkspaceButton(title: "Files", symbol: "folder", tint: AppColor.amber) { selection = .files }
 			}
-			HStack(spacing: 12) {
+
+			HStack(spacing: 10) {
 				WorkspaceStatPill(title: "iOS", value: "18+")
-				WorkspaceStatPill(title: "UI", value: "Adaptive")
 				WorkspaceStatPill(title: "Mode", value: "Free")
+				WorkspaceStatPill(title: "Data", value: "Local")
 			}
 		}
 		.padding(24)
 		.frame(maxWidth: .infinity, alignment: .leading)
-		.background(WorkspaceCardBackground(tint: AppColor.blue))
+		.background(WorkspaceCardBackground(tint: store.workspaceAccentColor))
 	}
 }
 
@@ -1128,19 +1112,30 @@ private struct ActionTile: View {
 
 	var body: some View {
 		Button(action: action) {
-			VStack(alignment: .leading, spacing: 10) {
-				Image(systemName: symbol)
-					.font(.system(size: 20, weight: .semibold))
-					.foregroundStyle(tint)
-				Text(title)
-					.font(.system(.headline, design: .default, weight: .semibold))
-					.foregroundStyle(.primary)
-				Text(subtitle)
-					.font(.system(.subheadline, design: .default))
-					.foregroundStyle(.secondary)
+			VStack(alignment: .leading, spacing: 14) {
+				HStack {
+					Image(systemName: symbol)
+						.font(.system(size: 19, weight: .bold))
+						.foregroundStyle(tint)
+						.frame(width: 42, height: 42)
+						.background(tint.opacity(0.16), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+					Spacer()
+					Image(systemName: "arrow.up.right")
+						.font(.system(.caption, design: .rounded, weight: .bold))
+						.foregroundStyle(.secondary)
+				}
+				VStack(alignment: .leading, spacing: 5) {
+					Text(title)
+						.font(.system(.headline, design: .rounded, weight: .bold))
+						.foregroundStyle(.primary)
+					Text(subtitle)
+						.font(.system(.subheadline, design: .default))
+						.foregroundStyle(.secondary)
+						.lineLimit(2)
+				}
 			}
 			.padding(18)
-			.frame(maxWidth: .infinity, minHeight: 118, alignment: .topLeading)
+			.frame(maxWidth: .infinity, minHeight: 132, alignment: .topLeading)
 			.background(WorkspaceCardBackground(tint: tint))
 		}
 		.buttonStyle(.plain)
@@ -2222,31 +2217,49 @@ private struct WorkspaceCardBackground: View {
 	var body: some View {
 		Group {
 			if #available(iOS 26.0, *) {
-				RoundedRectangle(cornerRadius: 20, style: .continuous)
-					.fill(Color(uiColor: .secondarySystemGroupedBackground).opacity(0.72))
-					.overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(tint.opacity(0.18), lineWidth: 0.8))
-					.glassEffect(.regular.tint(tint.opacity(0.10)), in: .rect(cornerRadius: 20))
+				cardShape
+					.fill(Color(uiColor: .secondarySystemGroupedBackground).opacity(0.66))
+					.overlay(cardShape.fill(LinearGradient(colors: [tint.opacity(0.18), .clear], startPoint: .topLeading, endPoint: .bottomTrailing)))
+					.overlay(cardShape.strokeBorder(tint.opacity(0.24), lineWidth: 0.9))
+					.glassEffect(.regular.tint(tint.opacity(0.12)), in: .rect(cornerRadius: 24))
 			} else {
-				RoundedRectangle(cornerRadius: 20, style: .continuous)
-					.fill(Color(uiColor: .secondarySystemGroupedBackground).opacity(0.92))
-					.overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.8))
+				cardShape
+					.fill(Color(uiColor: .secondarySystemGroupedBackground).opacity(0.94))
+					.overlay(cardShape.fill(LinearGradient(colors: [tint.opacity(0.10), .clear], startPoint: .topLeading, endPoint: .bottomTrailing)))
+					.overlay(cardShape.strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.8))
 			}
 		}
+		.shadow(color: tint.opacity(0.10), radius: 18, x: 0, y: 10)
+	}
+
+	private var cardShape: RoundedRectangle {
+		RoundedRectangle(cornerRadius: 24, style: .continuous)
 	}
 }
+
 private struct WorkspaceBackdrop: View {
 	var body: some View {
 		ZStack {
 			Color(uiColor: .systemGroupedBackground)
 			LinearGradient(
 				colors: [
-					Color(uiColor: .systemBackground).opacity(0.92),
-					Color(uiColor: .secondarySystemGroupedBackground).opacity(0.70),
-					Color(uiColor: .systemGroupedBackground).opacity(0.95)
+					Color(uiColor: .systemBackground),
+					Color(uiColor: .secondarySystemGroupedBackground).opacity(0.84),
+					Color(uiColor: .systemGroupedBackground)
 				],
 				startPoint: .topLeading,
 				endPoint: .bottomTrailing
 			)
+			Circle()
+				.fill(AppColor.blue.opacity(0.13))
+				.frame(width: 280, height: 280)
+				.blur(radius: 48)
+				.offset(x: -150, y: -260)
+			Circle()
+				.fill(AppColor.amber.opacity(0.10))
+				.frame(width: 240, height: 240)
+				.blur(radius: 54)
+				.offset(x: 170, y: 120)
 		}
 	}
 }

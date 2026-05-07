@@ -43,10 +43,10 @@ This audit covers the whole checked-in repo, not only the new SwiftUI workspace.
 - Removed fake SSH hosts and demo server monitors.
 - Removed seeded command snippets and added user snippet create/edit/delete.
 - Added honest empty states for Home, Git, Servers, AI, Files, monitors, vault, alerts, and snippets, plus a Home capability dashboard for configured/missing states.
-- Added global workspace status feedback.
+- Removed the global floating workspace status bar after it proved disruptive over the tab workspace.
 - Added runnable bundled script examples for system snapshots, website/API probes, archives, text search, and SSH command templates.
 - Replaced hard-coded white text on light system cards with semantic foreground colors across the SwiftUI workspace shell and removed duplicate hero panel padding.
-- Moved workspace status feedback out of the bottom tab area and into a hidden-when-idle top overlay.
+- Status text now remains internal feedback/state instead of rendering as a global overlay.
 - Reworded inflated Live Workspace/Command Center copy to describe real activity and terminal-driven/configuration-gated tools. Home quick actions are now configuration-aware instead of opening unconfigured feature panels as if they were ready.
 - Added real file/folder rename plus folder tar archive export from the Files tab.
 - Removed prototype wording like preview build/free preview/live answers and broad ready-state labels from the in-app workspace copy. Optional backend bootstrap controls now read as manual setup rather than a finished account system.
@@ -83,6 +83,7 @@ This audit covers the whole checked-in repo, not only the new SwiftUI workspace.
 - Add SSH monitor preflight command that checks `ssh`, auth type, `top`, `awk`, `df`, `uptime`, and `/proc/meminfo` before creating monitor expectations.
 
 ## Current Findings
+- Removed the global floating workspace status strip entirely and upgraded shared workspace card/backdrop/action tile styling so the main shell is less flat and less generic.
 - Reworked the Files tab from generic rows into a visible file-manager workspace with import/new/refresh actions, folder/file counts, explicit row actions, and honest real-storage copy.
 - Added first-run onboarding and a SwiftUI About/Support card with Buy Me a Coffee, GitHub, X, and contact links so the modern app shell no longer hides those legacy About links.
 - Validated network_ios header downloads in CI/local bootstrap so a transient GitHub HTML error page cannot be compiled as `ios_error.h`.

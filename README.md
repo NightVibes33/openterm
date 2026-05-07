@@ -39,8 +39,8 @@ Donations support development only: the app is currently free, and Buy Me a Coff
 - Server monitors persist locally, poll Linux CPU/memory/disk/load snapshots over noninteractive SSH, and keep a local acknowledgeable alert history when thresholds change; monitors are user-created and monitor cards appear only after real poll results.
 - The AI assistant can call a configurable OpenAI-compatible chat endpoint or hosted Supabase proxy, records local usage history, includes prompt shortcuts for errors, commands, scripts, SSH, remote dev setup, Docker, Git conflicts, and regex, and can insert assistant output back into the terminal. Live sending is disabled until a real endpoint/key or proxy/token is configured.
 - The iPhone More tab is custom now, not Apple's automatic overflow list, and contains real AI, Git, settings, theme, terminal controls, About/Support links, and a Buy Me a Coffee donation button.
-- The SwiftUI workspace now uses semantic text colors instead of hard-coded white labels, fixes the broken white-on-light card look, and removes awkward duplicate hero panel padding across the main shell.
-- Workspace status feedback is now a temporary top overlay instead of a persistent bar sitting above the bottom tab bar.
+- The SwiftUI workspace now uses semantic text colors, stronger shared glass cards, a richer backdrop, rounded typography in key hero/action surfaces, and more deliberate action tiles instead of flat generic blocks.
+- Workspace status messages are no longer rendered as a floating global bar; they remain internal feedback/state so the main tabs are not covered.
 - The home and More copy now avoids inflated âlive/command centerâ language and labels Git/AI as terminal-driven or configuration-gated where appropriate.
 - Home quick actions are configuration-aware: AI routes to setup until configured, monitors route to SSH/server setup until monitors exist, and Git starts with repo discovery.
 - Git commit action now requires a user-entered commit message instead of defaulting to generic generated text.
@@ -155,7 +155,7 @@ Important:
 - [x] Add honest empty states for Home activity and Git repository discovery
 - [x] Disable unconfigured AI live sends and show explicit provider/proxy setup state
 - [x] Stop showing monitor and recent-activity cards until real actions produce data
-- [x] Add global workspace status feedback for queued actions and failed preconditions
+- [x] Remove the floating global status bar so it no longer covers the workspace tabs
 - [x] Remove seeded fake snippets and add real snippet create/edit/delete flow
 - [x] Add terminal Git availability preflight before Git commands
 - [x] Reject blank SSH profiles and invalid monitor records before they create broken cards
