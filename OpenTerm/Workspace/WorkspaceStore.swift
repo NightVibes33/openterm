@@ -336,6 +336,17 @@ struct WorkspaceEditorDocument: Identifiable, Equatable {
 	let initialContent: String
 }
 
+struct WorkspaceBackupManifest: Encodable {
+	let exportedAt: Date
+	let sshProfiles: [SSHProfileSummary]
+	let sshVaultItems: [SSHVaultItem]
+	let snippets: [WorkspaceSnippet]
+	let serverMonitors: [ServerMonitorSummary]
+	let aiModel: String
+	let aiRoutingMode: String?
+	let appVersion: String
+}
+
 private struct WorkspaceCommandResult {
 	let stdout: String
 	let stderr: String
@@ -418,6 +429,7 @@ final class WorkspaceStore: ObservableObject {
 	@Published var statusMessage: String = "Workspace ready"
 	@Published var activeThemeName: String = "Glass Slate"
 	@Published var workspaceAccentColor: Color = Color(UserDefaultsController.shared.workspaceAccentColor)
+	@Published var lastBackupPath: String = "No backup exported yet"
 	@Published var freeModeSummary: String = "Free preview while SSH, Git, AI, editor, and monitoring flows are hardened."
 
 	private let fileManager = FileManager.default
@@ -557,6 +569,32 @@ final class WorkspaceStore: ObservableObject {
 
 	private func saveAIUsageHistory() {
 		save(aiUsageHistory, to: stateURL(for: "ai-usage-history.json"))
+	}
+
+	func exportWorkspaceBackup() {
+		let manifest = WorkspaceBackupManifest(
+			exportedAt: Date(),
+			sshProfiles: sshProfiles,
+			sshVaultItems: sshVaultItems,
+			snippets: snippets,
+			serverMonitors: serverMonitors,
+			aiModel: aiConfiguration.model,
+			aiRoutingMode: aiConfiguration.routingMode,
+			appVersion: Bundle.main.version
+		)
+		let encoder = JSONEncoder()
+		encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+		encoder.dateEncodingStrategy = .iso8601
+
+		do {
+			let data = try encoder.encode(manifest)
+			let backupURL = DocumentManager.shared.activeDocumentsFolderURL.appendingPathComponent("openterm-workspace-backup.json")
+			try data.write(to: backupURL, options: .atomic)
+			lastBackupPath = backupURL.lastPathComponent
+			statusMessage = "Exported workspace backup"
+		} catch {
+			statusMessage = "Could not export backup: \(error.localizedDescription)"
+		}
 	}
 
 	func refreshLocalFiles() {

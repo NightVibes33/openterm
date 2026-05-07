@@ -40,6 +40,7 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - The AI assistant can call a configurable OpenAI-compatible chat endpoint, records local usage history, includes prompt shortcuts, and can insert assistant output back into the terminal.
 - The iPhone More tab is custom now, not Apple's automatic overflow list, and contains real AI, Git, settings, theme, and terminal controls.
 - Settings are free-preview focused with real AI/provider controls and live appearance controls instead of placeholder billing screens.
+- Workspace backup export writes a JSON manifest for profiles, snippets, monitors, vault metadata, and AI routing metadata without raw private-key contents.
 - A Supabase schema foundation exists for users, subscriptions, devices, snippet sync, AI usage, monitors, audit logs, AI rate-limit windows, encrypted vault sync items, and monitor alerts.
 - GitHub Actions includes a green unsigned IPA workflow for CI artifact generation.
 - Vendored dependency compatibility patches have been added for modern Xcode/iOS SDK builds.
@@ -73,7 +74,7 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - `supabase/functions/ai-proxy/index.ts` is a deployable Edge Function scaffold for authenticated AI requests, rate-limit checks, OpenAI forwarding, and usage recording.
 - Tables currently defined: `users`, `subscriptions`, `devices`, `ssh_profiles_metadata`, `snippets`, `ai_usage`, `server_monitors`, `audit_logs`, `ai_rate_limits`, `vault_sync_items`, `server_monitor_alerts`.
 - Sensitive SSH material should remain end-to-end encrypted before upload. Raw private keys should not be stored server-side in plaintext.
-- The active app direction is free until the core SSH, Git, editor, AI, and monitoring workflows are stable.
+- The active app direction is free until the core SSH, Git, editor, AI, monitoring, and sync workflows are stable.
 
 ### CI
 - `.github/workflows/ios-unsigned-ipa.yml` builds an unsigned archive and packages an IPA artifact.
@@ -147,6 +148,7 @@ Important:
 - [ ] Add deployment secrets and production auth bootstrap
 - [x] Add local protected SSH key vault foundation
 - [x] Add backend encrypted vault sync tables
+- [x] Add backup/export manifest for workspace metadata
 - [ ] Connect app-side encrypted vault sync across devices
 - [ ] Add signed App Store distribution when needed
 

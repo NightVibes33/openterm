@@ -465,6 +465,18 @@ private struct SettingsWorkspaceView: View {
 			.padding(18)
 			.background(WorkspaceCardBackground(tint: AppColor.violet))
 
+			VStack(alignment: .leading, spacing: 12) {
+				SectionHeader(title: "Backup", subtitle: "Export workspace metadata without raw private-key contents.")
+				Text(store.lastBackupPath)
+					.font(.system(.footnote, design: .monospaced))
+					.foregroundStyle(.white.opacity(0.66))
+				PrimaryWorkspaceButton(title: "Export Backup", symbol: "square.and.arrow.up", tint: AppColor.green) {
+					store.exportWorkspaceBackup()
+				}
+			}
+			.padding(18)
+			.background(WorkspaceCardBackground(tint: AppColor.green))
+
 			AdaptiveGrid {
 				MetricCard(title: "Theme", value: store.activeThemeName, symbol: "paintpalette", tint: store.workspaceAccentColor)
 				MetricCard(title: "AI Requests", value: "\(store.aiUsageHistory.count)", symbol: "chart.bar", tint: AppColor.violet)
