@@ -82,7 +82,9 @@ This means the modernization should preserve the terminal engine where useful, w
 ## Platform Baseline
 
 - minimum iOS: `18.0`
-- design target: latest iOS with Liquid Glass polish
+- build toolchain target: `Xcode 26.4`
+- SDK target: `iOS 26.4`
+- design target: `iOS 26.4` with Liquid Glass polish
 - architecture: SwiftUI-first
 - persistence: SwiftData
 - purchase stack: StoreKit 2

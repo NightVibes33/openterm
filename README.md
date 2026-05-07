@@ -27,6 +27,7 @@ This fork is being modernized into a premium AI-powered mobile developer workspa
 
 - SwiftUI-first shell
 - iOS 18+ baseline
+- built with Xcode 26.4 and the iOS 26.4 SDK
 - Liquid Glass styling on supported systems
 - terminal + SSH + files + Git + servers + AI in one app
 - premium sync, vault, and monitoring layers
@@ -41,7 +42,8 @@ What is in the repo now:
 - new SwiftUI workspace shell
 - embedded legacy terminal inside the new shell
 - workspace sections for Home, Terminal, Files, Git, Servers, AI, and Settings
-- iOS 18+ project baseline
+- iOS 18+ minimum deployment target
+- Xcode 26.4 / iOS 26.4 SDK build target
 - Swift 5 project baseline
 - Liquid Glass-ready styling on supported systems
 - local workspace data models for sessions, snippets, SSH profiles, Git summaries, server cards, and premium plan surfaces
@@ -121,6 +123,8 @@ For testing builds on GitHub Actions, use:
 - `.github/workflows/ios-unsigned-ipa.yml`
 
 That workflow creates an unsigned IPA artifact for inspection and sideload-oriented testing only. It is not a normal signed App Store or TestFlight build.
+
+It is pinned to `Xcode 26.4` and verifies the `iOS 26.4` SDK before building.
 
 ## License
 
