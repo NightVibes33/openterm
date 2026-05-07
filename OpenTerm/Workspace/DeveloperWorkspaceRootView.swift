@@ -778,7 +778,7 @@ private struct HeroPanel: View {
 			}
 			HStack(spacing: 12) {
 				WorkspaceStatPill(title: "iOS", value: "18+")
-				WorkspaceStatPill(title: "SDK", value: "26.4")
+				WorkspaceStatPill(title: "Glass", value: "Auto")
 				WorkspaceStatPill(title: "Mode", value: "Free")
 			}
 		}

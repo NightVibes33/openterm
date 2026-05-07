@@ -27,7 +27,7 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 ### Implemented in this fork right now
 - Legacy OpenTerm terminal core is still present and embedded inside the SwiftUI workspace.
 - `AppDelegate` launches the modern workspace shell with Home, Files, Terminal, Servers, and a custom More hub on iPhone, plus full workspace navigation on iPad. Empty Home/Git/Server/AI states now explicitly ask for real user data or provider configuration instead of implying demo content exists.
-- iOS 18.0 is the deployment floor, with iOS 26 Liquid Glass-style SwiftUI surfaces enabled when the SDK/runtime supports them.
+- iOS 18.0 is the deployment floor, with Liquid Glass-style SwiftUI surfaces enabled conditionally when the SDK/runtime supports them instead of pretending unsupported devices have native iOS 26 materials.
 - Terminal commands can now be queued or executed from workspace actions, so SSH, Git, snippets, and generated commands can jump into the active terminal tab.
 - Terminal appearance has a modernized canvas with live font, cursor, keyboard, text color, background color, and app accent controls.
 - SSH profiles persist locally with label, host, username, port, auth type, key path, startup path, notes, and last-used timestamps; new installs no longer seed fake example hosts.
