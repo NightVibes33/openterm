@@ -182,7 +182,8 @@ Important:
 - [x] Replace safe legacy coder fatal errors with failable initializers
 - [x] Move Spotlight indexing identity off the old `com.silverfox.Terminal` domain
 - [x] Harden command execution/share command force unwraps
-- [ ] Remove remaining legacy `fatalError` and force-cast paths from storyboard factory/controllers
+- [x] Remove remaining scanned `fatalError`, `as!`, `try!`, and obvious force-unwrap crash paths from app Swift source
+- [ ] Replace optional-fallback legacy storyboard flows with real SwiftUI screens
 
 ## Next Engineering Priorities
 - Stabilize hosted AI proxy deployment: Supabase function secrets, auth validation, and rate-limit policy tests.

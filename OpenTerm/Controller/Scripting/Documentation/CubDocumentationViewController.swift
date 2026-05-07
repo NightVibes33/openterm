@@ -138,25 +138,27 @@ extension CubDocumentationViewController: UITableViewDelegate {
 		
 		tableView.deselectRow(at: indexPath, animated: true)
 		
-		guard let section = sections?[indexPath.section] else {
+		guard let section = sections?[safe: indexPath.section] else {
 			return
 		}
 		
-		let item: DocumentationItem
+		let item: DocumentationItem?
 		
 		switch section {
 		case .functions(let items):
-			item = items[indexPath.row]
+			item = items[safe: indexPath.row]
 			
 		case .variables(let items):
-			item = items[indexPath.row]
+			item = items[safe: indexPath.row]
 			
 		case .structs(let items):
-			item = items[indexPath.row]
+			item = items[safe: indexPath.row]
 
 		}
 		
-		let itemVC = UIStoryboard.main.cubDocumentationItemViewController(item: item)
+		guard let item = item, let itemVC = UIStoryboard.main.cubDocumentationItemViewController(item: item) else {
+			return
+		}
 		
 		self.navigationController?.pushViewController(itemVC, animated: true)
 		

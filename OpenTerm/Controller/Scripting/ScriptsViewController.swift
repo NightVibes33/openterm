@@ -313,7 +313,10 @@ class ScriptsViewController: UIViewController {
 	@objc
 	fileprivate func addScript() {
 		
-		let scriptMetadataVC = UIStoryboard.main.scriptMetadataViewController(state: .create)
+		guard let scriptMetadataVC = UIStoryboard.main.scriptMetadataViewController(state: .create) else {
+			showAlert("Scripts Unavailable", message: "The legacy script editor could not be loaded.")
+			return
+		}
 		scriptMetadataVC.delegate = self
 		
 		let navController = UINavigationController(rootViewController: scriptMetadataVC)

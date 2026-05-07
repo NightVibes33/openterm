@@ -50,13 +50,13 @@ This audit covers the whole checked-in repo, not only the new SwiftUI workspace.
 - Blocked vault push/pull UI until required Supabase configuration exists.
 - Rewrote active docs to mark billing/backend production work as deferred/scaffolded.
 - Removed old App Store badge/Terminal for iOS README framing, disabled the legacy StoreKit review prompt call, replaced the old App Store review settings row with repo/support links, and removed the old Silver Fox copyright text from the legacy Settings footer.
-- Hardened several old crash-prone utility paths: bundle version/build lookup, directory file-size metadata, attributed file-link mutation, drag/drop URL paste handling, asset color lookup, legacy settings color picker loading, malformed ANSI color parsing, missing script examples, missing Cub docs, and legacy terminal storyboard panel loading, unsupported coder initializers, command execution data writes, share argv parsing, and Spotlight identity now avoid stale/fatal behavior where safe.
+- Hardened several old crash-prone utility paths: bundle version/build lookup, directory file-size metadata, attributed file-link mutation, drag/drop URL paste handling, asset color lookup, legacy settings color picker loading, malformed ANSI color parsing, missing script examples, missing Cub docs, and legacy terminal storyboard panel loading, unsupported coder initializers, command execution data writes, share argv parsing, optional storyboard factory loading, and Spotlight identity now avoid stale/fatal behavior where safe.
 
 ## Still Bad / High Priority
 
 1. The visual design has been moved away from the dark generic AI-card look, but still needs a deeper information-architecture pass to reduce card count and make each surface feel more like a focused tool.
 2. The terminal screen is still the 2017/2018 UIKit terminal embedded inside SwiftUI. It needs a modern toolbar, session switcher, and terminal-specific status/action surface.
-3. Legacy storyboards and scripting panels remain old. They are real legacy features, but visually inconsistent and still need replacement even after the worst force-cast/fatal paths were reduced.
+3. Legacy storyboards and scripting panels remain old. They are real legacy features, but visually inconsistent and still need replacement even after force-cast/fatal crash paths were removed from the app source scan.
 4. Git is still terminal-driven, not native. That is acceptable only if the UI keeps saying so.
 5. Editor is still lightweight text editing, not an IDE. There is no LSP, diagnostics, rename, file tree refactor, or package awareness.
 6. Local developer toolchains are not embedded. Python/Node/Vim/Nano/Tmux/Htop are not local app features.
@@ -71,7 +71,7 @@ This audit covers the whole checked-in repo, not only the new SwiftUI workspace.
 - Add a real capability/status screen that shows configured/missing requirements for AI, vault sync, Git, monitors, SSH, files, and terminal.
 - Add file rename/move and folder export.
 - Replace or quarantine the old storyboard scripting/documentation screens before calling the UI modern.
-- Continue removing `fatalError` and force-cast paths from legacy controllers.
+- Replace the optional-fallback legacy storyboard flows with real SwiftUI screens instead of relying on old Interface Builder scenes.
 - Add runtime command availability capture and surface it in Help/README.
 - Add Keychain-backed storage for AI and Supabase secrets.
 - Add SSH monitor preflight command that checks `ssh`, auth type, `top`, `awk`, `df`, `uptime`, and `/proc/meminfo` before creating monitor expectations.

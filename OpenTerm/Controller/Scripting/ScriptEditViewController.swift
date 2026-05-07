@@ -28,8 +28,8 @@ class ScriptEditViewController: UIViewController {
 	let inputAssistantView: InputAssistantView
 	var autoCompleter: AutoCompleter!
 
-	var cubManualPanelViewController: PanelViewController!
-	var cubDocsPanelViewController: PanelViewController!
+	var cubManualPanelViewController: PanelViewController?
+	var cubDocsPanelViewController: PanelViewController?
 
 	let isExample: Bool
 	
@@ -50,19 +50,21 @@ class ScriptEditViewController: UIViewController {
 		
 		self.textView.contentTextView.indicatorStyle = .white
 		
-		let cubManualURL = Bundle.main.url(forResource: "book", withExtension: "html", subdirectory: "cub-guide.htmlcontainer")!
-		let cubManualVC = UIStoryboard.main.manualWebViewController(htmlURL: cubManualURL)
-		cubManualPanelViewController = PanelViewController(with: cubManualVC, in: self)
-		cubManualVC.title = "The Cub Programming Language"
+		if let cubManualURL = Bundle.main.url(forResource: "book", withExtension: "html", subdirectory: "cub-guide.htmlcontainer"),
+			let cubManualVC = UIStoryboard.main.manualWebViewController(htmlURL: cubManualURL) {
+			cubManualPanelViewController = PanelViewController(with: cubManualVC, in: self)
+			cubManualVC.title = "The Cub Programming Language"
+		}
 		
 		let cubDocsVC = UIStoryboard.main.cubDocumentationViewController()
-		cubDocsPanelViewController = PanelViewController(with: cubDocsVC, in: self)
-		cubDocsVC.title = "Documentation"
-
-		cubDocsPanelViewController.panelNavigationController.view.backgroundColor = .panelBackgroundColor
-		cubDocsPanelViewController.view.backgroundColor = .clear
+		if let cubDocsVC = cubDocsVC {
+			cubDocsPanelViewController = PanelViewController(with: cubDocsVC, in: self)
+			cubDocsVC.title = "Documentation"
+			cubDocsPanelViewController?.panelNavigationController.view.backgroundColor = .panelBackgroundColor
+			cubDocsPanelViewController?.view.backgroundColor = .clear
+		}
 		
-		autoCompleter = AutoCompleter(documentation: cubDocsVC.docBundle?.items ?? [])
+		autoCompleter = AutoCompleter(documentation: cubDocsVC?.docBundle?.items ?? [])
 		
 		if isExample {
 			
@@ -317,14 +319,22 @@ class ScriptEditViewController: UIViewController {
 	@objc
 	func showDocs(_ sender: UIBarButtonItem) {
 		
-		presentPopover(self.cubDocsPanelViewController, from: sender, backgroundColor: .panelBackgroundColor)
+		guard let cubDocsPanelViewController = cubDocsPanelViewController else {
+			showAlert("Documentation Unavailable", message: "The legacy documentation panel could not be loaded.")
+			return
+		}
+		presentPopover(cubDocsPanelViewController, from: sender, backgroundColor: .panelBackgroundColor)
 		
 	}
 	
 	@objc
 	func showManual(_ sender: UIButton) {
 	
-		presentPopover(self.cubManualPanelViewController, from: manualBarButtonItem, backgroundColor: .white)
+		guard let cubManualPanelViewController = cubManualPanelViewController else {
+			showAlert("Manual Unavailable", message: "The legacy Cub manual could not be loaded.")
+			return
+		}
+		presentPopover(cubManualPanelViewController, from: manualBarButtonItem, backgroundColor: .white)
 		
 	}
 	
@@ -343,7 +353,10 @@ class ScriptEditViewController: UIViewController {
 	@objc
 	func showScriptMetadata() {
 		
-		let scriptMetadataVC = UIStoryboard.main.scriptMetadataViewController(state: .update(document))
+		guard let scriptMetadataVC = UIStoryboard.main.scriptMetadataViewController(state: .update(document)) else {
+			showAlert("Scripts Unavailable", message: "The legacy script metadata editor could not be loaded.")
+			return
+		}
 		scriptMetadataVC.delegate = self
 		
 		let navController = UINavigationController(rootViewController: scriptMetadataVC)
@@ -478,7 +491,7 @@ extension ScriptEditViewController: InputAssistantViewDelegate {
 extension ScriptEditViewController: PanelManager {
 	
 	var panels: [PanelViewController] {
-		return [cubManualPanelViewController, cubDocsPanelViewController]
+		return [cubManualPanelViewController, cubDocsPanelViewController].compactMap { $0 }
 	}
 	
 	var panelContentWrapperView: UIView {
