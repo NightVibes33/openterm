@@ -38,7 +38,7 @@ The current design target is real-tool clarity first: fewer marketing cards, lig
 - The iPhone More tab is custom now, not Apple's automatic overflow list, and contains real AI, Git, settings, theme, and terminal controls.
 - Settings are free-preview focused with real AI/provider controls and live appearance controls instead of placeholder billing screens.
 - Workspace backup export writes a JSON manifest for profiles, snippets, monitors, vault metadata, and AI routing metadata without raw private-key contents.
-- Backend settings now store Supabase URL, anon key, access token, user/device identifiers, device label, and vault sync secret locally for hosted AI proxy routing, encrypted vault sync, and remote config refresh.
+- Backend settings store non-secret routing metadata locally, while AI provider keys, Supabase anon/access tokens, and vault sync secrets are routed through Keychain-backed local storage for hosted AI proxy routing, encrypted vault sync, and remote config refresh.
 - A Supabase schema foundation exists for users, subscriptions, devices, snippet sync, AI usage, monitors, audit logs, AI rate-limit windows, encrypted vault sync items, and monitor alerts.
 - GitHub Actions includes a green unsigned IPA workflow for CI artifact generation.
 - Vendored dependency compatibility patches have been added for modern Xcode/iOS SDK builds. Several old utility, settings, and ANSI parsing crash paths have been hardened, but legacy controller cleanup is still ongoing.
@@ -166,6 +166,7 @@ Important:
 - [x] Add hosted AI proxy scaffold
 - [x] Add app-side hosted proxy routing toggle
 - [x] Add local production auth/backend bootstrap settings
+- [x] Move AI/backend/vault secrets into Keychain-backed local storage
 - [x] Add Supabase remote config schema and app refresh action
 - [ ] Add deployment secrets and hosted auth hardening
 - [x] Add local protected SSH key vault foundation
@@ -187,7 +188,7 @@ Important:
 - [ ] Replace optional-fallback legacy storyboard flows with real SwiftUI screens
 
 ## Next Engineering Priorities
-- Stabilize hosted AI proxy deployment: Supabase function secrets, auth validation, and rate-limit policy tests.
+- Stabilize hosted AI proxy deployment: Supabase function secrets, auth validation, rate-limit policy tests, and real-device Keychain migration checks.
 - Harden encrypted vault sync: deploy RPC migration, test Supabase auth/RLS, and validate real multi-device conflict behavior.
 - Replace terminal-driven Git helpers with a native Git engine only after the current terminal-based workflow stays reliable.
 - Add embedded local toolchains only where they are realistic: Git first, then Python/Node only after binary size, licensing, and sandbox behavior are validated.

@@ -2,6 +2,7 @@ import Foundation
 import SwiftUI
 import UIKit
 import CryptoKit
+import Security
 
 enum WorkspaceDestination: String, CaseIterable, Hashable, Identifiable {
 	case home
@@ -416,6 +417,50 @@ private struct WorkspaceCommandResult {
 	let status: Int
 }
 
+private enum WorkspaceSecretStore {
+	private static let service = "com.nightvibes33.openterm.workspace"
+
+	static func read(_ key: String) -> String {
+		let query: [String: Any] = [
+			kSecClass as String: kSecClassGenericPassword,
+			kSecAttrService as String: service,
+			kSecAttrAccount as String: key,
+			kSecReturnData as String: true,
+			kSecMatchLimit as String: kSecMatchLimitOne
+		]
+		var result: CFTypeRef?
+		guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
+			let data = result as? Data,
+			let value = String(data: data, encoding: .utf8) else {
+			return ""
+		}
+		return value
+	}
+
+	static func write(_ value: String, for key: String) {
+		let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+		let query: [String: Any] = [
+			kSecClass as String: kSecClassGenericPassword,
+			kSecAttrService as String: service,
+			kSecAttrAccount as String: key
+		]
+		if trimmed.isEmpty {
+			SecItemDelete(query as CFDictionary)
+			return
+		}
+		let attributes: [String: Any] = [
+			kSecValueData as String: Data(trimmed.utf8),
+			kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+		]
+		let status = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
+		if status == errSecItemNotFound {
+			var addQuery = query
+			addQuery.merge(attributes) { _, new in new }
+			SecItemAdd(addQuery as CFDictionary, nil)
+		}
+	}
+}
+
 private final class WorkspaceCommandCapture: NSObject, CommandExecutorDelegate {
 	private let executor = CommandExecutor()
 	private var stdout = Data()
@@ -568,8 +613,8 @@ final class WorkspaceStore: ObservableObject {
 		serverMonitors = load([ServerMonitorSummary].self, from: stateURL(for: "server-monitors.json")) ?? defaultServerMonitors(from: sshProfiles)
 		serverSnapshots = load([ServerSnapshotSummary].self, from: stateURL(for: "server-snapshots.json")) ?? []
 		serverAlerts = load([ServerAlertEvent].self, from: stateURL(for: "server-alerts.json")) ?? []
-		aiConfiguration = load(AIProviderConfiguration.self, from: stateURL(for: "ai-configuration.json")) ?? .default
-		backendConfiguration = load(BackendConfiguration.self, from: stateURL(for: "backend-configuration.json")) ?? .default
+		aiConfiguration = loadAIConfiguration()
+		backendConfiguration = loadBackendConfiguration()
 		aiUsageHistory = load([AIUsageRecord].self, from: stateURL(for: "ai-usage-history.json")) ?? []
 		assistantMessages = []
 		assistantStatus = isAIConfigured ? "AI endpoint configured. Live prompts are available." : "AI is not configured yet. Add a provider endpoint or Supabase proxy in Settings."
@@ -634,12 +679,59 @@ final class WorkspaceStore: ObservableObject {
 		save(serverAlerts, to: stateURL(for: "server-alerts.json"))
 	}
 
+	private func loadAIConfiguration() -> AIProviderConfiguration {
+		var config = load(AIProviderConfiguration.self, from: stateURL(for: "ai-configuration.json")) ?? .default
+		let legacyAPIKey = config.apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+		let keychainAPIKey = WorkspaceSecretStore.read("ai.apiKey")
+		if keychainAPIKey.isEmpty, !legacyAPIKey.isEmpty {
+			WorkspaceSecretStore.write(legacyAPIKey, for: "ai.apiKey")
+		}
+		config.apiKey = keychainAPIKey.isEmpty ? legacyAPIKey : keychainAPIKey
+		return config
+	}
+
+	private func loadBackendConfiguration() -> BackendConfiguration {
+		var config = load(BackendConfiguration.self, from: stateURL(for: "backend-configuration.json")) ?? .default
+		let legacyAccessToken = config.accessToken.trimmingCharacters(in: .whitespacesAndNewlines)
+		let legacyAnonKey = (config.anonKey ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+		let legacyVaultSecret = (config.vaultSyncSecret ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+
+		let keychainAccessToken = WorkspaceSecretStore.read("backend.accessToken")
+		let keychainAnonKey = WorkspaceSecretStore.read("backend.anonKey")
+		let keychainVaultSecret = WorkspaceSecretStore.read("backend.vaultSyncSecret")
+
+		if keychainAccessToken.isEmpty, !legacyAccessToken.isEmpty {
+			WorkspaceSecretStore.write(legacyAccessToken, for: "backend.accessToken")
+		}
+		if keychainAnonKey.isEmpty, !legacyAnonKey.isEmpty {
+			WorkspaceSecretStore.write(legacyAnonKey, for: "backend.anonKey")
+		}
+		if keychainVaultSecret.isEmpty, !legacyVaultSecret.isEmpty {
+			WorkspaceSecretStore.write(legacyVaultSecret, for: "backend.vaultSyncSecret")
+		}
+
+		config.accessToken = keychainAccessToken.isEmpty ? legacyAccessToken : keychainAccessToken
+		config.anonKey = keychainAnonKey.isEmpty ? legacyAnonKey : keychainAnonKey
+		config.vaultSyncSecret = keychainVaultSecret.isEmpty ? legacyVaultSecret : keychainVaultSecret
+		return config
+	}
+
 	private func saveAIConfiguration() {
-		save(aiConfiguration, to: stateURL(for: "ai-configuration.json"))
+		WorkspaceSecretStore.write(aiConfiguration.apiKey, for: "ai.apiKey")
+		var persisted = aiConfiguration
+		persisted.apiKey = ""
+		save(persisted, to: stateURL(for: "ai-configuration.json"))
 	}
 
 	private func saveBackendConfiguration() {
-		save(backendConfiguration, to: stateURL(for: "backend-configuration.json"))
+		WorkspaceSecretStore.write(backendConfiguration.accessToken, for: "backend.accessToken")
+		WorkspaceSecretStore.write(backendConfiguration.anonKey ?? "", for: "backend.anonKey")
+		WorkspaceSecretStore.write(backendConfiguration.vaultSyncSecret ?? "", for: "backend.vaultSyncSecret")
+		var persisted = backendConfiguration
+		persisted.accessToken = ""
+		persisted.anonKey = nil
+		persisted.vaultSyncSecret = nil
+		save(persisted, to: stateURL(for: "backend-configuration.json"))
 	}
 
 	private func saveAIUsageHistory() {

@@ -38,12 +38,12 @@ Current app behavior:
 - Pasted SSH keys are written to protected local files in the app documents workspace.
 - Vault sync encrypts private-key payload bytes with AES-GCM before upload.
 - Supabase receives metadata, fingerprints, nonce, and ciphertext for vault sync.
-- AI provider keys and backend tokens are currently local app settings and still need Keychain migration before production use.
+- AI provider keys, Supabase bearer tokens, anon keys, and vault sync secrets are now routed through Keychain-backed local storage. Legacy JSON values are migrated into Keychain on load and redacted on save.
 
 ## Recommended Data Roadmap
 
 1. Keep the current JSON files until the core product stabilizes.
-2. Move secrets and provider tokens into Keychain.
+2. Validate Keychain migration/redaction for secrets and provider tokens on real devices.
 3. Add SwiftData only after the object model stops changing every build.
 4. Add migration code from JSON state into SwiftData.
 5. Validate Supabase RLS and Edge Function auth against a real deployed project.

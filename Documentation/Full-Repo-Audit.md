@@ -61,7 +61,7 @@ This audit covers the whole checked-in repo, not only the new SwiftUI workspace.
 5. Editor is still lightweight text editing, not an IDE. There is no LSP, diagnostics, rename, file tree refactor, or package awareness.
 6. Local developer toolchains are not embedded. Python/Node/Vim/Nano/Tmux/Htop are not local app features.
 7. Supabase backend is not production deployed/validated from this repo alone.
-8. Tokens/API keys should move to Keychain before production.
+8. AI and backend secrets now use Keychain-backed storage, but older installs should be validated for one-time migration from legacy JSON fields.
 9. `extraCommandsDictionary.plist` advertises extra command entries, but the active app currently relies on `commandsAsArray()` from ios_system and selected replacements. Command availability should be verified at runtime before docs claim support.
 10. iCloud container identifiers are legacy-shaped and may not match the current bundle/team without signing validation.
 
@@ -73,5 +73,5 @@ This audit covers the whole checked-in repo, not only the new SwiftUI workspace.
 - Replace or quarantine the old storyboard scripting/documentation screens before calling the UI modern.
 - Replace the optional-fallback legacy storyboard flows with real SwiftUI screens instead of relying on old Interface Builder scenes.
 - Add runtime command availability capture and surface it in Help/README.
-- Add Keychain-backed storage for AI and Supabase secrets.
+- Validate Keychain secret migration on a real device and confirm legacy JSON fields are redacted after save.
 - Add SSH monitor preflight command that checks `ssh`, auth type, `top`, `awk`, `df`, `uptime`, and `/proc/meminfo` before creating monitor expectations.

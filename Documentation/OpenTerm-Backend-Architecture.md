@@ -46,7 +46,7 @@ The UI should not present hosted AI or vault sync as ready until these exist.
 
 - Never upload plaintext private keys.
 - Never trust device-submitted subscription or entitlement state.
-- Treat access tokens as secrets and move them to Keychain before production.
+- Treat access tokens as secrets. The app now stores AI/backend/vault secrets through Keychain-backed local storage, but production should still validate migration, backup, and device-restore behavior.
 - Verify webhook signatures if payments are ever reintroduced.
 - Keep audit logs append-only for hosted actions.
 

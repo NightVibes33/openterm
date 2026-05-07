@@ -87,7 +87,7 @@ The app should stop looking like a generic AI dashboard. The design should be ca
 1. Keep CI green.
 2. Finish anti-fake cleanup: remove claims and controls that imply unimplemented behavior.
 3. Add capability checks before actions that depend on local/remote binaries.
-4. Move secrets into Keychain.
+4. Validate Keychain-backed secret migration and redaction on real devices.
 5. Add file rename/move and folder export.
 6. Add monitor profile validation and remote preflight output.
 7. Simplify the Home screen so it shows real state, not product marketing.
