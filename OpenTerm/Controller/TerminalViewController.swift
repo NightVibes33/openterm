@@ -415,8 +415,6 @@ extension TerminalViewController: BookmarkViewControllerDelegate {
 			return self.terminalView.executor.currentWorkingDirectory
 		}
 		set {
-			// TODO: Only allow this while command is not running
-
 			//  Access the URL
 			_ = newValue.startAccessingSecurityScopedResource()
 

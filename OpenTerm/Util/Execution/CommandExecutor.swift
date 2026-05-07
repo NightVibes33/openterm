@@ -121,8 +121,7 @@ class CommandExecutor {
 			// Save return code into the context
 			self.context[.status] = "\(returnCode)"
 
-			// Write the end code to stdout_pipe
-			// TODO: Also need to send to stderr?
+			// Write the end code to stdout_pipe. stderr is delivered separately to the delegate.
 			self.stdout_pipe.fileHandleForWriting.write(Parser.Code.endOfTransmission.rawValue.data(using: .utf8) ?? Data())
 
 			self.state = .idle

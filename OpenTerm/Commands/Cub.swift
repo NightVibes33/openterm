@@ -72,7 +72,6 @@ public func cub(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int
 		var parameters = [ValueType]()
 		
 		for arg in args {
-			// TODO: parse numbers here?
 			parameters.append(.string(arg))
 		}
 		

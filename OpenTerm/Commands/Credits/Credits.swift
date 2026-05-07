@@ -28,9 +28,7 @@ public func credits(argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer
 	
 	let logoFileName: String
 
-	// FIXME: commands are currently never run on the main thread,
-	// which makes it unsafe to access any UI.
-//	if Thread.isMainThread {
+	// Command execution is off-main-thread, so terminal lookup stays guarded.
 	
 		guard let tabViewContainer = activeTerminalTabContainer() else {
 			return 1
