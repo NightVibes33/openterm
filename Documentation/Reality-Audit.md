@@ -17,7 +17,7 @@ This fork should not pretend to be a native full IDE yet. The real product direc
 
 ## Previously Fake Or Misleading Areas Fixed
 
-- Removed seeded fake SSH hosts, seeded demo monitors, and generic seeded command snippets.
+- Removed seeded fake SSH hosts, seeded demo monitors, and generic seeded command snippets. Blank SSH profiles and invalid monitor records are rejected before persistence.
 - Home recent activity no longer shows saved SSH profiles until they have actually been used.
 - Monitor snapshots are no longer created just because a monitor was configured.
 - Empty Home, Git, Server, Vault, Monitor, and AI states now state what real setup is required.
@@ -45,3 +45,4 @@ This fork should not pretend to be a native full IDE yet. The real product direc
 - Add monitor setup validation for SSH auth type and required remote tools.
 - Add explicit local-vs-remote labels everywhere a command depends on the active terminal environment.
 - Continue replacing terminal-wrapper UI with native capability checks before showing actions as ready.
+- Add form-level validation messages that prevent sheets from closing when required fields are missing.

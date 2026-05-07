@@ -1022,13 +1022,30 @@ final class WorkspaceStore: ObservableObject {
 	}
 
 	func upsertSSHProfile(_ profile: SSHProfileSummary) {
-		if let index = sshProfiles.firstIndex(where: { $0.id == profile.id }) {
-			sshProfiles[index] = profile
+		let cleaned = SSHProfileSummary(
+			id: profile.id,
+			label: profile.label.trimmingCharacters(in: .whitespacesAndNewlines),
+			host: profile.host.trimmingCharacters(in: .whitespacesAndNewlines),
+			username: profile.username.trimmingCharacters(in: .whitespacesAndNewlines),
+			authKind: profile.authKind,
+			lastSeen: profile.lastSeen,
+			port: profile.port,
+			privateKeyPath: profile.privateKeyPath.trimmingCharacters(in: .whitespacesAndNewlines),
+			startupPath: profile.startupPath.trimmingCharacters(in: .whitespacesAndNewlines),
+			notes: profile.notes.trimmingCharacters(in: .whitespacesAndNewlines)
+		)
+		guard !cleaned.label.isEmpty, !cleaned.host.isEmpty, !cleaned.username.isEmpty else {
+			statusMessage = "SSH profile needs label, host, and username"
+			return
+		}
+		if let index = sshProfiles.firstIndex(where: { $0.id == cleaned.id }) {
+			sshProfiles[index] = cleaned
 		} else {
-			sshProfiles.append(profile)
+			sshProfiles.append(cleaned)
 		}
 		sshProfiles.sort { $0.label.localizedCaseInsensitiveCompare($1.label) == .orderedAscending }
 		saveSSHProfiles()
+		statusMessage = "Saved SSH profile: \(cleaned.label)"
 		rebuildRecentSessions()
 	}
 
@@ -1070,16 +1087,32 @@ final class WorkspaceStore: ObservableObject {
 	}
 
 	func upsertServerMonitor(_ monitor: ServerMonitorSummary) {
-		if let index = serverMonitors.firstIndex(where: { $0.id == monitor.id }) {
-			serverMonitors[index] = monitor
+		guard sshProfiles.contains(where: { $0.id == monitor.sshProfileID }) else {
+			statusMessage = "Select a real SSH profile before saving a monitor"
+			return
+		}
+		let cleaned = ServerMonitorSummary(
+			id: monitor.id,
+			sshProfileID: monitor.sshProfileID,
+			label: monitor.label.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Server" : monitor.label.trimmingCharacters(in: .whitespacesAndNewlines),
+			path: monitor.path.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "/" : monitor.path.trimmingCharacters(in: .whitespacesAndNewlines),
+			cpuThreshold: monitor.cpuThreshold,
+			memoryThreshold: monitor.memoryThreshold,
+			diskThreshold: monitor.diskThreshold,
+			refreshInterval: monitor.refreshInterval,
+			isEnabled: monitor.isEnabled
+		)
+		if let index = serverMonitors.firstIndex(where: { $0.id == cleaned.id }) {
+			serverMonitors[index] = cleaned
 		} else {
-			serverMonitors.append(monitor)
+			serverMonitors.append(cleaned)
 		}
 		saveServerMonitors()
 		serverSnapshots.removeAll { snapshot in
 			!serverMonitors.contains(where: { $0.id == snapshot.id })
 		}
 		saveServerSnapshots()
+		statusMessage = "Saved monitor: \(cleaned.label)"
 	}
 
 	func deleteServerMonitor(_ monitor: ServerMonitorSummary) {

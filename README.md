@@ -30,7 +30,7 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - iOS 18.0 is the deployment floor, with Liquid Glass-style SwiftUI surfaces enabled conditionally when the SDK/runtime supports them instead of pretending unsupported devices have native iOS 26 materials.
 - Terminal commands can now be queued or executed from workspace actions, so SSH, Git, snippets, and generated commands can jump into the active terminal tab.
 - Terminal appearance has a modernized canvas with live font, cursor, keyboard, text color, background color, and app accent controls.
-- SSH profiles persist locally with label, host, username, port, auth type, key path, startup path, notes, and last-used timestamps; new installs no longer seed fake example hosts.
+- SSH profiles persist locally with label, host, username, port, auth type, key path, startup path, notes, and last-used timestamps; new installs no longer seed fake example hosts, and blank profiles are rejected.
 - SSH quick connect now builds and runs real `ssh` commands through the terminal instead of only switching screens.
 - SSH profiles include remote Tool Audit and Dev Stack actions that verify package managers/tool versions, then queue safe package-manager commands for Git, Python 3, pip, Node.js, npm, htop, nano, vim, and tmux on Debian/Ubuntu, Alpine, Fedora/RHEL, or auto-detected Linux hosts.
 - A local SSH key vault foundation exists with protected on-device key files, metadata, import/delete actions, and attach-to-profile flow.
@@ -153,6 +153,7 @@ Important:
 - [x] Add global workspace status feedback for queued actions and failed preconditions
 - [x] Remove seeded fake snippets and add real snippet create/edit/delete flow
 - [x] Add terminal Git availability preflight before Git commands
+- [x] Reject blank SSH profiles and invalid monitor records before they create broken cards
 - [x] Add repo reality audit documentation
 - [x] Add remote SSH Tool Audit and Dev Stack setup actions for common Linux package managers
 - [x] Add local server monitor alert history and acknowledgement
