@@ -132,6 +132,12 @@ jobs:
             sed -i.bak 's/: class/: AnyObject/g' Pods/PanelKit/PanelKit/PanelContentDelegate/PanelContentDelegate.swift Pods/PanelKit/PanelKit/PanelManager/PanelManager.swift
             sed -i.bak 's/addChildViewController(/addChild(/g' Pods/PanelKit/PanelKit/Controller/PanelViewController.swift
             sed -i.bak 's/didMove(toParentViewController:/didMove(toParent:/g' Pods/PanelKit/PanelKit/Controller/PanelViewController.swift
+            sed -i.bak \
+              -e 's/UIKeyboardAnimationCurveUserInfoKey/UIResponder.keyboardAnimationCurveUserInfoKey/g' \
+              -e 's/UIKeyboardAnimationDurationUserInfoKey/UIResponder.keyboardAnimationDurationUserInfoKey/g' \
+              -e 's/UIKeyboardFrameEndUserInfoKey/UIResponder.keyboardFrameEndUserInfoKey/g' \
+              -e 's/UIViewAnimationOptions/UIView.AnimationOptions/g' \
+              Pods/PanelKit/PanelKit/Controller/PanelViewController+Keyboard.swift
           fi
           if [ -d "Pods/TabView/Sources" ]; then
             sed -i.bak 's/: class/: AnyObject/g' Pods/TabView/Sources/Internal/TabViewBar.swift

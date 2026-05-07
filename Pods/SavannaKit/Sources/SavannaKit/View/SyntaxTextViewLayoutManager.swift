@@ -3,7 +3,7 @@
 //  SavannaKit iOS
 //
 //  Created by Louis D'hauwe on 09/03/2018.
-//  Copyright © 2018 Silver Fox. All rights reserved.
+//  Copyright Â© 2018 Silver Fox. All rights reserved.
 //
 
 import Foundation
@@ -20,9 +20,9 @@ public enum EditorPlaceholderState {
 	case inactive
 }
 
-public extension NSAttributedStringKey {
+public extension NSAttributedString.Key {
 	
-	static public let editorPlaceholder = NSAttributedStringKey("editorPlaceholder")
+	static public let editorPlaceholder = NSAttributedString.Key("editorPlaceholder")
 
 }
 

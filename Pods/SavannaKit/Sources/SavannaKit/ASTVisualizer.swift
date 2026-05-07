@@ -3,7 +3,7 @@
 //  SavannaKit
 //
 //  Created by Louis D'hauwe on 26/10/2016.
-//  Copyright © 2016 - 2017 Silver Fox. All rights reserved.
+//  Copyright Â© 2016 - 2017 Silver Fox. All rights reserved.
 //
 
 import Foundation
@@ -33,7 +33,7 @@ fileprivate extension NSAttributedString {
 		let style = NSMutableParagraphStyle()
 		style.alignment = .center
 
-		let attributes: [NSAttributedStringKey: Any] = [
+		let attributes: [NSAttributedString.Key: Any] = [
 			.font: NSFont.systemFont(ofSize: fontSize),
 			.paragraphStyle: style
 		]

@@ -3,7 +3,7 @@
 //  PanelKit
 //
 //  Created by Louis D'hauwe on 09/03/2017.
-//  Copyright © 2017 Silver Fox. All rights reserved.
+//  Copyright Â© 2017 Silver Fox. All rights reserved.
 //
 
 import UIKit
@@ -28,13 +28,13 @@ extension PanelViewController {
 			return
 		}
 
-		let animationCurveRawNSN = userInfo[UIKeyboardAnimationCurveUserInfoKey] as? NSNumber
-		let animationCurveRaw = animationCurveRawNSN?.uintValue ?? UIViewAnimationOptions().rawValue
-		let animationCurve = UIViewAnimationOptions(rawValue: animationCurveRaw)
+		let animationCurveRawNSN = userInfo[UIResponder.keyboardAnimationCurveUserInfoKey] as? NSNumber
+		let animationCurveRaw = animationCurveRawNSN?.uintValue ?? UIView.AnimationOptions().rawValue
+		let animationCurve = UIView.AnimationOptions(rawValue: animationCurveRaw)
 
-		let duration = userInfo[UIKeyboardAnimationDurationUserInfoKey] as? Double ?? 0.3
+		let duration = userInfo[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double ?? 0.3
 
-		guard var keyboardFrame = (userInfo[UIKeyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue else {
+		guard var keyboardFrame = (userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue else {
 			return
 		}
 
@@ -108,11 +108,11 @@ extension PanelViewController {
 			return
 		}
 
-		let animationCurveRawNSN = userInfo[UIKeyboardAnimationCurveUserInfoKey] as? NSNumber
-		let animationCurveRaw = animationCurveRawNSN?.uintValue ?? UIViewAnimationOptions().rawValue
-		let animationCurve = UIViewAnimationOptions(rawValue: animationCurveRaw)
+		let animationCurveRawNSN = userInfo[UIResponder.keyboardAnimationCurveUserInfoKey] as? NSNumber
+		let animationCurveRaw = animationCurveRawNSN?.uintValue ?? UIView.AnimationOptions().rawValue
+		let animationCurve = UIView.AnimationOptions(rawValue: animationCurveRaw)
 
-		let duration = userInfo[UIKeyboardAnimationDurationUserInfoKey] as? Double ?? 0.3
+		let duration = userInfo[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double ?? 0.3
 
 		let currentFrame = viewToMove.frame
 

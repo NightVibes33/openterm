@@ -3,7 +3,7 @@
 //  SavannaKit
 //
 //  Created by Louis D'hauwe on 02/05/2018.
-//  Copyright © 2018 Silver Fox. All rights reserved.
+//  Copyright Â© 2018 Silver Fox. All rights reserved.
 //
 
 import Foundation
@@ -20,7 +20,7 @@ public extension NSMutableAttributedString {
 		
 		self.init(string: source)
 		
-		var attributes = [NSAttributedStringKey: Any]()
+		var attributes = [NSAttributedString.Key: Any]()
 		
 		let spaceAttrString = NSAttributedString(string: " ", attributes: [.font: theme.font])
 		let spaceWidth = spaceAttrString.size().width
@@ -67,7 +67,7 @@ public extension NSMutableAttributedString {
 				
 				let color = theme.color(for: syntaxColorType)
 				
-				var attr = [NSAttributedStringKey: Any]()
+				var attr = [NSAttributedString.Key: Any]()
 				
 				attr[.editorPlaceholder] = EditorPlaceholderState.inactive
 				
