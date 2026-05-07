@@ -132,6 +132,16 @@ jobs:
           gem install cocoapods
           pod install
 
+      - name: Patch HueKit for modern Swift
+        shell: bash
+        run: |
+          set -euo pipefail
+          # HueKit has a Swift compatibility issue with UIAccessibilityTraits |= in newer Swift.
+          # UIAccessibilityTraits no longer supports |= in modern Swift/iOS.
+          if [ -f "Pods/HueKit/HueKit/View/ColorBarPicker.swift" ]; then
+            sed -i.bak 's/t |= UIAccessibilityTraitAdjustable/t.formUnion(UIAccessibilityTraitAdjustable)/g' Pods/HueKit/HueKit/View/ColorBarPicker.swift
+          fi
+
       - name: List schemes
         shell: bash
         run: |
@@ -198,17 +208,4 @@ jobs:
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
-          name: OpenTerm-Unsigned-IPA
-          path: OpenTerm-Unsigned.ipa
-
-      - name: Add installability note
-        shell: bash
-        run: |
-          {
-            echo "## Unsigned IPA"
-            echo
-            echo "This artifact is for testing and inspection only."
-            echo
-            echo "Unsigned IPAs do not install on normal real iPhones by themselves."
-            echo "You still need proper signing/provisioning, sideload tooling, or a special device environment."
-          } >> "$GITHUB_STEP_SUMMARY"
+          name: 
