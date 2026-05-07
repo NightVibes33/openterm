@@ -22,7 +22,7 @@ The current design target is real-tool clarity first: fewer marketing cards, lig
 Donations support development only: the app is currently free, and Buy Me a Coffee is exposed as a support link rather than an entitlement or paywall.
 
 ### Implemented in this fork right now
-- Legacy OpenTerm terminal core is still present and embedded inside the SwiftUI workspace. Several older storyboard/XIB scripting and documentation panels still exist and are tracked as modernization debt rather than finished 2026-quality UI, but the Scripts panel remains functional and the bundled examples are maintained as runnable script samples.
+- Legacy OpenTerm terminal core is still present and embedded inside a modern SwiftUI terminal workspace chrome with quick navigation to Files, Servers, and Settings. Several older storyboard/XIB scripting and documentation panels still exist and are tracked as modernization debt rather than finished 2026-quality UI, but the Scripts panel remains functional and the bundled examples are maintained as runnable script samples.
 - `AppDelegate` launches the modern workspace shell with Home, Files, Terminal, Servers, and a custom More hub on iPhone, plus full workspace navigation on iPad. Home now shows a real capability check instead of marketing cards, and empty Home/Git/Server/AI states explicitly ask for real user data or provider configuration.
 - iOS 18.0 is the deployment floor, with Liquid Glass-style SwiftUI surfaces enabled conditionally when the SDK/runtime supports them instead of pretending unsupported devices have native iOS 26 materials.
 - Terminal commands can now be queued or executed from workspace actions, so SSH, Git, snippets, and generated commands can jump into the active terminal tab.

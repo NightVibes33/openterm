@@ -83,6 +83,7 @@ This audit covers the whole checked-in repo, not only the new SwiftUI workspace.
 - Add SSH monitor preflight command that checks `ssh`, auth type, `top`, `awk`, `df`, `uptime`, and `/proc/meminfo` before creating monitor expectations.
 
 ## Current Findings
+- Added a SwiftUI terminal workspace chrome around the legacy terminal container so the terminal tab no longer drops directly into old UIKit with no modern context.
 - Added Apple native document-browser access to the Files workspace so users can enter the real iOS Files browser before importing/editing copies in OpenTerm.
 - Normalized checked-in Pods build settings to iOS 18 and Swift 5; old Pods remain only where legacy terminal/scripts code still imports them.
 - Reworked the More tab into a focused hub and moved the full Settings form behind an explicit Settings sheet instead of dumping every setting inline.

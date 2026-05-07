@@ -73,7 +73,7 @@ struct DeveloperWorkspaceRootView: View {
 		case .home:
 			NavigationStack { WorkspaceHomeView(store: store, selection: $selection) }
 		case .terminal:
-			LegacyTerminalContainerView()
+			TerminalWorkspaceView(store: store, selection: $selection)
 		case .files:
 			NavigationStack { FilesWorkspaceView(store: store) }
 		case .git:
@@ -243,6 +243,46 @@ private struct QuickActionGrid: View {
 
 	private var aiActionSubtitle: String {
 		store.isAIConfigured ? "Use saved routing" : "Provider required"
+	}
+}
+
+
+private struct TerminalWorkspaceView: View {
+	@ObservedObject var store: WorkspaceStore
+	@Binding var selection: WorkspaceDestination
+
+	var body: some View {
+		VStack(spacing: 0) {
+			VStack(alignment: .leading, spacing: 14) {
+				HStack(alignment: .top, spacing: 14) {
+					VStack(alignment: .leading, spacing: 6) {
+						Text("Terminal")
+							.font(.system(.title2, design: .rounded, weight: .black))
+							.foregroundStyle(.primary)
+						Text("Real local ios_system shell with command handoff from SSH, Git, snippets, and AI tools.")
+							.font(.system(.footnote, design: .default, weight: .medium))
+							.foregroundStyle(.secondary)
+					}
+					Spacer(minLength: 0)
+					MetricPill(title: "Core", value: "Local")
+				}
+
+				LazyVGrid(columns: [GridItem(.adaptive(minimum: 112), spacing: 8)], spacing: 8) {
+					FileHeaderButton(title: "Files", symbol: "folder", tint: AppColor.amber) { selection = .files }
+					FileHeaderButton(title: "Servers", symbol: "server.rack", tint: AppColor.green) { selection = .servers }
+					FileHeaderButton(title: "Settings", symbol: "slider.horizontal.3", tint: store.workspaceAccentColor) { selection = .more }
+				}
+			}
+			.padding(16)
+			.background(WorkspaceCardBackground(tint: store.workspaceAccentColor))
+			.padding(.horizontal, 14)
+			.padding(.top, 12)
+			.padding(.bottom, 8)
+
+			LegacyTerminalContainerView()
+				.background(Color(UserDefaultsController.shared.terminalBackgroundColor))
+		}
+		.background(WorkspaceBackdrop().ignoresSafeArea())
 	}
 }
 
