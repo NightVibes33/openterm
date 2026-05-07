@@ -3,7 +3,7 @@
 //  OpenTerm
 //
 //  Created by Louis D'hauwe on 21/04/2018.
-//  Copyright © 2018 Silver Fox. All rights reserved.
+//  Copyright Â© 2018 Silver Fox. All rights reserved.
 //
 
 import UIKit
@@ -22,27 +22,20 @@ class CubDocumentationViewController: UIViewController {
 		case docItem(DocumentationItem)
 	}
 	
-	lazy var docBundle: CubDocumentationBundle = {
+	lazy var docBundle: CubDocumentationBundle? = {
 		
-		guard let docBundleURL = Bundle.main.url(forResource: "cub-docs", withExtension: "json", subdirectory: nil) else {
-			fatalError("Couldn't get docBundleURL")
-		}
-
-		guard let data = FileManager.default.contents(atPath: docBundleURL.path) else {
-			fatalError("Couldn't get data")
+		guard let docBundleURL = Bundle.main.url(forResource: "cub-docs", withExtension: "json", subdirectory: nil),
+			let data = FileManager.default.contents(atPath: docBundleURL.path) else {
+			return nil
 		}
 		
 		let decoder = JSONDecoder()
 
-		guard let bundle = try? decoder.decode(CubDocumentationBundle.self, from: data) else {
-			fatalError("Couldn't get bundle")
-		}
-
-		return bundle
+		return try? decoder.decode(CubDocumentationBundle.self, from: data)
 	}()
 	
 	lazy var allItems: [DocumentationItem] = {
-		return docBundle.items
+		return docBundle?.items ?? []
 	}()
 	
 	var sections: [Section]?
@@ -198,8 +191,8 @@ extension CubDocumentationViewController: UITableViewDataSource {
 	
 	func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
 		
-		guard let section = sections?[section] else {
-			fatalError("No section found")
+		guard let section = sections?[safe: section] else {
+			return 0
 		}
 		
 		switch section {
@@ -217,29 +210,28 @@ extension CubDocumentationViewController: UITableViewDataSource {
 	
 	func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 		
-		guard let section = sections?[indexPath.section] else {
-			fatalError("No section found")
+		guard let section = sections?[safe: indexPath.section],
+			let cell = tableView.dequeueReusableCell(withIdentifier: "CubDocumentationItemTableViewCell", for: indexPath) as? CubDocumentationItemTableViewCell else {
+			return UITableViewCell(style: .default, reuseIdentifier: nil)
 		}
-		
-		let cell = tableView.dequeueReusableCell(withIdentifier: "CubDocumentationItemTableViewCell", for: indexPath) as! CubDocumentationItemTableViewCell
 		
 		switch section {
 		case .functions(let items):
-			let item = items[indexPath.row]
+			guard let item = items[safe: indexPath.row] else { return UITableViewCell(style: .default, reuseIdentifier: nil) }
 			
 			cell.titleLbl.text = item.title
 			
 			return cell
 			
 		case .variables(let items):
-			let item = items[indexPath.row]
+			guard let item = items[safe: indexPath.row] else { return UITableViewCell(style: .default, reuseIdentifier: nil) }
 
 			cell.titleLbl.text = item.title
 
 			return cell
 			
 		case .structs(let items):
-			let item = items[indexPath.row]
+			guard let item = items[safe: indexPath.row] else { return UITableViewCell(style: .default, reuseIdentifier: nil) }
 			
 			cell.titleLbl.text = item.title
 			

@@ -176,6 +176,7 @@ Important:
 - [x] Disable stale StoreKit review prompting, remove the old App Store review settings action, and replace stale legacy Settings identity links while the app is free/unsigned focused
 - [x] Harden selected old utility force-cast crash paths
 - [ ] Replace legacy storyboard/XIB scripting and documentation panels with modern SwiftUI or remove them from the primary flow
+- [x] Harden legacy scripting/examples/documentation panels against missing resources and bad cell casts
 - [ ] Remove remaining legacy `fatalError` and force-cast paths from controllers
 
 ## Next Engineering Priorities

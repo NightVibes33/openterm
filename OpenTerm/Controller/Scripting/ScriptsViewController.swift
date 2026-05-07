@@ -3,7 +3,7 @@
 //  OpenTerm
 //
 //  Created by iamcdowe on 1/29/18.
-//  Copyright © 2018 Silver Fox. All rights reserved.
+//  Copyright Â© 2018 Silver Fox. All rights reserved.
 //
 
 import UIKit
@@ -51,12 +51,9 @@ class ScriptsViewController: UIViewController {
 	
 	lazy var examples: [PridelandOverview] = {
 		
-		guard let examplesURL = Bundle.main.url(forResource: "prideland-examples", withExtension: nil) else {
-			fatalError("Couldn't get examplesURL")
-		}
-		
-		guard let urls = try? FileManager.default.contentsOfDirectory(at: examplesURL, includingPropertiesForKeys: nil, options: []) else {
-			fatalError("Couldn't get data")
+		guard let examplesURL = Bundle.main.url(forResource: "prideland-examples", withExtension: nil),
+			let urls = try? FileManager.default.contentsOfDirectory(at: examplesURL, includingPropertiesForKeys: nil, options: []) else {
+			return []
 		}
 		
 		var overviews = [PridelandOverview]()
@@ -448,20 +445,24 @@ extension ScriptsViewController: UICollectionViewDataSource {
 	
 	func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
 		
-		guard let cellItem = cellItems?[indexPath.row] else {
-			fatalError("Expected cellItem")
+		guard let cellItem = cellItems?[safe: indexPath.row] else {
+			return UICollectionViewCell()
 		}
 		
 		switch cellItem {
 		case .prideland(let pridelandOverview):
 			
-			let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PridelandCollectionViewCell", for: indexPath) as! PridelandCollectionViewCell
+			guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PridelandCollectionViewCell", for: indexPath) as? PridelandCollectionViewCell else {
+				return UICollectionViewCell()
+			}
 
 			cell.show(pridelandOverview)
 			return cell
 
 		case .addNew:
-			let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "NewPridelandCollectionViewCell", for: indexPath) as! NewPridelandCollectionViewCell
+			guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "NewPridelandCollectionViewCell", for: indexPath) as? NewPridelandCollectionViewCell else {
+				return UICollectionViewCell()
+			}
 			
 			return cell
 			
@@ -494,8 +495,8 @@ extension ScriptsViewController: UICollectionViewDelegateFlowLayout {
 	
 	func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
 		
-		guard let cellItem = cellItems?[indexPath.row] else {
-			return
+		guard let cellItem = cellItems?[safe: indexPath.row] else {
+			return UICollectionViewCell()
 		}
 		
 		switch cellItem {
@@ -515,8 +516,8 @@ extension ScriptsViewController: UICollectionViewDelegateFlowLayout {
 			return
 		}
 		
-		guard let cellItem = cellItems?[indexPath.row] else {
-			return
+		guard let cellItem = cellItems?[safe: indexPath.row] else {
+			return UICollectionViewCell()
 		}
 		
 		switch cellItem {
@@ -542,8 +543,8 @@ extension ScriptsViewController: UICollectionViewDelegateFlowLayout {
 			return
 		}
 		
-		guard let cellItem = cellItems?[indexPath.row] else {
-			return
+		guard let cellItem = cellItems?[safe: indexPath.row] else {
+			return UICollectionViewCell()
 		}
 		
 		switch cellItem {

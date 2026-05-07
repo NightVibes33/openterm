@@ -50,7 +50,7 @@ This audit covers the whole checked-in repo, not only the new SwiftUI workspace.
 - Blocked vault push/pull UI until required Supabase configuration exists.
 - Rewrote active docs to mark billing/backend production work as deferred/scaffolded.
 - Removed old App Store badge/Terminal for iOS README framing, disabled the legacy StoreKit review prompt call, replaced the old App Store review settings row with repo/support links, and removed the old Silver Fox copyright text from the legacy Settings footer.
-- Hardened several old crash-prone utility paths: bundle version/build lookup, directory file-size metadata, attributed file-link mutation, drag/drop URL paste handling, asset color lookup, legacy settings color picker loading, and malformed ANSI color parsing now avoid force-cast/fatal crashes.
+- Hardened several old crash-prone utility paths: bundle version/build lookup, directory file-size metadata, attributed file-link mutation, drag/drop URL paste handling, asset color lookup, legacy settings color picker loading, malformed ANSI color parsing, missing script examples, and missing Cub docs now avoid force-cast/fatal crashes.
 
 ## Still Bad / High Priority
 
