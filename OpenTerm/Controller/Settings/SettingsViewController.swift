@@ -162,15 +162,14 @@ class SettingsViewController: UITableViewController {
 			let url: String?
 			switch indexPath.row {
 			case 0:
-				// Donate
-				url = "https://paypal.me/LouisDhauwe/"
+				// Project support
+				url = "https://buymeacoffee.com/ZYN3"
 			case 1:
-				// Review on App Store
-				let appId = "1323205755"
-				url = "itms-apps://itunes.apple.com/us/app/terminal/id\(appId)?action=write-review"
+				// Source repository
+				url = "https://github.com/NightVibes33/openterm"
 			case 2:
-				// Twitter
-				url = "https://twitter.com/LouisDhauwe"
+				// Project owner
+				url = "https://twitter.com/NightVibes33"
 			case 3:
 				// Contact Us
 				url = nil
@@ -200,7 +199,7 @@ class SettingsViewController: UITableViewController {
 		let mailComposerVC = MFMailComposeViewController()
 		mailComposerVC.mailComposeDelegate = self
 
-		mailComposerVC.setToRecipients(["support@silverfox.be"])
+		mailComposerVC.setToRecipients(["nightvibes33@users.noreply.github.com"])
 
 		let version = Bundle.main.version
 		let build = Bundle.main.build

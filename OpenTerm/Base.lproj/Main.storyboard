@@ -221,7 +221,7 @@
                                                     </constraints>
                                                     <segments>
                                                         <segment title="|"/>
-                                                        <segment title="█"/>
+                                                        <segment title="â"/>
                                                         <segment title="_"/>
                                                     </segments>
                                                     <connections>
@@ -330,7 +330,7 @@
                                             <rect key="frame" x="0.0" y="0.0" width="502" height="43.5"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" text="Donate via PayPal" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="sTB-eQ-WTi">
+                                                <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" text="Support OpenTerm" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="sTB-eQ-WTi">
                                                     <rect key="frame" x="20" y="0.0" width="482" height="43.5"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="16"/>
@@ -348,7 +348,7 @@
                                             <rect key="frame" x="0.0" y="0.0" width="502" height="43.5"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" text="Review OpenTerm on the App Store" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="2uu-C0-q4m">
+                                                <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" text="Open project on GitHub" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="2uu-C0-q4m">
                                                     <rect key="frame" x="20" y="0.0" width="482" height="43.5"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="16"/>
@@ -366,7 +366,7 @@
                                             <rect key="frame" x="0.0" y="0.0" width="502" height="43.5"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" text="Follow @LouisDhauwe on Twitter for updates" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="S6F-N0-IeH">
+                                                <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" text="Follow @NightVibes33 for updates" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="S6F-N0-IeH">
                                                     <rect key="frame" x="20" y="0.0" width="482" height="43.5"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="16"/>
