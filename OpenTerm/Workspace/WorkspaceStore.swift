@@ -537,14 +537,14 @@ final class WorkspaceStore: ObservableObject {
 	@Published var backendConfiguration: BackendConfiguration = .default
 	@Published var aiUsageHistory: [AIUsageRecord] = []
 	@Published var isRefreshingMonitors: Bool = false
-	@Published var statusMessage: String = "Workspace ready"
+	@Published var statusMessage: String = "Workspace idle"
 	@Published var activeThemeName: String = "Glass Slate"
 	@Published var workspaceAccentColor: Color = Color(UserDefaultsController.shared.workspaceAccentColor)
 	@Published var lastBackupPath: String = "No backup exported yet"
 	@Published var vaultSyncStatus: String = "Vault sync not configured"
 	@Published var isSyncingVault: Bool = false
 	@Published var remoteConfigStatus: String = "Remote config not loaded"
-	@Published var freeModeSummary: String = "Free preview while SSH, Git, AI, editor, and monitoring flows are hardened."
+	@Published var freeModeSummary: String = "Free while the core SSH, Git, AI, editor, and monitoring workflows are stabilized."
 
 	private let fileManager = FileManager.default
 	private let byteCountFormatter = ByteCountFormatter()
@@ -617,7 +617,7 @@ final class WorkspaceStore: ObservableObject {
 		backendConfiguration = loadBackendConfiguration()
 		aiUsageHistory = load([AIUsageRecord].self, from: stateURL(for: "ai-usage-history.json")) ?? []
 		assistantMessages = []
-		assistantStatus = isAIConfigured ? "AI endpoint configured. Live prompts are available." : "AI is not configured yet. Add a provider endpoint or Supabase proxy in Settings."
+		assistantStatus = isAIConfigured ? "AI endpoint configured. Prompts will use your saved routing settings." : "AI is not configured yet. Add a provider endpoint or Supabase proxy in Settings."
 	}
 
 	private func load<T: Decodable>(_ type: T.Type, from url: URL) -> T? {

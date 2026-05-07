@@ -112,7 +112,7 @@ private struct WorkspaceHomeView: View {
 					SessionCard(session: session)
 				}
 			}
-			SectionHeader(title: "Capability Check", subtitle: "What is actually ready on this device right now.")
+			SectionHeader(title: "Capability Check", subtitle: "What is configured locally, terminal-driven, or still missing.")
 			VStack(spacing: 10) {
 				ForEach(capabilityStatuses) { status in
 					CapabilityStatusRow(status: status)
@@ -637,7 +637,7 @@ private struct SettingsWorkspaceView: View {
 			.background(WorkspaceCardBackground(tint: store.workspaceAccentColor))
 
 			VStack(alignment: .leading, spacing: 12) {
-				SectionHeader(title: "AI Provider", subtitle: "OpenAI-compatible chat endpoint. Keys stay local in this preview build.")
+				SectionHeader(title: "AI Provider", subtitle: "OpenAI-compatible chat endpoint. Secrets are stored locally in Keychain-backed storage.")
 				TextField("Endpoint URL", text: $endpoint)
 					.textInputAutocapitalization(.never)
 					.autocorrectionDisabled()
@@ -776,7 +776,7 @@ private struct ThemeSettingsCard: View {
 
 	var body: some View {
 		VStack(alignment: .leading, spacing: 14) {
-			SectionHeader(title: "Live Color System", subtitle: "This is the real app theme control. Drag the color wheels and the workspace updates immediately.")
+			SectionHeader(title: "Theme Colors", subtitle: "Change the app accent and terminal colors immediately.")
 			ColorPicker("App accent", selection: $appAccent, supportsOpacity: false)
 				.foregroundStyle(.primary)
 				.onChange(of: appAccent) { newValue in
@@ -855,7 +855,7 @@ private struct HeroPanel: View {
 			}
 			HStack(spacing: 12) {
 				WorkspaceStatPill(title: "iOS", value: "18+")
-				WorkspaceStatPill(title: "Glass", value: "Auto")
+				WorkspaceStatPill(title: "UI", value: "Adaptive")
 				WorkspaceStatPill(title: "Mode", value: "Free")
 			}
 		}
