@@ -571,7 +571,8 @@ final class WorkspaceStore: ObservableObject {
 		aiConfiguration = load(AIProviderConfiguration.self, from: stateURL(for: "ai-configuration.json")) ?? .default
 		backendConfiguration = load(BackendConfiguration.self, from: stateURL(for: "backend-configuration.json")) ?? .default
 		aiUsageHistory = load([AIUsageRecord].self, from: stateURL(for: "ai-usage-history.json")) ?? []
-		assistantMessages = [AssistantMessage(role: "system", content: "Workspace assistant ready. Configure an endpoint in Settings, then ask for commands, error analysis, or SSH help.", createdAt: Date())]
+		assistantMessages = []
+		assistantStatus = isAIConfigured ? "AI endpoint configured. Live prompts are available." : "AI is not configured yet. Add a provider endpoint or Supabase proxy in Settings."
 	}
 
 	private func load<T: Decodable>(_ type: T.Type, from url: URL) -> T? {
@@ -1072,7 +1073,10 @@ final class WorkspaceStore: ObservableObject {
 			serverMonitors.append(monitor)
 		}
 		saveServerMonitors()
-		refreshDerivedSnapshots()
+		serverSnapshots.removeAll { snapshot in
+			!serverMonitors.contains(where: { $0.id == snapshot.id })
+		}
+		saveServerSnapshots()
 	}
 
 	func deleteServerMonitor(_ monitor: ServerMonitorSummary) {
@@ -1090,13 +1094,25 @@ final class WorkspaceStore: ObservableObject {
 		saveServerAlerts()
 	}
 
-	private func refreshDerivedSnapshots() {
-		for monitor in serverMonitors where !serverSnapshots.contains(where: { $0.id == monitor.id }) {
-			serverSnapshots.append(ServerSnapshotSummary(id: monitor.id, name: monitor.label))
-		}
+	private func removeStaleServerSnapshots() {
 		serverSnapshots.removeAll { snapshot in
 			!serverMonitors.contains(where: { $0.id == snapshot.id })
 		}
+	}
+
+	var isAIConfigured: Bool {
+		let resolvedEndpoint = aiConfiguration.usesHostedProxy && aiConfiguration.endpoint.isEmpty ? backendConfiguration.aiProxyEndpoint : aiConfiguration.endpoint
+		guard !resolvedEndpoint.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, URL(string: resolvedEndpoint) != nil else {
+			return false
+		}
+		if aiConfiguration.usesHostedProxy {
+			return !backendConfiguration.accessToken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+		}
+		return !aiConfiguration.apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+	}
+
+	func openSettings() {
+		NotificationCenter.default.post(name: .workspaceDidRequestSettingsFocus, object: nil)
 	}
 
 	func updateAIConfiguration(endpoint: String, model: String, apiKey: String, systemPrompt: String, useHostedProxy: Bool) {
@@ -1285,7 +1301,7 @@ final class WorkspaceStore: ObservableObject {
 		}
 		isRefreshingMonitors = true
 		statusMessage = "Refreshing server snapshots"
-		refreshDerivedSnapshots()
+		removeStaleServerSnapshots()
 
 		let enabledMonitors = serverMonitors.filter { $0.isEnabled }
 		guard !enabledMonitors.isEmpty else {
@@ -1542,8 +1558,8 @@ final class WorkspaceStore: ObservableObject {
 		}
 
 		let resolvedEndpoint = aiConfiguration.usesHostedProxy && aiConfiguration.endpoint.isEmpty ? backendConfiguration.aiProxyEndpoint : aiConfiguration.endpoint
-		guard let url = URL(string: resolvedEndpoint), !resolvedEndpoint.isEmpty else {
-			assistantStatus = "Add an AI endpoint or Supabase backend URL in Settings first."
+		guard isAIConfigured, let url = URL(string: resolvedEndpoint), !resolvedEndpoint.isEmpty else {
+			assistantStatus = aiConfiguration.usesHostedProxy ? "Add Supabase URL and access token in Settings before using hosted AI." : "Add an AI endpoint and API key in Settings before using live AI."
 			return
 		}
 
@@ -1616,7 +1632,7 @@ final class WorkspaceStore: ObservableObject {
 	private func rebuildRecentSessions() {
 		var sessions = [WorkspaceSession]()
 
-		for profile in sshProfiles.prefix(2) {
+		for profile in sshProfiles.filter({ $0.lastSeen != nil }).prefix(2) {
 			sessions.append(WorkspaceSession(title: profile.label, subtitle: "SSH / \(profile.username)@\(profile.host)", detail: "\(profile.authKind.title) / \(formatLastSeen(profile.lastSeen))", symbol: "server.rack", tint: Color(red: 0.31, green: 0.72, blue: 0.57)))
 		}
 

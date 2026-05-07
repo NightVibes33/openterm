@@ -16,6 +16,9 @@ struct DeveloperWorkspaceRootView: View {
 			}
 		}
 		.tint(store.workspaceAccentColor)
+		.safeAreaInset(edge: .bottom) {
+			WorkspaceStatusStrip(message: store.statusMessage, tint: store.workspaceAccentColor)
+		}
 		.onAppear {
 			store.refreshLocalFiles()
 			store.refreshGitWorkspaces()
@@ -429,6 +432,15 @@ private struct WorkspaceAssistantView: View {
 		WorkspaceScroll(title: "AI") {
 			WorkspaceSummaryBanner(title: "AI Command Center", detail: store.assistantStatus, tint: AppColor.violet)
 
+			if !store.isAIConfigured {
+				VStack(alignment: .leading, spacing: 12) {
+					EmptyStateCard(title: "AI Not Configured", detail: "Prompt shortcuts can prepare drafts, but live answers require an OpenAI-compatible endpoint plus API key, or a Supabase hosted proxy plus access token.", symbol: "sparkles")
+					PrimaryWorkspaceButton(title: "Configure AI", symbol: "slider.horizontal.3", tint: AppColor.violet) {
+						store.openSettings()
+					}
+				}
+			}
+
 			VStack(alignment: .leading, spacing: 12) {
 				TextField("Explain this error, generate a command, fix this script", text: $store.assistantDraft, axis: .vertical)
 					.textFieldStyle(.roundedBorder)
@@ -436,7 +448,7 @@ private struct WorkspaceAssistantView: View {
 				PrimaryWorkspaceButton(title: store.isSendingAssistantPrompt ? "Sending" : "Send Prompt", symbol: "paperplane.fill", tint: AppColor.violet) {
 					store.submitAssistantPrompt()
 				}
-				.disabled(store.isSendingAssistantPrompt)
+				.disabled(store.isSendingAssistantPrompt || !store.isAIConfigured)
 			}
 			.padding(18)
 			.background(WorkspaceCardBackground(tint: AppColor.violet))
@@ -706,6 +718,28 @@ private struct ThemeSettingsCard: View {
 		}
 		.padding(18)
 		.background(WorkspaceCardBackground(tint: store.workspaceAccentColor))
+	}
+}
+
+private struct WorkspaceStatusStrip: View {
+	let message: String
+	let tint: Color
+
+	var body: some View {
+		HStack(spacing: 8) {
+			Image(systemName: "info.circle")
+			Text(message)
+				.lineLimit(2)
+			Spacer(minLength: 0)
+		}
+		.font(.system(.footnote, design: .rounded, weight: .semibold))
+		.foregroundStyle(.white.opacity(0.86))
+		.padding(.horizontal, 14)
+		.padding(.vertical, 10)
+		.background(.ultraThinMaterial, in: Capsule())
+		.overlay(Capsule().strokeBorder(tint.opacity(0.32), lineWidth: 1))
+		.padding(.horizontal, 16)
+		.padding(.bottom, 8)
 	}
 }
 

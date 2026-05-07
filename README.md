@@ -26,7 +26,7 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 
 ### Implemented in this fork right now
 - Legacy OpenTerm terminal core is still present and embedded inside the SwiftUI workspace.
-- `AppDelegate` launches the modern workspace shell with Home, Files, Terminal, Servers, and a custom More hub on iPhone, plus full workspace navigation on iPad. Empty Home/Git/Server states now explicitly ask for real user data instead of implying demo content exists.
+- `AppDelegate` launches the modern workspace shell with Home, Files, Terminal, Servers, and a custom More hub on iPhone, plus full workspace navigation on iPad. Empty Home/Git/Server/AI states now explicitly ask for real user data or provider configuration instead of implying demo content exists.
 - iOS 18.0 is the deployment floor, with iOS 26 Liquid Glass-style SwiftUI surfaces enabled when the SDK/runtime supports them.
 - Terminal commands can now be queued or executed from workspace actions, so SSH, Git, snippets, and generated commands can jump into the active terminal tab.
 - Terminal appearance has a modernized canvas with live font, cursor, keyboard, text color, background color, and app accent controls.
@@ -38,8 +38,8 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - The Files tab now works as a real iOS document workspace: folder navigation, Files app import, create file/folder, delete, share/export, UTF-8 editing, syntax highlighting, search/match highlighting, lightweight completion chips, diff view against the opened version, and save back to disk.
 - Command snippets persist locally and can run directly in the terminal, including remote Linux dev-stack setup snippets for Debian, Alpine, and Fedora servers.
 - Git repositories are detected by scanning for `.git` folders, and clone/status/diff/log/pull/commit/push plus structured conflict actions are terminal-driven.
-- Server monitors persist locally, poll Linux CPU/memory/disk/load snapshots over noninteractive SSH, and keep a local acknowledgeable alert history when thresholds change; monitors are user-created instead of seeded demo data.
-- The AI assistant can call a configurable OpenAI-compatible chat endpoint, records local usage history, includes prompt shortcuts for errors, commands, scripts, SSH, remote dev setup, Docker, Git conflicts, and regex, and can insert assistant output back into the terminal.
+- Server monitors persist locally, poll Linux CPU/memory/disk/load snapshots over noninteractive SSH, and keep a local acknowledgeable alert history when thresholds change; monitors are user-created and monitor cards appear only after real poll results.
+- The AI assistant can call a configurable OpenAI-compatible chat endpoint or hosted Supabase proxy, records local usage history, includes prompt shortcuts for errors, commands, scripts, SSH, remote dev setup, Docker, Git conflicts, and regex, and can insert assistant output back into the terminal. Live sending is disabled until a real endpoint/key or proxy/token is configured.
 - The iPhone More tab is custom now, not Apple's automatic overflow list, and contains real AI, Git, settings, theme, and terminal controls.
 - Settings are free-preview focused with real AI/provider controls and live appearance controls instead of placeholder billing screens.
 - Workspace backup export writes a JSON manifest for profiles, snippets, monitors, vault metadata, and AI routing metadata without raw private-key contents.
@@ -148,6 +148,10 @@ Important:
 - [x] Replace mock SSH manager with local profiles and real terminal connect flow
 - [x] Remove seeded fake SSH/server monitor demo data and show honest empty states
 - [x] Add honest empty states for Home activity and Git repository discovery
+- [x] Disable unconfigured AI live sends and show explicit provider/proxy setup state
+- [x] Stop showing monitor and recent-activity cards until real actions produce data
+- [x] Add global workspace status feedback for queued actions and failed preconditions
+- [x] Add repo reality audit documentation
 - [x] Add remote SSH Tool Audit and Dev Stack setup actions for common Linux package managers
 - [x] Add local server monitor alert history and acknowledgement
 - [x] Add real iOS file navigation, Files import, create folder/file, delete, share/export, and local UTF-8 text editing
@@ -183,6 +187,7 @@ Important:
 - `Documentation/OpenTerm-AI-Workspace-Blueprint.md`
 - `Documentation/OpenTerm-Data-And-Monetization.md`
 - `Documentation/OpenTerm-Backend-Architecture.md`
+- `Documentation/Reality-Audit.md`
 
 ## License
 OpenTerm is available under the GPLv2 (or later) and the MPLv2 license.
