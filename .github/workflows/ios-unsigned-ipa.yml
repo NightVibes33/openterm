@@ -28,12 +28,29 @@ jobs:
           xcrun --sdk iphoneos --show-sdk-version
           xcrun --sdk iphoneos --show-sdk-path
 
-      - name: Download dependencies and frameworks
+      - name: Patch get_sources.sh for GitHub archive format
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Apple redirects opensource.apple.com tarballs to GitHub codeload.
+          # GitHub archives extract to repo-tag/ instead of tag/.
+          # We patch get_sources.sh to handle both naming conventions.
+          sed -i.bak \
+            -e 's/mv \$file file_cmds/mv file_cmds-\$file file_cmds 2>\/dev\/null || mv \$file file_cmds/' \
+            -e 's/mv \$libutil libutil/mv libutil-\$libutil libutil 2>\/dev\/null || mv \$libutil libutil/' \
+            -e 's/mv \$libinfo libinfo/mv Libinfo-\$libinfo libinfo 2>\/dev\/null || mv \$libinfo libinfo/' \
+            -e 's/mv \$shell shell_cmds/mv shell_cmds-\$shell shell_cmds 2>\/dev\/null || mv \$shell shell_cmds/' \
+            -e 's/mv \$text text_cmds/mv text_cmds-\$text text_cmds 2>\/dev\/null || mv \$text text_cmds/' \
+            -e 's/mv \$archive libarchive/mv libarchive-\$archive libarchive 2>\/dev\/null || mv \$archive libarchive/' \
+            -e 's/mv \$curl curl/mv curl-\$curl curl 2>\/dev\/null || mv \$curl curl/' \
+            Dependencies/ios_system/get_sources.sh
+
+      - name: Download sources and frameworks
         shell: bash
         run: |
           set -euo pipefail
 
-          # Initialize submodules fully (non-shallow for nested submodules)
+          # Initialize submodules fully
           git submodule update --init --recursive
 
           # Download sources for ios_system (curl, openssl, libssh2, etc.)
@@ -41,16 +58,16 @@ jobs:
           ./get_sources.sh
           popd
 
-      - name: Build frameworks for ios_system
+      - name: Build/download frameworks for ios_system
         shell: bash
         run: |
           set -euo pipefail
 
           pushd Dependencies/ios_system
-          ./get_frameworks.sh
+          ./get_frameworks_fat.sh
           popd
 
-      - name: Build frameworks for network_ios
+      - name: Build/download frameworks for network_ios
         shell: bash
         run: |
           set -euo pipefail
