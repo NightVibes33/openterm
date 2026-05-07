@@ -161,6 +161,9 @@ jobs:
             sed -i.bak 's/: class/: AnyObject/g' Pods/TabView/Sources/Internal/TabViewBar.swift
             sed -i.bak 's/internal protocol TabViewContainer: class/internal protocol TabViewContainer: AnyObject/' Pods/TabView/Sources/TabViewContainerViewController.swift
           fi
+          if [ -f "Pods/Cub/Sources/Cub/Compiler/BytecodeCompiler.swift" ]; then
+            sed -i.bak -e 's/public let rawValue: Int/public typealias RawValue = Int\n    public let rawValue: RawValue/' -e 's/public init(rawValue: BytecodeCompilerOptions.RawValue)/public init(rawValue: RawValue)/' Pods/Cub/Sources/Cub/Compiler/BytecodeCompiler.swift
+          fi
           if [ -f "Pods/InputAssistant/Sources/InputAssistantView.swift" ]; then
             sed -i.bak 's/: class/: AnyObject/g' Pods/InputAssistant/Sources/InputAssistantView.swift
           fi

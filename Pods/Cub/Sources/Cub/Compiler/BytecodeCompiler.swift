@@ -3,7 +3,7 @@
 //  Cub
 //
 //  Created by Louis D'hauwe on 07/10/2016.
-//  Copyright © 2016 - 2018 Silver Fox. All rights reserved.
+//  Copyright Â© 2016 - 2018 Silver Fox. All rights reserved.
 //
 
 import Foundation
@@ -14,9 +14,10 @@ public enum CompilerOptimizationLevel: Int {
 
 // TODO: implement
 public struct BytecodeCompilerOptions: OptionSet {
-    public let rawValue: Int
+    public typealias RawValue = Int
+    public let rawValue: RawValue
 
-	public init(rawValue: BytecodeCompilerOptions.RawValue) {
+	public init(rawValue: RawValue) {
 		self.rawValue = rawValue
 	}
 	
