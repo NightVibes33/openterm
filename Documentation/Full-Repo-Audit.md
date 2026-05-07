@@ -33,6 +33,9 @@ This audit covers the whole checked-in repo, not only the new SwiftUI workspace.
 - Git buttons previously assumed `git` existed in the terminal environment.
 - Vault sync previously looked ready before Supabase/auth/secret config existed.
 - Docs still presented monetization/premium/subscriptions as active product direction even though billing is deferred.
+- README still linked the old App Store listing and old Terminal for iOS branding.
+- Old App Store review prompt was still wired to keyboard-dismiss behavior.
+- Xcode project, Spotlight domain, iCloud, and UTI identifiers still carry `com.silverfox` legacy identity values.
 - The hero previously claimed a static iOS SDK version instead of runtime-conditional support.
 
 ## Fixed In Current Anti-Fake Pass
@@ -46,12 +49,14 @@ This audit covers the whole checked-in repo, not only the new SwiftUI workspace.
 - Rejected blank SSH profiles and invalid monitor records before persistence.
 - Blocked vault push/pull UI until required Supabase configuration exists.
 - Rewrote active docs to mark billing/backend production work as deferred/scaffolded.
+- Removed old App Store badge/Terminal for iOS README framing and disabled the legacy StoreKit review prompt call.
+- Hardened several old crash-prone utility paths: bundle version/build lookup, directory file-size metadata, attributed file-link mutation, and drag/drop URL paste handling now avoid force-cast crashes.
 
 ## Still Bad / High Priority
 
 1. The visual design still feels like generic card-grid AI UI. It needs fewer cards, stronger typography, less decorative gradient/glass, and more tool-native layout.
 2. The terminal screen is still the 2017/2018 UIKit terminal embedded inside SwiftUI. It needs a modern toolbar, session switcher, and terminal-specific status/action surface.
-3. Legacy storyboards and scripting panels remain old. They are real legacy features, but visually inconsistent.
+3. Legacy storyboards and scripting panels remain old. They are real legacy features, but visually inconsistent and still contain several `fatalError`/force-cast paths.
 4. Git is still terminal-driven, not native. That is acceptable only if the UI keeps saying so.
 5. Editor is still lightweight text editing, not an IDE. There is no LSP, diagnostics, rename, file tree refactor, or package awareness.
 6. Local developer toolchains are not embedded. Python/Node/Vim/Nano/Tmux/Htop are not local app features.
@@ -65,6 +70,8 @@ This audit covers the whole checked-in repo, not only the new SwiftUI workspace.
 - Replace the remaining marketing/card-heavy UI with compact operational surfaces. Home now has the first version of a real capability dashboard.
 - Add a real capability/status screen that shows configured/missing requirements for AI, vault sync, Git, monitors, SSH, files, and terminal.
 - Add file rename/move and folder export.
+- Replace or quarantine the old storyboard scripting/documentation screens before calling the UI modern.
+- Continue removing `fatalError` and force-cast paths from legacy controllers.
 - Add runtime command availability capture and surface it in Help/README.
 - Add Keychain-backed storage for AI and Supabase secrets.
 - Add SSH monitor preflight command that checks `ssh`, auth type, `top`, `awk`, `df`, `uptime`, and `/proc/meminfo` before creating monitor expectations.

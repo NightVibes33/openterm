@@ -1,12 +1,7 @@
-<p align="center">
-<img src="readme-resources/hero.png" alt="Terminal for iOS">
-</p>
-
 <h1 align="center">OpenTerm</h1>
 
 <p align="center">
-<a href="https://itunes.apple.com/app/terminal/id1323205755?mt=8&at=1010lII4"><img src="readme-resources/app_store_badge.svg" alt="Download on the App Store"/></a>
-<br><span align="center">(Previously called Terminal for iOS)</span>
+The modern free SSH + terminal workspace for iPhone and iPad.
 </p>
 
 <p align="center">
@@ -18,14 +13,14 @@
 </p>
 
 ## About
-OpenTerm is being refocused from a standalone terminal app into an AI-powered mobile developer workspace for iPhone and iPad.
+OpenTerm is being refocused from a standalone terminal app into a free SSH + terminal workspace for iPhone and iPad, with optional AI command assistance after the user configures a provider.
 
-The design target is closer to "Raycast + Warp + Linear for iOS" than an old-school shell app: clean, modern, glassy, fast, and approachable for developers, VPS users, homelab users, and power users who still want a beginner-friendly surface.
+The current design target is real-tool clarity first: fewer marketing cards, clear local-vs-remote labels, honest setup states, fast terminal access, and an interface that does not pretend unavailable features are ready.
 
 ## Current Repo Status
 
 ### Implemented in this fork right now
-- Legacy OpenTerm terminal core is still present and embedded inside the SwiftUI workspace.
+- Legacy OpenTerm terminal core is still present and embedded inside the SwiftUI workspace. Several older storyboard/XIB scripting and documentation panels still exist and are tracked as modernization debt rather than finished 2026-quality UI.
 - `AppDelegate` launches the modern workspace shell with Home, Files, Terminal, Servers, and a custom More hub on iPhone, plus full workspace navigation on iPad. Home now shows a real capability check instead of marketing cards, and empty Home/Git/Server/AI states explicitly ask for real user data or provider configuration.
 - iOS 18.0 is the deployment floor, with Liquid Glass-style SwiftUI surfaces enabled conditionally when the SDK/runtime supports them instead of pretending unsupported devices have native iOS 26 materials.
 - Terminal commands can now be queued or executed from workspace actions, so SSH, Git, snippets, and generated commands can jump into the active terminal tab.
@@ -46,7 +41,7 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - Backend settings now store Supabase URL, anon key, access token, user/device identifiers, device label, and vault sync secret locally for hosted AI proxy routing, encrypted vault sync, and remote config refresh.
 - A Supabase schema foundation exists for users, subscriptions, devices, snippet sync, AI usage, monitors, audit logs, AI rate-limit windows, encrypted vault sync items, and monitor alerts.
 - GitHub Actions includes a green unsigned IPA workflow for CI artifact generation.
-- Vendored dependency compatibility patches have been added for modern Xcode/iOS SDK builds.
+- Vendored dependency compatibility patches have been added for modern Xcode/iOS SDK builds. A few old utility crash paths have been hardened, but legacy controller cleanup is still ongoing.
 
 ### Partially implemented
 - SSH profile and key-vault storage are local first. App-side encrypted vault push/pull, newer-wins conflict handling, local repair, and app-active refresh are wired; production migration rollout and real multi-device testing still need validation.
@@ -59,12 +54,12 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - Full external language-server daemon integration in the code editor.
 - Embedded native Git engine integration; structured conflict workflows exist but still run through terminal Git.
 - Production AI proxy deployment secrets and hosted auth hardening.
-- StoreKit/subscription entitlements and server-side purchase verification.
+- Payment, StoreKit, subscription entitlements, and server-side purchase verification are intentionally deferred and not active product behavior.
 
 ## Architecture Notes
 
 ### App shell
-- `OpenTerm/AppDelegate.swift` launches the SwiftUI workspace shell.
+- `OpenTerm/AppDelegate.swift` launches the SwiftUI workspace shell. Some project identity values still use legacy `com.silverfox.*` identifiers and need a deliberate signing/iCloud migration before production distribution.
 - `OpenTerm/Workspace/DeveloperWorkspaceRootView.swift` drives the main multi-surface experience.
 - `OpenTerm/Workspace/LegacyTerminalContainerView.swift` wraps the legacy terminal controller.
 - `OpenTerm/Workspace/WorkspaceStore.swift` owns local workspace state, persistence, terminal actions, SSH profile commands, protected local vault metadata, monitor refresh, Git command queuing, file editing, snippets, backup export, backend bootstrap settings, app accent state, and AI provider/proxy configuration. The SwiftUI workspace owns the lightweight highlighted editor surface.
@@ -178,6 +173,10 @@ Important:
 - [x] Add backup/export manifest for workspace metadata
 - [x] Connect app-side encrypted vault push/pull controls with AES-GCM payload encryption
 - [x] Add vault sync newer-wins conflict handling, local repair, and app-active refresh
+- [x] Disable stale StoreKit review prompting while the app is free/unsigned focused
+- [x] Harden selected old utility force-cast crash paths
+- [ ] Replace legacy storyboard/XIB scripting and documentation panels with modern SwiftUI or remove them from the primary flow
+- [ ] Remove remaining legacy `fatalError` and force-cast paths from controllers
 
 ## Next Engineering Priorities
 - Stabilize hosted AI proxy deployment: Supabase function secrets, auth validation, and rate-limit policy tests.

@@ -12,7 +12,6 @@ import Darwin
 import UIKit
 import ios_system
 import PanelKit
-import StoreKit
 import UniformTypeIdentifiers
 
 class TerminalViewController: UIViewController {
@@ -258,7 +257,6 @@ class TerminalViewController: UIViewController {
 	@objc
 	func didDismissKeyboard() {
 
-		StoreReviewPrompter.promptIfNeeded()
 	}
 
 	@objc

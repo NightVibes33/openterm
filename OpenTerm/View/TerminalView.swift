@@ -593,7 +593,7 @@ extension TerminalView: UITextPasteDelegate {
 	func textPasteConfigurationSupporting(_ textPasteConfigurationSupporting: UITextPasteConfigurationSupporting, transform item: UITextPasteItem) {
 		
 		// try to pick result from localObject
-		if let localUrl: URL = item.localObject as! URL? {
+		if let localUrl = item.localObject as? URL {
 			let currentDirectory = self.executor.currentWorkingDirectory.path
 			let result = relative(filename: localUrl.path, to: currentDirectory)
 			item.setResult(string: result)

@@ -3,7 +3,7 @@
 //  OpenTerm
 //
 //  Created by Louis D'hauwe on 06/04/2018.
-//  Copyright © 2018 Silver Fox. All rights reserved.
+//  Copyright Â© 2018 Silver Fox. All rights reserved.
 //
 // Adapted from https://github.com/dcvz/DirectoryObserver/blob/master/DirectoryObserver/Classes/DirectoryObserver.swift
 
@@ -132,7 +132,7 @@ public class DirectoryObserver {
 			for file in contents {
 				autoreleasepool {
 					if let fileAttributes = try? fm.attributesOfItem(atPath: file.path) {
-						let fileSize = fileAttributes[FileAttributeKey.size] as! Int
+						let fileSize = (fileAttributes[FileAttributeKey.size] as? NSNumber)?.intValue ?? 0
 						let fileHash = "\(file.lastPathComponent)\(fileSize)"
 						directoryMetadata.append(fileHash)
 					}

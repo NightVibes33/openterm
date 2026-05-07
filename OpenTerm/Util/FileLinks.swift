@@ -44,7 +44,7 @@ extension NSAttributedString {
 	
 	public func withFilesAsLinks(currentDirectory: String) -> NSAttributedString {
         let text = string
-        let mutable = self.mutableCopy() as! NSMutableAttributedString
+        guard let mutable = self.mutableCopy() as? NSMutableAttributedString else { return self }
         
         // read all files to have easy access
         let manager = FileManager.default
