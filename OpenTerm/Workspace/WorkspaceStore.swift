@@ -276,6 +276,26 @@ struct ServerSnapshotSummary: Identifiable, Codable, Hashable {
 	}
 }
 
+struct ServerAlertEvent: Identifiable, Codable, Hashable {
+	var id: UUID
+	var monitorID: UUID
+	var title: String
+	var detail: String
+	var level: MonitorAlertLevel
+	var createdAt: Date
+	var isAcknowledged: Bool
+
+	init(id: UUID = UUID(), monitorID: UUID, title: String, detail: String, level: MonitorAlertLevel, createdAt: Date = Date(), isAcknowledged: Bool = false) {
+		self.id = id
+		self.monitorID = monitorID
+		self.title = title
+		self.detail = detail
+		self.level = level
+		self.createdAt = createdAt
+		self.isAcknowledged = isAcknowledged
+	}
+}
+
 struct LocalWorkspaceFile: Identifiable, Hashable {
 	var id: String { relativePath }
 	let name: String
@@ -455,6 +475,7 @@ final class WorkspaceStore: ObservableObject {
 	@Published var gitWorkspaces: [GitWorkspaceSummary] = []
 	@Published var serverMonitors: [ServerMonitorSummary] = []
 	@Published var serverSnapshots: [ServerSnapshotSummary] = []
+	@Published var serverAlerts: [ServerAlertEvent] = []
 	@Published var localFiles: [LocalWorkspaceFile] = []
 	@Published var activeEditor: WorkspaceEditorDocument?
 	@Published var assistantMessages: [AssistantMessage] = []
@@ -540,6 +561,7 @@ final class WorkspaceStore: ObservableObject {
 		snippets = load([WorkspaceSnippet].self, from: stateURL(for: "snippets.json")) ?? defaultSnippets()
 		serverMonitors = load([ServerMonitorSummary].self, from: stateURL(for: "server-monitors.json")) ?? defaultServerMonitors(from: sshProfiles)
 		serverSnapshots = load([ServerSnapshotSummary].self, from: stateURL(for: "server-snapshots.json")) ?? []
+		serverAlerts = load([ServerAlertEvent].self, from: stateURL(for: "server-alerts.json")) ?? []
 		aiConfiguration = load(AIProviderConfiguration.self, from: stateURL(for: "ai-configuration.json")) ?? .default
 		backendConfiguration = load(BackendConfiguration.self, from: stateURL(for: "backend-configuration.json")) ?? .default
 		aiUsageHistory = load([AIUsageRecord].self, from: stateURL(for: "ai-usage-history.json")) ?? []
@@ -612,6 +634,10 @@ final class WorkspaceStore: ObservableObject {
 
 	private func saveServerSnapshots() {
 		save(serverSnapshots, to: stateURL(for: "server-snapshots.json"))
+	}
+
+	private func saveServerAlerts() {
+		save(serverAlerts, to: stateURL(for: "server-alerts.json"))
 	}
 
 	private func saveAIConfiguration() {
@@ -913,7 +939,7 @@ final class WorkspaceStore: ObservableObject {
 
 	private func startVaultBackgroundRefreshIfConfigured() {
 		vaultSyncTimer?.invalidate()
-		guard vaultSyncContext(from: backendConfiguration) != nil else { return }
+		guard vaultSyncContext(from: backendConfiguration, updateStatus: false) != nil else { return }
 		vaultSyncTimer = Timer.scheduledTimer(withTimeInterval: 900, repeats: true) { [weak self] _ in
 			self?.pullSSHVaultFromCloud()
 		}
@@ -977,8 +1003,16 @@ final class WorkspaceStore: ObservableObject {
 	func deleteServerMonitor(_ monitor: ServerMonitorSummary) {
 		serverMonitors.removeAll { $0.id == monitor.id }
 		serverSnapshots.removeAll { $0.id == monitor.id }
+		serverAlerts.removeAll { $0.monitorID == monitor.id }
 		saveServerMonitors()
 		saveServerSnapshots()
+		saveServerAlerts()
+	}
+
+	func acknowledgeServerAlert(_ alert: ServerAlertEvent) {
+		guard let index = serverAlerts.firstIndex(where: { $0.id == alert.id }) else { return }
+		serverAlerts[index].isAcknowledged = true
+		saveServerAlerts()
 	}
 
 	private func refreshDerivedSnapshots() {
@@ -1261,11 +1295,22 @@ final class WorkspaceStore: ObservableObject {
 	}
 
 	private func updateSnapshot(for monitor: ServerMonitorSummary, snapshot: ServerSnapshotSummary) {
+		let previousLevel = serverSnapshots.first(where: { $0.id == monitor.id })?.alertLevel
 		if let index = serverSnapshots.firstIndex(where: { $0.id == monitor.id }) {
 			serverSnapshots[index] = snapshot
 		} else {
 			serverSnapshots.append(snapshot)
 		}
+		recordServerAlertIfNeeded(monitor: monitor, snapshot: snapshot, previousLevel: previousLevel)
+	}
+
+	private func recordServerAlertIfNeeded(monitor: ServerMonitorSummary, snapshot: ServerSnapshotSummary, previousLevel: MonitorAlertLevel?) {
+		guard snapshot.alertLevel == .watch || snapshot.alertLevel == .alert || snapshot.alertLevel == .unavailable else { return }
+		guard previousLevel != snapshot.alertLevel else { return }
+		let alert = ServerAlertEvent(monitorID: monitor.id, title: "\(monitor.label) \(snapshot.alertLevel.title)", detail: snapshot.detail, level: snapshot.alertLevel)
+		serverAlerts.insert(alert, at: 0)
+		serverAlerts = Array(serverAlerts.prefix(50))
+		saveServerAlerts()
 	}
 
 	func startMonitorAutoRefresh() {
@@ -1496,7 +1541,7 @@ final class WorkspaceStore: ObservableObject {
 		statusMessage = "Queued git command in terminal"
 	}
 
-	private func vaultSyncContext(from config: BackendConfiguration) -> VaultSyncContext? {
+	private func vaultSyncContext(from config: BackendConfiguration, updateStatus: Bool = true) -> VaultSyncContext? {
 		let rpcBaseURL = config.vaultRPCBaseURL
 		let anonKey = (config.anonKey ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
 		let accessToken = config.accessToken.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -1504,8 +1549,10 @@ final class WorkspaceStore: ObservableObject {
 		let deviceID = (config.deviceID ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
 		let secret = (config.vaultSyncSecret ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
 		guard !rpcBaseURL.isEmpty, !anonKey.isEmpty, !accessToken.isEmpty, !userID.isEmpty, !secret.isEmpty else {
-			vaultSyncStatus = "Add Supabase URL, anon key, access token, user id, and vault sync secret first"
-			statusMessage = vaultSyncStatus
+			if updateStatus {
+				vaultSyncStatus = "Add Supabase URL, anon key, access token, user id, and vault sync secret first"
+				statusMessage = vaultSyncStatus
+			}
 			return nil
 		}
 		return VaultSyncContext(rpcBaseURL: rpcBaseURL, anonKey: anonKey, accessToken: accessToken, userID: userID, deviceID: deviceID.isEmpty ? nil : deviceID, secret: secret)

@@ -281,13 +281,23 @@ private struct ServersWorkspaceView: View {
 				ProgressView("Refreshing")
 					.tint(.white)
 					.foregroundStyle(.white)
+
 			}
 			AdaptiveGrid {
 				ForEach(store.serverSnapshots) { snapshot in
 					ServerSnapshotCard(snapshot: snapshot)
 				}
+
 			}
+
+				SectionHeader(title: "Server Alerts", subtitle: "Local alert history from monitor threshold changes.")
+				ForEach(store.serverAlerts.filter { !$0.isAcknowledged }.prefix(6)) { alert in
+					ServerAlertCard(alert: alert) {
+						store.acknowledgeServerAlert(alert)
+					}
+				}
 		}
+
 		.toolbar {
 			ToolbarItemGroup(placement: .topBarTrailing) {
 				Button { editingProfile = SSHProfileDraft(profile: nil) } label: { Image(systemName: "server.rack") }
@@ -1015,6 +1025,29 @@ private struct SSHVaultImportSheet: View {
 				}
 			}
 		}
+	}
+}
+
+private struct ServerAlertCard: View {
+	let alert: ServerAlertEvent
+	let acknowledge: () -> Void
+
+	var body: some View {
+		VStack(alignment: .leading, spacing: 10) {
+			HStack {
+				Label(alert.title, systemImage: "exclamationmark.triangle")
+					.font(.system(.headline, design: .rounded, weight: .semibold))
+					.foregroundStyle(.white)
+				Spacer()
+				Button("Acknowledge", action: acknowledge)
+					.font(.system(.caption, design: .rounded, weight: .semibold))
+			}
+			Text(alert.detail)
+				.font(.system(.footnote, design: .rounded))
+				.foregroundStyle(.white.opacity(0.72))
+		}
+		.padding(16)
+		.background(WorkspaceCardBackground(tint: alert.level.tint))
 	}
 }
 

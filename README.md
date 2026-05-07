@@ -38,7 +38,7 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - Local files are scanned from `DocumentManager.shared.activeDocumentsFolderURL`; UTF-8 files can open in an in-app syntax-highlighted editor with search/match highlighting, lightweight completion chips, diff view against the opened version, and save back to disk.
 - Command snippets persist locally and can run directly in the terminal, including remote Linux dev-stack setup snippets for Debian, Alpine, and Fedora servers.
 - Git repositories are detected by scanning for `.git` folders, and clone/status/diff/log/pull/commit/push plus structured conflict actions are terminal-driven.
-- Server monitors persist locally and can poll Linux CPU, memory, disk, and load snapshots over noninteractive SSH.
+- Server monitors persist locally, poll Linux CPU/memory/disk/load snapshots over noninteractive SSH, and keep a local acknowledgeable alert history when thresholds change.
 - The AI assistant can call a configurable OpenAI-compatible chat endpoint, records local usage history, includes prompt shortcuts for errors, commands, scripts, SSH, remote dev setup, Docker, Git conflicts, and regex, and can insert assistant output back into the terminal.
 - The iPhone More tab is custom now, not Apple's automatic overflow list, and contains real AI, Git, settings, theme, and terminal controls.
 - Settings are free-preview focused with real AI/provider controls and live appearance controls instead of placeholder billing screens.
@@ -50,7 +50,7 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 
 ### Partially implemented
 - SSH profile and key-vault storage are local first. App-side encrypted vault push/pull, newer-wins conflict handling, local repair, and app-active refresh are wired; production migration rollout and real multi-device testing still need validation.
-- Server monitoring works for noninteractive SSH profiles; password-based profiles still require manual terminal sessions.
+- Server monitoring works for noninteractive SSH profiles with local alert history; password-based profiles still require manual terminal sessions.
 - Git actions are terminal-driven because this fork does not currently bundle a native Git engine.
 - The editor has lightweight syntax highlighting, language detection, search/match highlighting, completion chips, and an in-app diff view. Full external LSP daemon integration is not bundled yet.
 - The AI assistant supports direct provider routing or hosted Supabase proxy routing, prompt shortcuts, terminal handoff, local usage history, and app-side remote config refresh. Backend tables/functions and an Edge Function scaffold exist for hosted rate-limit enforcement, but live deployment secrets and production auth hardening still need environment setup.
@@ -147,6 +147,7 @@ Important:
 - [x] Add backend schema foundation
 - [x] Replace mock SSH manager with local profiles and real terminal connect flow
 - [x] Add remote SSH Tool Audit and Dev Stack setup actions for common Linux package managers
+- [x] Add local server monitor alert history and acknowledgement
 - [x] Add local UTF-8 text editor
 - [x] Add lightweight syntax highlighting, language detection, and editor search
 - [x] Add lightweight editor completions and diff view
@@ -172,7 +173,7 @@ Important:
 - Harden encrypted vault sync: deploy RPC migration, test Supabase auth/RLS, and validate real multi-device conflict behavior.
 - Replace terminal-driven Git helpers with a native Git engine only after the current terminal-based workflow stays reliable.
 - Add embedded local toolchains only where they are realistic: Git first, then Python/Node only after binary size, licensing, and sandbox behavior are validated.
-- Improve remote server onboarding with deeper preflight checks for sudo availability, shell, disk space, and installed tool versions.
+- Improve remote server onboarding with deeper preflight checks for sudo availability, shell, disk space, installed tool versions, and monitor alert delivery.
 - Expand the editor from lightweight highlighting into real developer tooling: diff view, file tree actions, completions, and optional LSP-style assistance.
 - Keep payment/subscription code deferred until the free core product is stable.
 
