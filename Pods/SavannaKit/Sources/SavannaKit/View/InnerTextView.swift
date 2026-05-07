@@ -3,7 +3,7 @@
 //  SavannaKit
 //
 //  Created by Louis D'hauwe on 09/07/2017.
-//  Copyright © 2017 Silver Fox. All rights reserved.
+//  Copyright Â© 2017 Silver Fox. All rights reserved.
 //
 
 import Foundation
@@ -15,7 +15,7 @@ import CoreGraphics
 	import UIKit
 #endif
 
-protocol InnerTextViewDelegate: class {
+protocol InnerTextViewDelegate: AnyObject {
 	func didUpdateCursorFloatingState()
 }
 

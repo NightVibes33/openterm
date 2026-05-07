@@ -3,7 +3,7 @@
 //  InputAssistant
 //
 //  Created by Ian McDowell on 1/28/18.
-//  Copyright © 2018 Ian McDowell. All rights reserved.
+//  Copyright Â© 2018 Ian McDowell. All rights reserved.
 //
 
 import UIKit
@@ -22,7 +22,7 @@ public struct InputAssistantAction {
     }
 }
 
-public protocol InputAssistantViewDataSource: class {
+public protocol InputAssistantViewDataSource: AnyObject {
     
     /// Text to display when there are no suggestions.
     func textForEmptySuggestionsInInputAssistantView() -> String?
@@ -35,7 +35,7 @@ public protocol InputAssistantViewDataSource: class {
 }
 
 /// Delegate to receive notifications about user actions in the input assistant view.
-public protocol InputAssistantViewDelegate: class {
+public protocol InputAssistantViewDelegate: AnyObject {
     
     /// When the user taps on a suggestion
     func inputAssistantView(_ inputAssistantView: InputAssistantView, didSelectSuggestionAtIndex index: Int)

@@ -3,14 +3,14 @@
 //  OpenTerm
 //
 //  Created by Louis D'hauwe on 09/12/2017.
-//  Copyright © 2017 Silver Fox. All rights reserved.
+//  Copyright Â© 2017 Silver Fox. All rights reserved.
 //
 
 import UIKit
 import InputAssistant
-import MobileCoreServices
+import UniformTypeIdentifiers
 
-protocol TerminalViewDelegate: class {
+protocol TerminalViewDelegate: AnyObject {
 
 	func didEnterCommand(_ command: String)
 	func commandDidEnd()
@@ -502,14 +502,13 @@ extension TerminalView: UITextDragDelegate {
 		// allow dragging URLs
 		var items = [UIDragItem]()
 		for item in dragRequest.suggestedItems {
-			let fileURLType = kUTTypeFileURL as String
+			let fileURLType = UTType.fileURL.identifier
 			if item.itemProvider.hasItemConformingToTypeIdentifier(fileURLType) {
 				
 				// determine uti making sure not to use dynamic type
 				let filename = (textView.text(in: dragRequest.dragRange) ?? "") as NSString
-				let uti_ns = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, filename.pathExtension as CFString, nil)?.takeRetainedValue() as NSString?
-				var uti = uti_ns != nil ? String(uti_ns!) : (kUTTypeFileURL as String)
-				if uti.hasPrefix("dyn.") { uti = kUTTypeFileURL as String }
+				let derivedType = UTType(filenameExtension: filename.pathExtension)?.identifier
+				var uti = derivedType ?? UTType.fileURL.identifier
 				
 				let provider = NSItemProvider()
 				provider.registerFileRepresentation(forTypeIdentifier: uti, fileOptions: .openInPlace, visibility: .all,
@@ -591,7 +590,7 @@ extension TerminalView: UITextPasteDelegate {
 		}
 		
 		// we only get to this point if there are no public types
-		let uti = item.itemProvider.registeredTypeIdentifiers.first ?? (kUTTypeFileURL as String)
+		let uti = item.itemProvider.registeredTypeIdentifiers.first ?? UTType.fileURL.identifier
 		paste(item: item, uti: uti)
 	}
 	

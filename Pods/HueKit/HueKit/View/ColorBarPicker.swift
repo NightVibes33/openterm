@@ -3,7 +3,7 @@
 //  HueKit
 //
 //  Created by Louis D'hauwe on 30/07/2017.
-//  Copyright © 2017 Silver Fox. All rights reserved.
+//  Copyright Â© 2017 Silver Fox. All rights reserved.
 //
 
 import Foundation
@@ -254,7 +254,7 @@ open class ColorBarPicker: UIControl {
 		get {
 			var t = super.accessibilityTraits
 			
-			t |= UIAccessibilityTraitAdjustable
+			t.formUnion(.adjustable)
 			
 			return t
 		}

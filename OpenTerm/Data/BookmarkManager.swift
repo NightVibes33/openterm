@@ -3,13 +3,13 @@
 //  OpenTerm
 //
 //  Created by Maximilian Katzmann on 02.02.18.
-//  Copyright © 2018 Silver Fox. All rights reserved.
+//  Copyright Â© 2018 Silver Fox. All rights reserved.
 //
 
 import Foundation
 import UIKit
 
-protocol BookmarkManagerDelegate: class {
+protocol BookmarkManagerDelegate: AnyObject {
 	func bookmarksWereUpdated()
 }
 

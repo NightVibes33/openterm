@@ -3,7 +3,7 @@
 //  PanelKit
 //
 //  Created by Louis D'hauwe on 11/02/2017.
-//  Copyright © 2017 Silver Fox. All rights reserved.
+//  Copyright Â© 2017 Silver Fox. All rights reserved.
 //
 
 import UIKit
@@ -13,7 +13,7 @@ import UIKit
 ///
 /// Typically the `PanelManager` protocol is implemented on a `UIViewController` subclass.
 /// If not, you should specify the `managerViewController` property.
-public protocol PanelManager: class {
+public protocol PanelManager: AnyObject {
 
 	/// The ```UIViewController``` that manages the panels and contains
 	/// ```panelContentWrapperView``` and ```panelContentView```.
@@ -67,14 +67,14 @@ public protocol PanelManager: class {
 	/// - Returns: Edge insets.
 	func dragInsets(for panel: PanelViewController) -> UIEdgeInsets
 
-	/// Blur effect for content overlay view when exposé is active.
+	/// Blur effect for content overlay view when exposÃ© is active.
 	var exposeOverlayBlurEffect: UIBlurEffect { get }
 
-	/// Called when exposé is about to be entered.
+	/// Called when exposÃ© is about to be entered.
 	/// The default implementation is an empty function.
 	func willEnterExpose()
 
-	/// Called when exposé is about to be exited.
+	/// Called when exposÃ© is about to be exited.
 	/// The default implementation is an empty function.
 	func willExitExpose()
 

@@ -3,19 +3,19 @@
 //  OpenTerm
 //
 //  Created by Ian McDowell on 1/28/18.
-//  Copyright © 2018 Silver Fox. All rights reserved.
+//  Copyright Â© 2018 Silver Fox. All rights reserved.
 //
 
 import Foundation
 
 /// Receive notifications when the auto completion state changes
-protocol AutoCompleteManagerDelegate: class {
+protocol AutoCompleteManagerDelegate: AnyObject {
 	func autoCompleteManagerDidChangeState()
 	func autoCompleteManagerDidChangeCompletions()
 }
 
 /// Provide commands to the completion manager
-protocol AutoCompleteManagerDataSource: class {
+protocol AutoCompleteManagerDataSource: AnyObject {
 	func allCommandsForAutoCompletion() -> [String]
 	func completionsForProgram(_ command: String, _ currentArguments: [String]) -> [AutoCompleteManager.Completion]
 	func availableCompletions(in completions: [AutoCompleteManager.Completion], forArguments arguments: [String]) -> [AutoCompleteManager.Completion]

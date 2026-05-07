@@ -3,14 +3,14 @@
 //  PanelKit
 //
 //  Created by Louis D'hauwe on 12/03/2017.
-//  Copyright © 2017 Silver Fox. All rights reserved.
+//  Copyright Â© 2017 Silver Fox. All rights reserved.
 //
 
 import UIKit
 
 /// PanelContentDelegate determines the panel size and allows
 /// you to get notified for certain events.
-public protocol PanelContentDelegate: class {
+public protocol PanelContentDelegate: AnyObject {
 
 	/// The title for the close button in the navigation bar.
 	var closeButtonTitle: String { get }

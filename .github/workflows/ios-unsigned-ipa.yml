@@ -23,7 +23,9 @@ jobs:
           xcode-version: latest-stable
 
       - name: Verify Xcode and SDK
+        shell: bash
         run: |
+          set -euo pipefail
           xcodebuild -version
           xcrun --sdk iphoneos --show-sdk-version
           xcrun --sdk iphoneos --show-sdk-path
@@ -32,65 +34,50 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-
-          # Apple redirects opensource.apple.com tarballs to GitHub codeload.
-          # GitHub archives extract to repo-tag/ instead of tag/.
-          # We download from GitHub directly and rename accordingly.
           pushd Dependencies/ios_system
-
-          # Clean up any previous attempts
           rm -rf file_cmds shell_cmds text_cmds libutil libinfo libarchive curl
           rm -rf file_cmds-* shell_cmds-* text_cmds-* libutil-* Libinfo-* libarchive-* curl-*
 
-          # file_cmds
           echo "Getting file_cmds"
           curl -sL https://github.com/apple-oss-distributions/file_cmds/archive/refs/tags/file_cmds-272.tar.gz | tar xz
           mv file_cmds-file_cmds-272 file_cmds
           (cd file_cmds && patch -p1 < ../file_cmds.patch)
 
-          # libutil
           echo "Getting libutil"
           curl -sL https://github.com/apple-oss-distributions/libutil/archive/refs/tags/libutil-51.tar.gz | tar xz
           mv libutil-libutil-51 libutil
           (cd libutil && patch -p1 < ../libutil.patch)
 
-          # libinfo
           echo "Getting libinfo"
           curl -sL https://github.com/apple-oss-distributions/Libinfo/archive/refs/tags/Libinfo-517.tar.gz | tar xz
           mv Libinfo-Libinfo-517 libinfo
           (cd libinfo && patch -p1 < ../libinfo.patch)
 
-          # shell_cmds
           echo "Getting shell_cmds"
           curl -sL https://github.com/apple-oss-distributions/shell_cmds/archive/refs/tags/shell_cmds-203.tar.gz | tar xz
           mv shell_cmds-shell_cmds-203 shell_cmds
           (cd shell_cmds && patch -p1 < ../shell_cmds.patch)
 
-          # text_cmds
           echo "Getting text_cmds"
           curl -sL https://github.com/apple-oss-distributions/text_cmds/archive/refs/tags/text_cmds-99.tar.gz | tar xz
           mv text_cmds-text_cmds-99 text_cmds
           (cd text_cmds && patch -p1 < ../text_cmds.patch)
 
-          # libarchive
           echo "Getting libarchive"
           curl -sL https://github.com/apple-oss-distributions/libarchive/archive/refs/tags/libarchive-54.tar.gz | tar xz
           mv libarchive-libarchive-54 libarchive
           (cd libarchive && patch -p1 < ../libarchive.patch)
 
-          # curl
           echo "Getting curl"
           curl -sL https://github.com/apple-oss-distributions/curl/archive/refs/tags/curl-105.tar.gz | tar xz
           mv curl-curl-105 curl
           (cd curl && patch -p1 < ../curl.patch)
-
           popd
 
       - name: Build/download frameworks for ios_system
         shell: bash
         run: |
           set -euo pipefail
-
           pushd Dependencies/ios_system
           ./get_frameworks_fat.sh
           popd
@@ -99,7 +86,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-
           pushd Dependencies/network_ios
           ./get_frameworks.sh
           popd
@@ -109,7 +95,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-
           WORKSPACE=$(find . -maxdepth 1 -name "*.xcworkspace" | head -n 1)
           PROJECT=$(find . -maxdepth 1 -name "*.xcodeproj" | head -n 1)
 
@@ -132,72 +117,36 @@ jobs:
           gem install cocoapods
           pod install
 
-      - name: Patch HueKit for modern Swift
+      - name: Patch vendored dependencies for modern Swift and iOS SDKs
         shell: bash
         run: |
           set -euo pipefail
-          # HueKit has a Swift compatibility issue with UIAccessibilityTraits |= in newer Swift.
-          # UIAccessibilityTraits no longer supports |= in modern Swift/iOS.
           if [ -f "Pods/HueKit/HueKit/View/ColorBarPicker.swift" ]; then
             sed -i.bak 's/t |= UIAccessibilityTraitAdjustable/t.formUnion(.adjustable)/g' Pods/HueKit/HueKit/View/ColorBarPicker.swift
           fi
-
-      - name: Patch BezierPathLength for modern Swift
-        shell: bash
-        run: |
-          set -euo pipefail
-          # BezierPathLength has a Swift strict-concurrency issue with escaping closures.
-          # The PathApplier closure needs @escaping in modern Swift.
           if [ -f "Pods/BezierPathLength/Source/PathElement.swift" ]; then
             sed -i.bak 's/func apply(with applier: PathApplier)/func apply(with applier: @escaping PathApplier)/g' Pods/BezierPathLength/Source/PathElement.swift
           fi
-
-      - name: Patch InputAssistant for modern iOS
-        shell: bash
-        run: |
-          set -euo pipefail
-          # InputAssistant uses deprecated UICollectionViewFlowLayoutAutomaticSize constant.
-          # It has been renamed to UICollectionViewFlowLayout.automaticSize in modern iOS.
           if [ -f "Pods/InputAssistant/Sources/InputAssistantCollectionView.swift" ]; then
             sed -i.bak 's/UICollectionViewFlowLayoutAutomaticSize/UICollectionViewFlowLayout.automaticSize/g' Pods/InputAssistant/Sources/InputAssistantCollectionView.swift
           fi
-
-      - name: Patch TabView for modern iOS
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [ -d "Pods/TabView" ]; then
-            # API renames in modern iOS/Swift
-            find Pods/TabView/Sources -name "*.swift" -exec sed -i.bak               -e 's/setOverrideTraitCollection(_:forChildViewController:)/setOverrideTraitCollection(_:forChild:)/g'               -e 's/removeFromParentViewController()/removeFromParent()/g'               -e 's/addChildViewController/addChild/g'               -e 's/didMove(toParentViewController:)/didMove(toParent:)/g'               -e 's/UIScrollViewDecelerationRateFast/UIScrollView.DecelerationRate.fast/g'               -e 's/UIBlurEffectStyle/UIBlurEffect.Style/g'               {} +
-
-            # Remove invalid self-referencing computed properties that cause infinite recursion
-            # and invalid redeclarations in modern Swift.
-            python3 -c "
-import re
-path = 'Pods/TabView/Sources/TabViewContainerViewController.swift'
-with open(path, 'r') as f:
-    content = f.read()
-# Remove the two invalid computed properties
-content = re.sub(
-    r'    var primaryTabViewController: TabViewController \{[^}]+\}',
-    '    // Removed invalid primaryTabViewController redeclaration',
-    content
-)
-content = re.sub(
-    r'    var secondaryTabViewController: TabViewController\? \{[^}]+\}',
-    '    // Removed invalid secondaryTabViewController redeclaration',
-    content
-)
-with open(path, 'w') as f:
-    f.write(content)
-"
+          if [ -d "Pods/TabView/Sources" ]; then
+            find Pods/TabView/Sources -name "*.swift" -exec sed -i.bak \
+              -e 's/setOverrideTraitCollection(_:forChildViewController:)/setOverrideTraitCollection(_:forChild:)/g' \
+              -e 's/removeFromParentViewController()/removeFromParent()/g' \
+              -e 's/addChildViewController(/addChild(/g' \
+              -e 's/didMove(toParentViewController:/didMove(toParent:/g' \
+              -e 's/UIScrollViewDecelerationRateFast/UIScrollView.DecelerationRate.fast/g' \
+              -e 's/UIBlurEffectStyle/UIBlurEffect.Style/g' \
+              {} +
+            perl -0pi -e 's#\n    var primaryTabViewController: TabViewController \{\n        return primaryTabViewController\n    \}\n\n    var secondaryTabViewController: TabViewController\? \{\n        return secondaryTabViewController\n    \}\n#\n#s' Pods/TabView/Sources/TabViewContainerViewController.swift
+            perl -0pi -e 's/internal protocol TabViewContainer: class/internal protocol TabViewContainer: AnyObject/' Pods/TabView/Sources/TabViewContainerViewController.swift
           fi
 
       - name: List schemes
         shell: bash
         run: |
           set -euo pipefail
-
           if [ "${{ steps.detect.outputs.type }}" = "workspace" ]; then
             xcodebuild -list -workspace "${{ steps.detect.outputs.file }}"
           else
@@ -208,7 +157,6 @@ with open(path, 'w') as f:
         shell: bash
         run: |
           set -euo pipefail
-
           SCHEME="OpenTerm"
           ARCHIVE_PATH="$PWD/build/OpenTerm.xcarchive"
 
@@ -222,9 +170,7 @@ with open(path, 'w') as f:
               CODE_SIGNING_ALLOWED=NO \
               CODE_SIGNING_REQUIRED=NO \
               CODE_SIGN_IDENTITY="" \
-              DEVELOPMENT_TEAM="" \
-              IPHONEOS_DEPLOYMENT_TARGET=18.0 \
-              SWIFT_VERSION=5.0
+              DEVELOPMENT_TEAM=""
           else
             xcodebuild archive \
               -project "${{ steps.detect.outputs.file }}" \
@@ -235,16 +181,13 @@ with open(path, 'w') as f:
               CODE_SIGNING_ALLOWED=NO \
               CODE_SIGNING_REQUIRED=NO \
               CODE_SIGN_IDENTITY="" \
-              DEVELOPMENT_TEAM="" \
-              IPHONEOS_DEPLOYMENT_TARGET=18.0 \
-              SWIFT_VERSION=5.0
+              DEVELOPMENT_TEAM=""
           fi
 
       - name: Package unsigned IPA
         shell: bash
         run: |
           set -euo pipefail
-
           mkdir -p Payload
           APP_PATH=$(find build/OpenTerm.xcarchive/Products/Applications -name "*.app" | head -n 1)
 
@@ -262,14 +205,13 @@ with open(path, 'w') as f:
           name: OpenTerm-Unsigned-IPA
           path: OpenTerm-Unsigned.ipa
 
-      - name: Add installability note
+      - name: Add workflow summary
         shell: bash
         run: |
           {
-            echo "## Unsigned IPA"
+            echo "## Unsigned IPA artifact"
             echo
-            echo "This artifact is for testing and inspection only."
+            echo "This workflow produces an unsigned IPA for build verification and sideload-oriented testing only."
             echo
-            echo "Unsigned IPAs do not install on normal real iPhones by themselves."
-            echo "You still need proper signing/provisioning, sideload tooling, or a special device environment."
+            echo "Unsigned IPAs will not install on a normal real iPhone without proper signing, provisioning, or external sideload tooling."
           } >> "$GITHUB_STEP_SUMMARY"

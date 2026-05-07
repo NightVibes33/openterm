@@ -5,7 +5,7 @@
 //  Partially based on: https://gist.github.com/zwaldowski/e6aa7f3f81303a688ad4
 //
 //  Created by Louis D'hauwe on 18/11/2016.
-//  Copyright © 2016 Silver Fox. All rights reserved.
+//  Copyright Â© 2016 Silver Fox. All rights reserved.
 //
 
 import Foundation
@@ -49,7 +49,7 @@ extension CGPath {
 	
 	typealias PathApplier = @convention(block) (UnsafePointer<CGPathElement>) -> Void
 	
-	func apply(with applier: PathApplier) {
+	func apply(with applier: @escaping PathApplier) {
 		
 		let callback: @convention(c) (UnsafeMutableRawPointer, UnsafePointer<CGPathElement>) -> Void = { (info, element) in
 			

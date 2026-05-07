@@ -3,7 +3,7 @@
 //  OpenTerm
 //
 //  Created by Louis D'hauwe on 03/04/2018.
-//  Copyright © 2018 Silver Fox. All rights reserved.
+//  Copyright Â© 2018 Silver Fox. All rights reserved.
 //
 
 import UIKit
@@ -13,7 +13,7 @@ enum ScriptMetadataState {
 	case update(PridelandDocument)
 }
 
-protocol ScriptMetadataViewControllerDelegate: class {
+protocol ScriptMetadataViewControllerDelegate: AnyObject {
 	
 	func didUpdateScript(_ updatedDocument: PridelandDocument)
 	func didCreateScript(_ document: PridelandDocument)
@@ -64,9 +64,9 @@ class ScriptMetadataViewController: UIViewController {
 		case .update(let document):
 			
 			if let name = document.metadata?.name {
-				self.title = "Edit “\(name)”"
+				self.title = "Edit â\(name)â"
 			} else {
-				self.title = "Edit ”\(document.fileURL.lastPathComponent)”"
+				self.title = "Edit â\(document.fileURL.lastPathComponent)â"
 			}
 			
 			saveBarButtonItem.title = "Save"
@@ -145,7 +145,7 @@ class ScriptMetadataViewController: UIViewController {
         
         let url = DocumentManager.shared.scriptsURL.appendingPathComponent("\(metadata.name).prideland")
 		
-		let deleteAlert = UIAlertController(title: "Are you sure you want to delete “\(metadata.name)”?", message: "This action can't be undone.", preferredStyle: .alert)
+		let deleteAlert = UIAlertController(title: "Are you sure you want to delete â\(metadata.name)â?", message: "This action can't be undone.", preferredStyle: .alert)
 		
 		deleteAlert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { (handler) in
 			

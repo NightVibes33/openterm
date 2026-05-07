@@ -3,7 +3,7 @@
 //  OpenTerm
 //
 //  Created by Louis D'hauwe on 05/03/2018.
-//  Copyright © 2018 Silver Fox. All rights reserved.
+//  Copyright Â© 2018 Silver Fox. All rights reserved.
 //
 
 import Foundation
@@ -31,11 +31,11 @@ extension InputAssistantView: CubSyntaxAutoCompleteManagerDelegate {
 }
 
 
-protocol CubSyntaxAutoCompleteManagerDelegate: class {
+protocol CubSyntaxAutoCompleteManagerDelegate: AnyObject {
 	func autoCompleteManagerDidChangeCompletions()
 }
 
-protocol CubSyntaxAutoCompleteManagerDataSource: class {
+protocol CubSyntaxAutoCompleteManagerDataSource: AnyObject {
 	func completions() -> [CubSyntaxAutoCompleteManager.Completion]
 }
 

@@ -9,7 +9,7 @@ import UIKit
 import PanelKit
 
 /// Protocol that is used to interact with the bookmark view controller.
-protocol BookmarkViewControllerDelegate: class {
+protocol BookmarkViewControllerDelegate: AnyObject {
 
 	/// Notifies the delegate that a bookmark was selected, or retrieves the current directory.
 	///

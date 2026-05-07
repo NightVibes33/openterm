@@ -3,12 +3,12 @@
 //  OpenTerm
 //
 //  Created by Ian McDowell on 1/31/18.
-//  Copyright © 2018 Silver Fox. All rights reserved.
+//  Copyright Â© 2018 Silver Fox. All rights reserved.
 //
 
 import Foundation
 
-protocol ParserDelegate: class {
+protocol ParserDelegate: AnyObject {
 	func parser(_ parser: Parser, didReceiveString string: NSAttributedString)
 	func parserDidEndTransmission(_ parser: Parser)
 }

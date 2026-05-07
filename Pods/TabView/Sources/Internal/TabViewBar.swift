@@ -3,7 +3,7 @@
 //  TabView
 //
 //  Created by Ian McDowell on 2/2/18.
-//  Copyright © 2018 Ian McDowell. All rights reserved.
+//  Copyright Â© 2018 Ian McDowell. All rights reserved.
 //
 
 import UIKit
@@ -11,14 +11,14 @@ import UIKit
 private let barHeight: CGFloat = 48
 private let tabHeight: CGFloat = 33
 
-protocol TabViewBarDataSource: class {
+protocol TabViewBarDataSource: AnyObject {
     var title: String? { get }
     var viewControllers: [UIViewController] { get }
     var visibleViewController: UIViewController? { get }
     var hidesSingleTab: Bool { get }
 }
 
-protocol TabViewBarDelegate: class {
+protocol TabViewBarDelegate: AnyObject {
     func activateTab(_ tab: UIViewController)
     func closeTab(_ tab: UIViewController)
     func insertTab(_ tab: UIViewController, atIndex index: Int)

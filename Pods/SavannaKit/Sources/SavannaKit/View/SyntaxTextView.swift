@@ -3,7 +3,7 @@
 //  SavannaKit
 //
 //  Created by Louis D'hauwe on 23/01/2017.
-//  Copyright © 2017 Silver Fox. All rights reserved.
+//  Copyright Â© 2017 Silver Fox. All rights reserved.
 //
 
 import Foundation
@@ -20,7 +20,7 @@ private enum InitMethod {
 	case frame(CGRect)
 }
 
-public protocol SyntaxTextViewDelegate: class {
+public protocol SyntaxTextViewDelegate: AnyObject {
 	
 	func didChangeText(_ syntaxTextView: SyntaxTextView)
 

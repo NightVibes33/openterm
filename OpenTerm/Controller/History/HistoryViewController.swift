@@ -3,13 +3,13 @@
 //  OpenTerm
 //
 //  Created by Louis D'hauwe on 02/01/2018.
-//  Copyright © 2018 Silver Fox. All rights reserved.
+//  Copyright Â© 2018 Silver Fox. All rights reserved.
 //
 
 import UIKit
 import PanelKit
 
-protocol HistoryViewControllerDelegate: class {
+protocol HistoryViewControllerDelegate: AnyObject {
 
 	func didSelectCommand(command: String)
 

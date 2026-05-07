@@ -3,7 +3,7 @@
 //  PanelKit
 //
 //  Created by Louis D'hauwe on 24/11/2016.
-//  Copyright © 2016-2017 Silver Fox. All rights reserved.
+//  Copyright Â© 2016-2017 Silver Fox. All rights reserved.
 //
 
 import UIKit
@@ -104,9 +104,9 @@ import UIKit
 		super.init(nibName: nil, bundle: nil)
 
 		self.view.addSubview(shadowView)
-		self.addChildViewController(panelNavigationController)
+		self.addChild(panelNavigationController)
 		self.view.addSubview(panelNavigationController.view)
-		panelNavigationController.didMove(toParentViewController: self)
+		panelNavigationController.didMove(toParent: self)
 
 		panelNavigationController.panelViewController = self
 

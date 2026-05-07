@@ -3,7 +3,7 @@
 //  OpenTerm
 //
 //  Created by Louis D'hauwe on 21/04/2018.
-//  Copyright © 2018 Silver Fox. All rights reserved.
+//  Copyright Â© 2018 Silver Fox. All rights reserved.
 //
 
 import UIKit
@@ -12,7 +12,7 @@ import Cub
 import SavannaKit
 import PanelKit
 
-protocol ScriptEditViewControllerDelegate: class {
+protocol ScriptEditViewControllerDelegate: AnyObject {
 	func didImportExample()
 }
 

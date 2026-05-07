@@ -1,4 +1,4 @@
-platform :ios, '11.0'
+platform :ios, '18.0'
 
 # ignore all warnings from all pods
 inhibit_all_warnings!

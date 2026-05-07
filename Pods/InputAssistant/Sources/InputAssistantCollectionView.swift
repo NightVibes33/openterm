@@ -3,7 +3,7 @@
 //  InputAssistant
 //
 //  Created by Ian McDowell on 1/28/18.
-//  Copyright © 2018 Ian McDowell. All rights reserved.
+//  Copyright Â© 2018 Ian McDowell. All rights reserved.
 //
 
 import UIKit
@@ -22,7 +22,7 @@ class InputAssistantCollectionView: UICollectionView {
     init() {
         let layout = UICollectionViewFlowLayout()
         layout.estimatedItemSize = CGSize(width: 100, height: 41)
-        layout.itemSize = UICollectionViewFlowLayoutAutomaticSize
+        layout.itemSize = UICollectionViewFlowLayout.automaticSize
         layout.scrollDirection = .horizontal
         layout.minimumInteritemSpacing = 10
         layout.sectionInset = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)

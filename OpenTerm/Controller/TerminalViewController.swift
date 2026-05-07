@@ -3,7 +3,7 @@
 //  OpenTerm
 //
 //  Created by Louis D'hauwe on 07/12/2017.
-//  Copyright © 2017 Silver Fox. All rights reserved.
+//  Copyright Â© 2017 Silver Fox. All rights reserved.
 //
 
 import Foundation
@@ -13,7 +13,7 @@ import UIKit
 import ios_system
 import PanelKit
 import StoreKit
-import MobileCoreServices
+import UniformTypeIdentifiers
 
 class TerminalViewController: UIViewController {
 
@@ -346,7 +346,7 @@ class TerminalViewController: UIViewController {
 	private func showDocumentPicker(_ sender: UIView) {
 		terminalView.resignFirstResponder()
 
-		let picker = UIDocumentPickerViewController(documentTypes: [kUTTypeFolder as String], in: .open)
+		let picker = UIDocumentPickerViewController(forOpeningContentTypes: [.folder], asCopy: false)
 		picker.allowsMultipleSelection = true
 		picker.delegate = self
 

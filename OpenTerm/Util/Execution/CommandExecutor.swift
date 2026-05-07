@@ -3,13 +3,13 @@
 //  OpenTerm
 //
 //  Created by Ian McDowell on 1/30/18.
-//  Copyright © 2018 Silver Fox. All rights reserved.
+//  Copyright Â© 2018 Silver Fox. All rights reserved.
 //
 
 import Foundation
 import ios_system
 
-protocol CommandExecutorDelegate: class {
+protocol CommandExecutorDelegate: AnyObject {
 	func commandExecutor(_ commandExecutor: CommandExecutor, receivedStdout stdout: Data)
 	func commandExecutor(_ commandExecutor: CommandExecutor, receivedStderr stderr: Data)
 	func commandExecutor(_ commandExecutor: CommandExecutor, didChangeWorkingDirectory to: URL)
