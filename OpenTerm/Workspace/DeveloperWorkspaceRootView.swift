@@ -385,6 +385,7 @@ private struct SettingsWorkspaceView: View {
 	@State private var model = ""
 	@State private var apiKey = ""
 	@State private var systemPrompt = ""
+	@State private var useHostedProxy = false
 	@State private var appAccent = Color(UserDefaultsController.shared.workspaceAccentColor)
 	@State private var terminalText = Color(UserDefaultsController.shared.terminalTextColor)
 	@State private var terminalBackground = Color(UserDefaultsController.shared.terminalBackgroundColor)
@@ -451,8 +452,14 @@ private struct SettingsWorkspaceView: View {
 				TextField("System prompt", text: $systemPrompt, axis: .vertical)
 					.textFieldStyle(.roundedBorder)
 					.lineLimit(3...6)
+				Toggle("Use hosted AI proxy", isOn: $useHostedProxy)
+					.tint(store.workspaceAccentColor)
+					.foregroundStyle(.white)
+				Text(useHostedProxy ? "Endpoint should be your Supabase ai-proxy function URL. API key should be the user's Supabase bearer token." : "Endpoint should be an OpenAI-compatible chat completions URL. API key is sent as a bearer token.")
+					.font(.system(.footnote, design: .rounded))
+					.foregroundStyle(.white.opacity(0.62))
 				PrimaryWorkspaceButton(title: "Save AI Settings", symbol: "checkmark.seal", tint: store.workspaceAccentColor) {
-					store.updateAIConfiguration(endpoint: endpoint, model: model, apiKey: apiKey, systemPrompt: systemPrompt)
+					store.updateAIConfiguration(endpoint: endpoint, model: model, apiKey: apiKey, systemPrompt: systemPrompt, useHostedProxy: useHostedProxy)
 				}
 			}
 			.padding(18)
@@ -470,6 +477,7 @@ private struct SettingsWorkspaceView: View {
 			model = store.aiConfiguration.model
 			apiKey = store.aiConfiguration.apiKey
 			systemPrompt = store.aiConfiguration.systemPrompt
+			useHostedProxy = store.aiConfiguration.usesHostedProxy
 			appAccent = store.workspaceAccentColor
 			terminalText = Color(UserDefaultsController.shared.terminalTextColor)
 			terminalBackground = Color(UserDefaultsController.shared.terminalBackgroundColor)

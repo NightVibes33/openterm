@@ -289,12 +289,18 @@ struct AIProviderConfiguration: Codable, Equatable {
 	var model: String
 	var apiKey: String
 	var systemPrompt: String
+	var routingMode: String?
+
+	var usesHostedProxy: Bool {
+		routingMode == "hosted_proxy"
+	}
 
 	static let `default` = AIProviderConfiguration(
 		endpoint: "",
 		model: "gpt-4.1-mini",
 		apiKey: "",
-		systemPrompt: "You are OpenTerm AI, a concise mobile developer assistant focused on shell, SSH, Linux, and code tasks."
+		systemPrompt: "You are OpenTerm AI, a concise mobile developer assistant focused on shell, SSH, Linux, and code tasks.",
+		routingMode: nil
 	)
 }
 
@@ -765,10 +771,17 @@ final class WorkspaceStore: ObservableObject {
 		}
 	}
 
-	func updateAIConfiguration(endpoint: String, model: String, apiKey: String, systemPrompt: String) {
-		aiConfiguration = AIProviderConfiguration(endpoint: endpoint.trimmingCharacters(in: .whitespacesAndNewlines), model: model.trimmingCharacters(in: .whitespacesAndNewlines), apiKey: apiKey.trimmingCharacters(in: .whitespacesAndNewlines), systemPrompt: systemPrompt.trimmingCharacters(in: .whitespacesAndNewlines))
+	func updateAIConfiguration(endpoint: String, model: String, apiKey: String, systemPrompt: String, useHostedProxy: Bool) {
+		aiConfiguration = AIProviderConfiguration(
+			endpoint: endpoint.trimmingCharacters(in: .whitespacesAndNewlines),
+			model: model.trimmingCharacters(in: .whitespacesAndNewlines),
+			apiKey: apiKey.trimmingCharacters(in: .whitespacesAndNewlines),
+			systemPrompt: systemPrompt.trimmingCharacters(in: .whitespacesAndNewlines),
+			routingMode: useHostedProxy ? "hosted_proxy" : nil
+		)
 		saveAIConfiguration()
-		assistantStatus = aiConfiguration.endpoint.isEmpty ? "Configure an AI endpoint in Settings to enable live answers." : "AI endpoint saved. Prompts will use \(aiConfiguration.model)."
+		let route = aiConfiguration.usesHostedProxy ? "hosted proxy" : "direct provider"
+		assistantStatus = aiConfiguration.endpoint.isEmpty ? "Configure an AI endpoint in Settings to enable live answers." : "AI endpoint saved. Prompts will use \(aiConfiguration.model) through \(route)."
 	}
 
 	func updateWorkspaceAccent(_ color: Color) {
@@ -1085,11 +1098,17 @@ final class WorkspaceStore: ObservableObject {
 			request.setValue("Bearer \(aiConfiguration.apiKey)", forHTTPHeaderField: "Authorization")
 		}
 
-		let body = AIChatRequest(model: aiConfiguration.model, messages: [
+		let messages = [
 			AIChatRequest.Message(role: "system", content: aiConfiguration.systemPrompt),
 			AIChatRequest.Message(role: "user", content: prompt)
-		])
-		request.httpBody = try? JSONEncoder().encode(body)
+		]
+		if aiConfiguration.usesHostedProxy {
+			let body = AIProxyRequest(featureCode: "assistant", model: aiConfiguration.model, messages: messages, estimatedTokens: estimateTokenCount(for: messages), deviceID: nil)
+			request.httpBody = try? JSONEncoder().encode(body)
+		} else {
+			let body = AIChatRequest(model: aiConfiguration.model, messages: messages)
+			request.httpBody = try? JSONEncoder().encode(body)
+		}
 
 		URLSession.shared.dataTask(with: request) { data, response, error in
 			DispatchQueue.main.async {
@@ -1180,6 +1199,22 @@ private struct AIChatRequest: Encodable {
 
 	let model: String
 	let messages: [Message]
+}
+
+private struct AIProxyRequest: Encodable {
+	let featureCode: String
+	let model: String
+	let messages: [AIChatRequest.Message]
+	let estimatedTokens: Int
+	let deviceID: String?
+
+	private enum CodingKeys: String, CodingKey {
+		case featureCode = "feature_code"
+		case model
+		case messages
+		case estimatedTokens = "estimated_tokens"
+		case deviceID = "device_id"
+	}
 }
 
 private struct AIChatResponse: Decodable {

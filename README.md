@@ -49,7 +49,7 @@ The design target is closer to "Raycast + Warp + Linear for iOS" than an old-sch
 - Server monitoring works for noninteractive SSH profiles; password-based profiles still require manual terminal sessions.
 - Git actions are terminal-driven because this fork does not currently bundle a native Git engine.
 - The editor has lightweight syntax highlighting, language detection, and search/match highlighting, but full language-server tooling, completions, and diff views are not finished.
-- The AI assistant supports a configurable provider endpoint, prompt shortcuts, terminal handoff, and local usage history. Backend tables/functions and an Edge Function scaffold exist for hosted rate-limit enforcement, but the app still calls the configured endpoint directly until proxy routing is enabled in-app.
+- The AI assistant supports direct provider routing or hosted Supabase proxy routing, prompt shortcuts, terminal handoff, and local usage history. Backend tables/functions and an Edge Function scaffold exist for hosted rate-limit enforcement.
 
 ### Not implemented yet
 - End-to-end encrypted SSH key vault sync across devices.
@@ -143,7 +143,8 @@ Important:
 - [x] Connect configurable AI provider endpoint, prompt shortcuts, terminal handoff, and local usage history
 - [x] Add backend AI rate-limit and usage-control schema
 - [x] Add hosted AI proxy scaffold
-- [ ] Add app-side hosted proxy routing and deployment secrets
+- [x] Add app-side hosted proxy routing toggle
+- [ ] Add deployment secrets and production auth bootstrap
 - [x] Add local protected SSH key vault foundation
 - [x] Add backend encrypted vault sync tables
 - [ ] Connect app-side encrypted vault sync across devices
