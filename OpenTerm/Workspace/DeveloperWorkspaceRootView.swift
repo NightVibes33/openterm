@@ -16,9 +16,14 @@ struct DeveloperWorkspaceRootView: View {
 			}
 		}
 		.tint(store.workspaceAccentColor)
-		.safeAreaInset(edge: .bottom) {
-			WorkspaceStatusStrip(message: store.statusMessage, tint: store.workspaceAccentColor)
+		.overlay(alignment: .top) {
+			if store.statusMessage != "Workspace idle" {
+				WorkspaceStatusStrip(message: store.statusMessage, tint: store.workspaceAccentColor)
+					.padding(.top, 10)
+					.transition(.move(edge: .top).combined(with: .opacity))
+			}
 		}
+		.animation(.spring(response: 0.34, dampingFraction: 0.86), value: store.statusMessage)
 		.onAppear {
 			store.refreshLocalFiles()
 			store.refreshGitWorkspaces()
@@ -848,7 +853,6 @@ private struct WorkspaceStatusStrip: View {
 		.background(.ultraThinMaterial, in: Capsule())
 		.overlay(Capsule().strokeBorder(tint.opacity(0.32), lineWidth: 1))
 		.padding(.horizontal, 16)
-		.padding(.bottom, 8)
 	}
 }
 

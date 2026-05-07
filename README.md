@@ -38,6 +38,7 @@ The current design target is real-tool clarity first: fewer marketing cards, lig
 - The AI assistant can call a configurable OpenAI-compatible chat endpoint or hosted Supabase proxy, records local usage history, includes prompt shortcuts for errors, commands, scripts, SSH, remote dev setup, Docker, Git conflicts, and regex, and can insert assistant output back into the terminal. Live sending is disabled until a real endpoint/key or proxy/token is configured.
 - The iPhone More tab is custom now, not Apple's automatic overflow list, and contains real AI, Git, settings, theme, and terminal controls.
 - The SwiftUI workspace now uses semantic text colors instead of hard-coded white labels, fixing the broken white-on-light card look across the main shell.
+- Workspace status feedback is now a temporary top overlay instead of a persistent bar sitting above the bottom tab bar.
 - The home and More copy now avoids inflated âlive/command centerâ language and labels Git/AI as terminal-driven or configuration-gated where appropriate.
 - Prototype wording such as âpreview build,â âFree preview,â âlive answers,â and broad âreadyâ labels was removed from the in-app workspace copy.
 - Settings are free-app focused with real AI/provider controls and appearance controls instead of placeholder billing screens.
