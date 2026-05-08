@@ -147,8 +147,10 @@ class TerminalView: UIView {
 		executor.delegate = self
 
 		backgroundColor = UserDefaultsController.shared.terminalBackgroundColor
-		layer.cornerRadius = 20
+		layer.cornerRadius = 18
 		layer.cornerCurve = .continuous
+		layer.borderWidth = 1
+		layer.borderColor = UIColor.white.withAlphaComponent(0.08).cgColor
 
 		textView.translatesAutoresizingMaskIntoConstraints = false
 		self.addSubview(textView)
@@ -185,6 +187,7 @@ class TerminalView: UIView {
 		UIView.animate(withDuration: 0.25) {
 			self.backgroundColor = UserDefaultsController.shared.terminalBackgroundColor
 		}
+		layer.borderColor = UIColor.white.withAlphaComponent(0.08).cgColor
 	}
 
 	private func adjustInsets(for state: KeyboardEvent) {

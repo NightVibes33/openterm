@@ -586,8 +586,8 @@ private struct ServersWorkspaceView: View {
 		.onAppear { store.startMonitorAutoRefresh() }
 		.onDisappear { store.stopMonitorAutoRefresh() }
 		.sheet(item: $editingProfile) { draft in
-			SSHProfileEditorSheet(draft: draft) { profile in
-				store.upsertSSHProfile(profile)
+			SSHProfileEditorSheet(draft: draft) { profile, password in
+				store.upsertSSHProfile(profile, password: password)
 			}
 		}
 		.sheet(item: $editingMonitor) { draft in
@@ -1539,7 +1539,7 @@ private struct SSHProfileCard: View {
 					Text("\(profile.username)@\(profile.host):\(profile.port)")
 						.font(.system(.subheadline, design: .monospaced))
 						.foregroundStyle(.secondary)
-					Text("\(profile.authKind.title) / Last used \(lastSeen)")
+					Text("\(profile.platform?.title ?? "Linux / Unix") / \(profile.authKind.title) / Last used \(lastSeen)")
 						.font(.system(.footnote, design: .default))
 						.foregroundStyle(.secondary)
 				}
@@ -1553,6 +1553,7 @@ private struct SSHProfileCard: View {
 					Button("Debian / Ubuntu") { installDevStack("Debian/Ubuntu") }
 					Button("Alpine") { installDevStack("Alpine") }
 					Button("Fedora / RHEL") { installDevStack("Fedora/RHEL") }
+					Button("Windows: Audit Only") { auditTools() }
 				} label: {
 					Label("Queue Dev Stack", systemImage: "shippingbox.and.arrow.backward")
 						.font(.system(.headline, design: .default, weight: .semibold))
@@ -2110,6 +2111,8 @@ private struct SSHProfileDraft: Identifiable {
 	var host: String
 	var username: String
 	var authKind: SSHAuthKind
+	var platform: SSHHostPlatform
+	var password: String
 	var port: Int
 	var privateKeyPath: String
 	var startupPath: String
@@ -2122,6 +2125,8 @@ private struct SSHProfileDraft: Identifiable {
 		host = profile?.host ?? ""
 		username = profile?.username ?? "root"
 		authKind = profile?.authKind ?? .agent
+		platform = profile?.platform ?? .linux
+		password = profile.map { WorkspaceStore.shared.sshPassword(for: $0.id) } ?? ""
 		port = profile?.port ?? 22
 		privateKeyPath = profile?.privateKeyPath ?? ""
 		startupPath = profile?.startupPath ?? ""
@@ -2130,16 +2135,16 @@ private struct SSHProfileDraft: Identifiable {
 	}
 
 	var profile: SSHProfileSummary {
-		SSHProfileSummary(id: id, label: label, host: host, username: username, authKind: authKind, lastSeen: lastSeen, port: port, privateKeyPath: privateKeyPath, startupPath: startupPath, notes: notes)
+		SSHProfileSummary(id: id, label: label, host: host, username: username, authKind: authKind, lastSeen: lastSeen, port: port, privateKeyPath: privateKeyPath, startupPath: startupPath, notes: notes, platform: platform)
 	}
 }
 
 private struct SSHProfileEditorSheet: View {
 	@Environment(\.dismiss) private var dismiss
 	@State private var draft: SSHProfileDraft
-	let save: (SSHProfileSummary) -> Void
+	let save: (SSHProfileSummary, String) -> Void
 
-	init(draft: SSHProfileDraft, save: @escaping (SSHProfileSummary) -> Void) {
+	init(draft: SSHProfileDraft, save: @escaping (SSHProfileSummary, String) -> Void) {
 		_draft = State(initialValue: draft)
 		self.save = save
 	}
@@ -2151,12 +2156,25 @@ private struct SSHProfileEditorSheet: View {
 				TextField("Host", text: $draft.host)
 				TextField("Username", text: $draft.username)
 				Stepper("Port \(draft.port)", value: $draft.port, in: 1...65535)
+				Picker("Host OS", selection: $draft.platform) {
+					ForEach(SSHHostPlatform.allCases) { platform in
+						Text(platform.title).tag(platform)
+					}
+				}
 				Picker("Auth", selection: $draft.authKind) {
 					ForEach(SSHAuthKind.allCases) { kind in
 						Text(kind.title).tag(kind)
 					}
 				}
-				TextField("Private key path", text: $draft.privateKeyPath)
+				if draft.authKind == .password {
+					SecureField("Password stored in Keychain", text: $draft.password)
+					Text("OpenTerm copies this password before opening SSH. Paste it into the interactive password prompt; background polling still requires key/agent auth.")
+						.font(.footnote)
+						.foregroundStyle(.secondary)
+				}
+				if draft.authKind == .key || draft.authKind == .certificate {
+					TextField("Private key path", text: $draft.privateKeyPath)
+				}
 				TextField("Startup path", text: $draft.startupPath)
 				TextField("Notes", text: $draft.notes, axis: .vertical)
 			}
@@ -2165,7 +2183,7 @@ private struct SSHProfileEditorSheet: View {
 				ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
 				ToolbarItem(placement: .confirmationAction) {
 					Button("Save") {
-						save(draft.profile)
+						save(draft.profile, draft.password)
 						dismiss()
 					}
 				}

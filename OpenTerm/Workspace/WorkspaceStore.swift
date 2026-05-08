@@ -81,6 +81,22 @@ enum SSHAuthKind: String, CaseIterable, Codable, Identifiable {
 	}
 }
 
+enum SSHHostPlatform: String, CaseIterable, Codable, Identifiable {
+	case linux
+	case windows
+	case auto
+
+	var id: String { rawValue }
+
+	var title: String {
+		switch self {
+		case .linux: return "Linux / Unix"
+		case .windows: return "Windows 11 / Server"
+		case .auto: return "Auto-detect"
+		}
+	}
+}
+
 enum MonitorAlertLevel: String, Codable {
 	case healthy
 	case watch
@@ -156,6 +172,7 @@ struct SSHProfileSummary: Identifiable, Codable, Hashable {
 	var privateKeyPath: String
 	var startupPath: String
 	var notes: String
+	var platform: SSHHostPlatform?
 
 	init(
 		id: UUID = UUID(),
@@ -167,7 +184,8 @@ struct SSHProfileSummary: Identifiable, Codable, Hashable {
 		port: Int = 22,
 		privateKeyPath: String = "",
 		startupPath: String = "",
-		notes: String = ""
+		notes: String = "",
+		platform: SSHHostPlatform? = nil
 	) {
 		self.id = id
 		self.label = label
@@ -179,6 +197,7 @@ struct SSHProfileSummary: Identifiable, Codable, Hashable {
 		self.privateKeyPath = privateKeyPath
 		self.startupPath = startupPath
 		self.notes = notes
+		self.platform = platform
 	}
 }
 
@@ -1113,6 +1132,17 @@ final class WorkspaceStore: ObservableObject {
 		return String(format: "local-%08x", folded)
 	}
 
+	func sshPassword(for profileID: UUID) -> String {
+		WorkspaceSecretStore.read("ssh.password.\(profileID.uuidString)")
+	}
+
+	func upsertSSHProfile(_ profile: SSHProfileSummary, password: String? = nil) {
+		if let password {
+			WorkspaceSecretStore.write(password, for: "ssh.password.\(profile.id.uuidString)")
+		}
+		upsertSSHProfile(profile)
+	}
+
 	func upsertSSHProfile(_ profile: SSHProfileSummary) {
 		let cleaned = SSHProfileSummary(
 			id: profile.id,
@@ -1124,7 +1154,8 @@ final class WorkspaceStore: ObservableObject {
 			port: profile.port,
 			privateKeyPath: profile.privateKeyPath.trimmingCharacters(in: .whitespacesAndNewlines),
 			startupPath: profile.startupPath.trimmingCharacters(in: .whitespacesAndNewlines),
-			notes: profile.notes.trimmingCharacters(in: .whitespacesAndNewlines)
+			notes: profile.notes.trimmingCharacters(in: .whitespacesAndNewlines),
+			platform: profile.platform
 		)
 		guard !cleaned.label.isEmpty, !cleaned.host.isEmpty, !cleaned.username.isEmpty else {
 			statusMessage = "SSH profile needs label, host, and username"
@@ -1142,6 +1173,7 @@ final class WorkspaceStore: ObservableObject {
 	}
 
 	func deleteSSHProfile(_ profile: SSHProfileSummary) {
+		WorkspaceSecretStore.write("", for: "ssh.password.\(profile.id.uuidString)")
 		sshProfiles.removeAll { $0.id == profile.id }
 		serverMonitors.removeAll { $0.sshProfileID == profile.id }
 		serverSnapshots.removeAll { snapshot in
@@ -1353,9 +1385,19 @@ final class WorkspaceStore: ObservableObject {
 	}
 
 	func connect(to profile: SSHProfileSummary) {
+		if profile.authKind == .password {
+			let password = sshPassword(for: profile.id)
+			if !password.isEmpty {
+				UIPasteboard.general.string = password
+				statusMessage = "Password copied. Paste it at the SSH prompt for \(profile.label)."
+			} else {
+				statusMessage = "Opening password SSH session for \(profile.label)"
+			}
+		} else {
+			statusMessage = "Opening SSH session for \(profile.label)"
+		}
 		openTerminal(command: sshCommand(for: profile), executeNow: true)
 		touchProfile(profile.id)
-		statusMessage = "Opening SSH session for \(profile.label)"
 	}
 
 	func queueRemoteDevStack(on profile: SSHProfileSummary, flavor: String) {
@@ -1366,7 +1408,12 @@ final class WorkspaceStore: ObservableObject {
 	}
 
 	func queueRemoteToolAudit(on profile: SSHProfileSummary) {
-		let script = #"printf 'OpenTerm remote tool audit\n'; uname -a 2>/dev/null; printf '\nPackage managers:\n'; for tool in apt apt-get apk dnf yum brew pkg; do command -v $tool >/dev/null 2>&1 && echo "$tool: $(command -v $tool)"; done; printf '\nDeveloper tools:\n'; for tool in git python3 pip3 node npm htop nano vim tmux docker; do if command -v $tool >/dev/null 2>&1; then printf '%s: ' $tool; $tool --version 2>&1 | head -n 1; else echo "$tool: missing"; fi; done"#
+		let script: String
+		if profile.platform == .windows {
+			script = #"powershell -NoProfile -Command "Write-Host 'OpenTerm Windows SSH audit'; Get-ComputerInfo -Property OsName,OsVersion,CsName; Write-Host ''; Write-Host 'Developer tools:'; foreach ($tool in 'git','python','py','node','npm','docker','winget','powershell') { $cmd = Get-Command $tool -ErrorAction SilentlyContinue; if ($cmd) { Write-Host ($tool + ': ' + $cmd.Source) } else { Write-Host ($tool + ': missing') } }""#
+		} else {
+			script = #"printf 'OpenTerm remote tool audit\n'; uname -a 2>/dev/null; printf '\nPackage managers:\n'; for tool in apt apt-get apk dnf yum brew pkg; do command -v $tool >/dev/null 2>&1 && echo "$tool: $(command -v $tool)"; done; printf '\nDeveloper tools:\n'; for tool in git python3 pip3 node npm htop nano vim tmux docker; do if command -v $tool >/dev/null 2>&1; then printf '%s: ' $tool; $tool --version 2>&1 | head -n 1; else echo "$tool: missing"; fi; done"#
+		}
 		openTerminal(command: sshCommand(for: profile, remoteCommand: script, batchMode: false), executeNow: true)
 		touchProfile(profile.id)
 		statusMessage = "Queued remote tool audit for \(profile.label)"
@@ -1464,12 +1511,12 @@ final class WorkspaceStore: ObservableObject {
 		}
 
 		guard profile.authKind != .password else {
-			updateSnapshot(for: monitor, snapshot: ServerSnapshotSummary(id: monitor.id, name: monitor.label, alertLevel: .unavailable, detail: "Password auth is interactive only. Open the terminal to connect manually.", lastChecked: Date()))
+			updateSnapshot(for: monitor, snapshot: ServerSnapshotSummary(id: monitor.id, name: monitor.label, alertLevel: .unavailable, detail: "Password auth is interactive. Saved passwords are copied for terminal login, not used for background monitor polling.", lastChecked: Date()))
 			completion()
 			return
 		}
 
-		let remoteScript = "CPU=$(top -bn1 2>/dev/null | awk '/Cpu|CPU/ {for (i=1;i<=NF;i++) if ($i ~ /id,/) idle=$(i-1)} END {if (idle==\"\") print 0; else printf \"%d\", 100-idle}') ; MEM=$(awk '/MemTotal/ {total=$2} /MemAvailable/ {available=$2} END {if (total>0) printf \"%d\", ((total-available)*100)/total; else print 0}' /proc/meminfo 2>/dev/null) ; DISK=$(df -P \(shellQuote(monitor.path)) 2>/dev/null | awk 'NR==2 {gsub(/%/, \"\", $5); print $5}') ; LOAD=$(uptime 2>/dev/null | sed 's/.*load averages*[: ]*//') ; echo \"CPU:${CPU:-0}|MEM:${MEM:-0}|DISK:${DISK:-0}|LOAD:${LOAD:-n/a}\""
+		let remoteScript = monitorScript(for: monitor, profile: profile)
 		let command = sshCommand(for: profile, remoteCommand: remoteScript, batchMode: true)
 
 		commandCapture.run(command: command) { result in
@@ -1477,6 +1524,27 @@ final class WorkspaceStore: ObservableObject {
 			self.updateSnapshot(for: monitor, snapshot: snapshot)
 			completion()
 		}
+	}
+
+	private func monitorScript(for monitor: ServerMonitorSummary, profile: SSHProfileSummary) -> String {
+		if profile.platform == .windows {
+			let drive = windowsDrive(from: monitor.path).replacingOccurrences(of: "'", with: "''")
+			return """
+			powershell -NoProfile -Command "$cpu=(Get-CimInstance Win32_Processor | Measure-Object -Property LoadPercentage -Average).Average; $os=Get-CimInstance Win32_OperatingSystem; $mem=[int]((($os.TotalVisibleMemorySize-$os.FreePhysicalMemory)*100)/$os.TotalVisibleMemorySize); $disk=(Get-CimInstance Win32_LogicalDisk -Filter 'DeviceID=''\(drive)'''); $diskPct=0; if ($disk -and $disk.Size -gt 0) { $diskPct=[int]((($disk.Size-$disk.FreeSpace)*100)/$disk.Size) }; $load='Windows'; Write-Output ('CPU:{0}|MEM:{1}|DISK:{2}|LOAD:{3}' -f [int]$cpu,$mem,$diskPct,$load)"
+			"""
+		}
+		let diskPath = shellQuote(monitor.path)
+		return """
+		CPU=$(top -bn1 2>/dev/null | awk '/Cpu|CPU/ {for (i=1;i<=NF;i++) if ($i ~ /id,/) idle=$(i-1)} END {if (idle=="") print 0; else printf "%d", 100-idle}') ; MEM=$(awk '/MemTotal/ {total=$2} /MemAvailable/ {available=$2} END {if (total>0) printf "%d", ((total-available)*100)/total; else print 0}' /proc/meminfo 2>/dev/null) ; DISK=$(df -P \(diskPath) 2>/dev/null | awk 'NR==2 {gsub(/%/, "", $5); print $5}') ; LOAD=$(uptime 2>/dev/null | sed 's/.*load averages*[: ]*//') ; echo "CPU:${CPU:-0}|MEM:${MEM:-0}|DISK:${DISK:-0}|LOAD:${LOAD:-n/a}"
+		"""
+	}
+
+	private func windowsDrive(from path: String) -> String {
+		let trimmed = path.trimmingCharacters(in: .whitespacesAndNewlines)
+		if trimmed.count >= 2, trimmed.dropFirst().first == ":" {
+			return String(trimmed.prefix(2)).uppercased()
+		}
+		return "C:"
 	}
 
 	private func snapshot(from result: WorkspaceCommandResult, monitor: ServerMonitorSummary) -> ServerSnapshotSummary {

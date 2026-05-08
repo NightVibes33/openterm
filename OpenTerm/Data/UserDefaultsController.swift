@@ -32,7 +32,7 @@ class UserDefaultsController {
 
 	var terminalTextColor: UIColor {
 		get {
-			return userDefaults.color(forKey: "terminalTextColor") ?? UIColor.defaultMainTintColor
+			return userDefaults.color(forKey: "terminalTextColor") ?? UIColor.modernTerminalTextColor
 		}
 		set {
 			userDefaults.set(newValue, forKey: "terminalTextColor")
@@ -42,7 +42,7 @@ class UserDefaultsController {
 
 	var terminalBackgroundColor: UIColor {
 		get {
-			return userDefaults.color(forKey: "terminalBackgroundColor") ?? UIColor.panelBackgroundColor
+			return userDefaults.color(forKey: "terminalBackgroundColor") ?? UIColor.modernTerminalBackgroundColor
 		}
 		set {
 			userDefaults.set(newValue, forKey: "terminalBackgroundColor")
@@ -54,7 +54,7 @@ class UserDefaultsController {
 		get {
 			
 			guard let val = userDefaults.object(forKey: "terminalFontSize") as? Int else {
-				return 14
+				return 15
 			}
 			
 			return val
