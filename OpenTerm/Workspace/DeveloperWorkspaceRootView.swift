@@ -252,37 +252,125 @@ private struct TerminalWorkspaceView: View {
 	@Binding var selection: WorkspaceDestination
 
 	var body: some View {
-		VStack(spacing: 0) {
-			VStack(alignment: .leading, spacing: 14) {
-				HStack(alignment: .top, spacing: 14) {
-					VStack(alignment: .leading, spacing: 6) {
-						Text("Terminal")
-							.font(.system(.title2, design: .rounded, weight: .black))
-							.foregroundStyle(.primary)
-						Text("Real local ios_system shell with command handoff from SSH, Git, snippets, and AI tools.")
-							.font(.system(.footnote, design: .default, weight: .medium))
-							.foregroundStyle(.secondary)
-					}
-					Spacer(minLength: 0)
-					MetricPill(title: "Core", value: "Local")
-				}
+		VStack(spacing: 14) {
+			TerminalCommandDeck(store: store, selection: $selection)
 
-				LazyVGrid(columns: [GridItem(.adaptive(minimum: 112), spacing: 8)], spacing: 8) {
-					FileHeaderButton(title: "Files", symbol: "folder", tint: AppColor.amber) { selection = .files }
-					FileHeaderButton(title: "Servers", symbol: "server.rack", tint: AppColor.green) { selection = .servers }
-					FileHeaderButton(title: "Settings", symbol: "slider.horizontal.3", tint: store.workspaceAccentColor) { selection = .more }
+			ZStack(alignment: .topLeading) {
+				RoundedRectangle(cornerRadius: 28, style: .continuous)
+					.fill(Color(UserDefaultsController.shared.terminalBackgroundColor))
+					.overlay(
+						RoundedRectangle(cornerRadius: 28, style: .continuous)
+							.strokeBorder(store.workspaceAccentColor.opacity(0.30), lineWidth: 1)
+					)
+					.shadow(color: store.workspaceAccentColor.opacity(0.18), radius: 24, x: 0, y: 14)
+
+				VStack(spacing: 0) {
+					TerminalWindowBar(store: store, selection: $selection)
+					LegacyTerminalContainerView()
+						.clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+						.padding(.horizontal, 10)
+						.padding(.bottom, 10)
 				}
 			}
-			.padding(16)
-			.background(WorkspaceCardBackground(tint: store.workspaceAccentColor))
-			.padding(.horizontal, 14)
-			.padding(.top, 12)
-			.padding(.bottom, 8)
-
-			LegacyTerminalContainerView()
-				.background(Color(UserDefaultsController.shared.terminalBackgroundColor))
 		}
+		.padding(.horizontal, 14)
+		.padding(.top, 12)
+		.padding(.bottom, 10)
 		.background(WorkspaceBackdrop().ignoresSafeArea())
+	}
+}
+
+private struct TerminalCommandDeck: View {
+	@ObservedObject var store: WorkspaceStore
+	@Binding var selection: WorkspaceDestination
+
+	var body: some View {
+		VStack(alignment: .leading, spacing: 16) {
+			HStack(alignment: .top, spacing: 14) {
+				VStack(alignment: .leading, spacing: 7) {
+					Text("Terminal")
+						.font(.system(size: 32, weight: .black, design: .rounded))
+						.foregroundStyle(.primary)
+					Text("A real local shell with SSH, Git, snippets, file handoff, and AI command insertion. Local runtimes stay honest; heavy dev stacks run on SSH hosts.")
+						.font(.system(.subheadline, design: .rounded, weight: .medium))
+						.foregroundStyle(.secondary)
+				}
+				Spacer(minLength: 0)
+				VStack(alignment: .trailing, spacing: 8) {
+					MetricPill(title: "Shell", value: "Local")
+					MetricPill(title: "Runtime", value: "Remote-first")
+				}
+			}
+
+			LazyVGrid(columns: [GridItem(.adaptive(minimum: 122), spacing: 10)], spacing: 10) {
+				TerminalJumpButton(title: "Files", subtitle: "Import/edit", symbol: "folder", tint: AppColor.amber) { selection = .files }
+				TerminalJumpButton(title: "Servers", subtitle: "SSH profiles", symbol: "server.rack", tint: AppColor.green) { selection = .servers }
+				TerminalJumpButton(title: "AI", subtitle: "Command help", symbol: "sparkles", tint: AppColor.violet) { selection = .assistant }
+				TerminalJumpButton(title: "Settings", subtitle: "Theme", symbol: "slider.horizontal.3", tint: store.workspaceAccentColor) { selection = .more }
+			}
+		}
+		.padding(18)
+		.background(WorkspaceCardBackground(tint: store.workspaceAccentColor))
+	}
+}
+
+private struct TerminalWindowBar: View {
+	@ObservedObject var store: WorkspaceStore
+	@Binding var selection: WorkspaceDestination
+
+	var body: some View {
+		HStack(spacing: 12) {
+			HStack(spacing: 7) {
+				Circle().fill(AppColor.coral).frame(width: 11, height: 11)
+				Circle().fill(AppColor.amber).frame(width: 11, height: 11)
+				Circle().fill(AppColor.green).frame(width: 11, height: 11)
+			}
+			Text("OpenTerm shell")
+				.font(.system(.caption, design: .monospaced, weight: .bold))
+				.foregroundStyle(.secondary)
+			Spacer()
+			Button { selection = .more } label: {
+				Label("Theme", systemImage: "paintpalette")
+					.font(.system(.caption, design: .rounded, weight: .bold))
+			}
+			.buttonStyle(.bordered)
+			.tint(store.workspaceAccentColor)
+		}
+		.padding(.horizontal, 16)
+		.padding(.vertical, 12)
+	}
+}
+
+private struct TerminalJumpButton: View {
+	let title: String
+	let subtitle: String
+	let symbol: String
+	let tint: Color
+	let action: () -> Void
+
+	var body: some View {
+		Button(action: action) {
+			HStack(spacing: 10) {
+				Image(systemName: symbol)
+					.font(.system(size: 17, weight: .bold))
+					.foregroundStyle(tint)
+					.frame(width: 34, height: 34)
+					.background(tint.opacity(0.14), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+				VStack(alignment: .leading, spacing: 2) {
+					Text(title)
+						.font(.system(.subheadline, design: .rounded, weight: .bold))
+						.foregroundStyle(.primary)
+					Text(subtitle)
+						.font(.system(.caption, design: .default, weight: .medium))
+						.foregroundStyle(.secondary)
+				}
+				Spacer(minLength: 0)
+			}
+			.padding(12)
+			.frame(maxWidth: .infinity, alignment: .leading)
+			.background(Color.primary.opacity(0.055), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+		}
+		.buttonStyle(.plain)
 	}
 }
 
