@@ -75,7 +75,7 @@ This audit covers the whole checked-in repo, not only the new SwiftUI workspace.
 
 - Replace the remaining marketing/card-heavy UI with compact operational surfaces. Home now has the first version of a real capability dashboard.
 - Keep capability/status labels strict: local, configured, terminal-driven, or missing; avoid broad ready/live claims unless the app has verified them.
-- Add file move/copy and richer binary preview metadata. Rename and folder tar export are now implemented.
+- Add file move and richer binary preview metadata. Rename, duplicate/copy, copy path, terminal-here, search, file-kind labels, and folder tar export are now implemented.
 - Replace the old storyboard scripting/documentation screens before calling the UI modern; examples remain available because the scripting flow works, but the controller is still legacy UIKit.
 - Replace the optional-fallback legacy storyboard flows with real SwiftUI screens instead of relying on old Interface Builder scenes.
 - Add runtime command availability capture and surface it in Help/README.
@@ -92,6 +92,8 @@ This audit covers the whole checked-in repo, not only the new SwiftUI workspace.
 - Normalized checked-in Pods build settings to iOS 18 and Swift 5; old Pods remain only where legacy terminal/scripts code still imports them.
 - Reworked the More tab into a focused hub and moved the full Settings form behind an explicit Settings sheet instead of dumping every setting inline.
 - Removed the global floating workspace status strip entirely and upgraded shared workspace card/backdrop/action tile styling so the main shell is less flat and less generic.
-- Reworked the Files tab from generic rows into a visible file-manager workspace with import/new/refresh actions, folder/file counts, explicit row actions, and honest real-storage copy.
+- Reworked the Files tab from generic cards into a more native file-manager workspace with system browser/import entry points, local search, file-kind metadata, compact rows, duplicate, copy path, open terminal here, import/new/refresh actions, folder/file counts, explicit row actions, and honest real-storage copies.
 - Added first-run onboarding and a SwiftUI About/Support card with Buy Me a Coffee, GitHub, X, and contact links so the modern app shell no longer hides those legacy About links.
 - Validated network_ios header downloads in CI/local bootstrap so a transient GitHub HTML error page cannot be compiled as `ios_error.h`.
+
+- Podfile post-install settings now explicitly normalize old vendored frameworks to iOS 18, Swift 5, no bitcode, and full archive architectures while legacy framework removal continues module by module.

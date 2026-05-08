@@ -322,6 +322,8 @@ struct LocalWorkspaceFile: Identifiable, Hashable {
 	let relativePath: String
 	let sizeDescription: String
 	let modifiedDescription: String
+	let kindDescription: String
+	let fileExtension: String
 	let isDirectory: Bool
 }
 
@@ -830,7 +832,38 @@ final class WorkspaceStore: ObservableObject {
 			sizeDescription = byteCountFormatter.string(fromByteCount: fileSize)
 		}
 		let relativePath = relativePath(for: fileURL)
-		return LocalWorkspaceFile(name: fileURL.lastPathComponent, relativePath: relativePath, sizeDescription: sizeDescription, modifiedDescription: dateFormatter.localizedString(for: modified, relativeTo: Date()), isDirectory: isDirectory)
+		let fileExtension = fileURL.pathExtension.lowercased()
+		return LocalWorkspaceFile(
+			name: fileURL.lastPathComponent,
+			relativePath: relativePath,
+			sizeDescription: sizeDescription,
+			modifiedDescription: dateFormatter.localizedString(for: modified, relativeTo: Date()),
+			kindDescription: kindDescription(forExtension: fileExtension, isDirectory: isDirectory),
+			fileExtension: fileExtension,
+			isDirectory: isDirectory
+		)
+	}
+
+	private func kindDescription(forExtension ext: String, isDirectory: Bool) -> String {
+		if isDirectory { return "Folder" }
+		switch ext {
+		case "swift": return "Swift Source"
+		case "js", "mjs", "cjs": return "JavaScript"
+		case "ts", "tsx": return "TypeScript"
+		case "py": return "Python"
+		case "sh", "zsh", "bash": return "Shell Script"
+		case "json": return "JSON"
+		case "yml", "yaml": return "YAML"
+		case "md", "markdown": return "Markdown"
+		case "html", "htm": return "HTML"
+		case "css", "scss": return "Stylesheet"
+		case "xml", "plist": return "XML / Plist"
+		case "png", "jpg", "jpeg", "gif", "heic", "webp": return "Image"
+		case "zip", "tar", "gz", "tgz": return "Archive"
+		case "txt", "log": return "Text"
+		case "": return "File"
+		default: return ext.uppercased() + " File"
+		}
 	}
 
 	private func relativePath(for url: URL) -> String {
@@ -1724,6 +1757,58 @@ final class WorkspaceStore: ObservableObject {
 		} catch {
 			statusMessage = "Could not rename \(file.name): \(error.localizedDescription)"
 		}
+	}
+
+	func duplicateLocalItem(_ file: LocalWorkspaceFile) {
+		let sourceURL = urlForLocalFile(relativePath: file.relativePath)
+		guard sourceURL.path.hasPrefix(documentsRootURL.path) else {
+			statusMessage = "Item is outside the workspace"
+			return
+		}
+		let destinationURL = uniqueDuplicateURL(for: sourceURL)
+		do {
+			try fileManager.copyItem(at: sourceURL, to: destinationURL)
+			refreshLocalFiles()
+			statusMessage = "Duplicated \(file.name)"
+		} catch {
+			statusMessage = "Could not duplicate \(file.name): \(error.localizedDescription)"
+		}
+	}
+
+	private func uniqueDuplicateURL(for sourceURL: URL) -> URL {
+		let folderURL = sourceURL.deletingLastPathComponent()
+		let base = (sourceURL.lastPathComponent as NSString).deletingPathExtension
+		let ext = (sourceURL.lastPathComponent as NSString).pathExtension
+		var index = 2
+		var candidateName = ext.isEmpty ? "\(base) copy" : "\(base) copy.\(ext)"
+		var candidate = folderURL.appendingPathComponent(candidateName)
+		while fileManager.fileExists(atPath: candidate.path) {
+			candidateName = ext.isEmpty ? "\(base) copy \(index)" : "\(base) copy \(index).\(ext)"
+			candidate = folderURL.appendingPathComponent(candidateName)
+			index += 1
+		}
+		return candidate
+	}
+
+	func copyLocalPath(_ file: LocalWorkspaceFile) {
+		let url = urlForLocalFile(relativePath: file.relativePath)
+		guard url.path.hasPrefix(documentsRootURL.path) else {
+			statusMessage = "Item is outside the workspace"
+			return
+		}
+		UIPasteboard.general.string = url.path
+		statusMessage = "Copied path for \(file.name)"
+	}
+
+	func openTerminalForLocalItem(_ file: LocalWorkspaceFile) {
+		let url = urlForLocalFile(relativePath: file.relativePath)
+		guard url.path.hasPrefix(documentsRootURL.path) else {
+			statusMessage = "Item is outside the workspace"
+			return
+		}
+		let folderURL = file.isDirectory ? url : url.deletingLastPathComponent()
+		openTerminal(command: "cd \(shellQuote(folderURL.path))", executeNow: true)
+		statusMessage = "Terminal opened in \(file.isDirectory ? file.name : folderURL.lastPathComponent)"
 	}
 
 	func exportLocalItem(_ file: LocalWorkspaceFile) -> URL? {

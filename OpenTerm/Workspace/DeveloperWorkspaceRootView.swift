@@ -300,6 +300,17 @@ private struct FilesWorkspaceView: View {
 	@State private var renameName = ""
 	@State private var showingRename = false
 	@State private var editingSnippet: SnippetDraft?
+	@State private var searchText = ""
+
+	private var visibleFiles: [LocalWorkspaceFile] {
+		let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+		guard !query.isEmpty else { return store.localFiles }
+		return store.localFiles.filter {
+			$0.name.localizedCaseInsensitiveContains(query) ||
+			$0.relativePath.localizedCaseInsensitiveContains(query) ||
+			$0.kindDescription.localizedCaseInsensitiveContains(query)
+		}
+	}
 
 	var body: some View {
 		WorkspaceScroll(title: "Files") {
@@ -316,28 +327,51 @@ private struct FilesWorkspaceView: View {
 				refresh: { store.refreshLocalFiles() }
 			)
 
-			VStack(alignment: .leading, spacing: 12) {
+			VStack(alignment: .leading, spacing: 14) {
+				HStack(spacing: 12) {
+					Image(systemName: "magnifyingglass")
+						.foregroundStyle(.secondary)
+					TextField("Search name, path, or type", text: $searchText)
+						.textInputAutocapitalization(.never)
+						.autocorrectionDisabled()
+					if !searchText.isEmpty {
+						Button { searchText = "" } label: { Image(systemName: "xmark.circle.fill") }
+							.buttonStyle(.plain)
+							.foregroundStyle(.secondary)
+					}
+				}
+				.padding(14)
+				.background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+
 				HStack(spacing: 10) {
-					SectionHeader(title: "Current Folder", subtitle: "Open text files, drill into folders, or use row actions for export, rename, and delete.")
+					SectionHeader(title: "Workspace Browser", subtitle: "Real app Documents storage. Import from iOS Files, edit local copies, duplicate, export, or jump a terminal into a folder.")
 					Spacer()
-					Text("\(store.localFiles.count) item\(store.localFiles.count == 1 ? "" : "s")")
-						.font(.system(.caption, design: .default, weight: .bold))
-						.foregroundStyle(AppColor.amber)
-						.padding(.horizontal, 10)
-						.padding(.vertical, 6)
-						.background(AppColor.amber.opacity(0.14), in: Capsule())
+					Text("\(visibleFiles.count) shown")
+						.font(.system(.caption, design: .rounded, weight: .bold))
+						.foregroundStyle(.secondary)
 				}
+
 				if store.localFiles.isEmpty {
-					EmptyStateCard(title: "Folder Is Empty", detail: "Import files from iOS Files, create a project folder, or create a text file. This folder is real app document storage, not seeded demo data.", symbol: "folder")
-				}
-				ForEach(store.localFiles) { file in
-					FileRow(
-						file: file,
-						open: { open(file) },
-						rename: { beginRename(file) },
-						export: { export(file) },
-						delete: { store.deleteLocalFile(file) }
-					)
+					EmptyStateCard(title: "No Files Yet", detail: "Open the iOS Files browser or import files to create editable workspace copies. OpenTerm does not fake project files.", symbol: "folder.badge.plus")
+				} else if visibleFiles.isEmpty {
+					EmptyStateCard(title: "No Matches", detail: "Nothing in this folder matches \"\(searchText)\".", symbol: "magnifyingglass")
+				} else {
+					VStack(spacing: 0) {
+						ForEach(visibleFiles) { file in
+							FileRow(
+								file: file,
+								open: { open(file) },
+								rename: { beginRename(file) },
+								export: { export(file) },
+								duplicate: { store.duplicateLocalItem(file) },
+								copyPath: { store.copyLocalPath(file) },
+								openTerminal: { store.openTerminalForLocalItem(file) },
+								delete: { store.deleteLocalFile(file) }
+							)
+							if file.id != visibleFiles.last?.id { Divider().padding(.leading, 64) }
+						}
+					}
+					.background(WorkspaceListBackground(tint: AppColor.amber))
 				}
 			}
 
@@ -366,6 +400,7 @@ private struct FilesWorkspaceView: View {
 		}
 		.toolbar {
 			ToolbarItemGroup(placement: .topBarTrailing) {
+				Button { showingSystemBrowser = true } label: { Image(systemName: "doc.viewfinder") }
 				Button { showingImporter = true } label: { Image(systemName: "square.and.arrow.down") }
 				Button { showingNewFolder = true } label: { Image(systemName: "folder.badge.plus") }
 				Button { showingNewFile = true } label: { Image(systemName: "doc.badge.plus") }
@@ -1321,18 +1356,14 @@ private struct FileWorkspaceHeader: View {
 	let refresh: () -> Void
 
 	var body: some View {
-		VStack(alignment: .leading, spacing: 18) {
+		VStack(alignment: .leading, spacing: 20) {
 			HStack(alignment: .top, spacing: 16) {
-				VStack(alignment: .leading, spacing: 8) {
-					Text("Files")
-						.font(.system(.largeTitle, design: .default, weight: .bold))
+				VStack(alignment: .leading, spacing: 10) {
+					Label("Files", systemImage: "folder.fill")
+						.font(.system(size: 34, weight: .black, design: .rounded))
 						.foregroundStyle(.primary)
-					Text(path)
-						.font(.system(.callout, design: .monospaced, weight: .semibold))
-						.foregroundStyle(AppColor.amber)
-						.lineLimit(2)
-					Text("Use Appleâs document browser for real iOS Files access, then keep editable copies in OpenTermâs workspace for terminal, snippets, and exports.")
-						.font(.system(.subheadline, design: .default))
+					Text("Native iOS file access plus an editable OpenTerm workspace. No fake demo files, no toy rows.")
+						.font(.system(.body, design: .rounded, weight: .medium))
 						.foregroundStyle(.secondary)
 				}
 				Spacer(minLength: 0)
@@ -1342,14 +1373,29 @@ private struct FileWorkspaceHeader: View {
 				}
 			}
 
-			LazyVGrid(columns: [GridItem(.adaptive(minimum: 138), spacing: 10)], spacing: 10) {
-				FileHeaderButton(title: "iOS Browser", symbol: "doc.viewfinder", tint: AppColor.amber, action: openSystemBrowser)
-				FileHeaderButton(title: "Import", symbol: "square.and.arrow.down", tint: AppColor.blue, action: importFiles)
-				FileHeaderButton(title: "New File", symbol: "doc.badge.plus", tint: AppColor.green, action: newFile)
-				FileHeaderButton(title: "New Folder", symbol: "folder.badge.plus", tint: AppColor.violet, action: newFolder)
-				FileHeaderButton(title: "Refresh", symbol: "arrow.clockwise", tint: AppColor.coral, action: refresh)
-				if canNavigateUp {
-					FileHeaderButton(title: "Parent", symbol: "arrow.up.folder", tint: AppColor.coral, action: goUp)
+			HStack(spacing: 8) {
+				Image(systemName: "internaldrive")
+					.foregroundStyle(AppColor.amber)
+				Text(path)
+					.font(.system(.callout, design: .monospaced, weight: .semibold))
+					.foregroundStyle(.primary)
+					.lineLimit(2)
+				Spacer(minLength: 0)
+			}
+			.padding(.horizontal, 14)
+			.padding(.vertical, 11)
+			.background(Color.primary.opacity(0.055), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+
+			VStack(spacing: 10) {
+				PrimaryWorkspaceButton(title: "Open iOS Files Browser", symbol: "doc.viewfinder", tint: AppColor.amber, action: openSystemBrowser)
+				LazyVGrid(columns: [GridItem(.adaptive(minimum: 128), spacing: 10)], spacing: 10) {
+					FileHeaderButton(title: "Import Copy", symbol: "square.and.arrow.down", tint: AppColor.blue, action: importFiles)
+					FileHeaderButton(title: "New File", symbol: "doc.badge.plus", tint: AppColor.green, action: newFile)
+					FileHeaderButton(title: "New Folder", symbol: "folder.badge.plus", tint: AppColor.violet, action: newFolder)
+					FileHeaderButton(title: "Refresh", symbol: "arrow.clockwise", tint: AppColor.coral, action: refresh)
+					if canNavigateUp {
+						FileHeaderButton(title: "Parent", symbol: "arrow.up.folder", tint: AppColor.coral, action: goUp)
+					}
 				}
 			}
 		}
@@ -1368,11 +1414,11 @@ private struct FileHeaderButton: View {
 	var body: some View {
 		Button(action: action) {
 			Label(title, systemImage: symbol)
-				.font(.system(.subheadline, design: .default, weight: .bold))
+				.font(.system(.subheadline, design: .rounded, weight: .bold))
 				.frame(maxWidth: .infinity)
-				.padding(.vertical, 10)
+				.padding(.vertical, 9)
 		}
-		.buttonStyle(.borderedProminent)
+		.buttonStyle(.bordered)
 		.tint(tint)
 	}
 }
@@ -1382,34 +1428,49 @@ private struct FileRow: View {
 	let open: () -> Void
 	let rename: () -> Void
 	let export: () -> Void
+	let duplicate: () -> Void
+	let copyPath: () -> Void
+	let openTerminal: () -> Void
 	let delete: () -> Void
 
 	private var tint: Color { file.isDirectory ? AppColor.blue : AppColor.amber }
+	private var iconName: String {
+		if file.isDirectory { return "folder.fill" }
+		switch file.fileExtension {
+		case "swift": return "swift"
+		case "sh", "zsh", "bash": return "terminal.fill"
+		case "json", "yml", "yaml", "plist", "xml": return "curlybraces"
+		case "png", "jpg", "jpeg", "gif", "heic", "webp": return "photo.fill"
+		case "zip", "tar", "gz", "tgz": return "archivebox.fill"
+		default: return "doc.text.fill"
+		}
+	}
 
 	var body: some View {
-		HStack(alignment: .center, spacing: 14) {
+		HStack(alignment: .center, spacing: 12) {
 			Button(action: open) {
-				HStack(spacing: 14) {
+				HStack(spacing: 12) {
 					ZStack {
-						RoundedRectangle(cornerRadius: 14, style: .continuous)
-							.fill(tint.opacity(0.16))
-						Image(systemName: file.isDirectory ? "folder.fill" : "doc.text.fill")
-							.font(.system(size: 22, weight: .semibold))
+						RoundedRectangle(cornerRadius: 12, style: .continuous)
+							.fill(tint.opacity(0.14))
+						Image(systemName: iconName)
+							.font(.system(size: 19, weight: .semibold))
 							.foregroundStyle(tint)
 					}
-					.frame(width: 50, height: 50)
+					.frame(width: 42, height: 42)
 
-					VStack(alignment: .leading, spacing: 6) {
+					VStack(alignment: .leading, spacing: 4) {
 						Text(file.name)
-							.font(.system(.headline, design: .default, weight: .semibold))
+							.font(.system(.headline, design: .rounded, weight: .semibold))
 							.foregroundStyle(.primary)
 							.lineLimit(1)
-						Text(file.relativePath.isEmpty ? file.name : file.relativePath)
+						Text(file.relativePath)
 							.font(.system(.caption, design: .monospaced, weight: .medium))
 							.foregroundStyle(.secondary)
 							.lineLimit(1)
 						HStack(spacing: 8) {
-							Text(file.isDirectory ? "Folder" : file.sizeDescription)
+							Text(file.kindDescription)
+							Text(file.sizeDescription)
 							Text(file.modifiedDescription)
 						}
 						.font(.system(.caption, design: .default))
@@ -1420,17 +1481,28 @@ private struct FileRow: View {
 			}
 			.buttonStyle(.plain)
 
-			HStack(spacing: 8) {
-				Button(action: export) { Image(systemName: "square.and.arrow.up") }
-				Button(action: rename) { Image(systemName: "pencil") }
-				Button(role: .destructive, action: delete) { Image(systemName: "trash") }
+			Menu {
+				Button(action: open) { Label(file.isDirectory ? "Open Folder" : "Open Editor", systemImage: file.isDirectory ? "folder" : "doc.text") }
+				Button(action: openTerminal) { Label("Open Terminal Here", systemImage: "terminal") }
+				Button(action: copyPath) { Label("Copy Path", systemImage: "doc.on.doc") }
+				Button(action: duplicate) { Label("Duplicate", systemImage: "plus.square.on.square") }
+				Button(action: rename) { Label("Rename", systemImage: "pencil") }
+				Button(action: export) { Label(file.isDirectory ? "Export Folder Archive" : "Share / Export", systemImage: "square.and.arrow.up") }
+				Button(role: .destructive, action: delete) { Label("Delete", systemImage: "trash") }
+			} label: {
+				Image(systemName: "ellipsis.circle")
+					.font(.system(size: 22, weight: .semibold))
+					.foregroundStyle(.secondary)
+					.frame(width: 40, height: 40)
 			}
-			.buttonStyle(.bordered)
 		}
-		.padding(14)
-		.background(WorkspaceCardBackground(tint: tint))
+		.padding(.horizontal, 14)
+		.padding(.vertical, 11)
 		.contextMenu {
 			Button(action: open) { Label(file.isDirectory ? "Open Folder" : "Open Editor", systemImage: file.isDirectory ? "folder" : "doc.text") }
+			Button(action: openTerminal) { Label("Open Terminal Here", systemImage: "terminal") }
+			Button(action: copyPath) { Label("Copy Path", systemImage: "doc.on.doc") }
+			Button(action: duplicate) { Label("Duplicate", systemImage: "plus.square.on.square") }
 			Button(action: rename) { Label("Rename", systemImage: "pencil") }
 			Button(action: export) { Label(file.isDirectory ? "Export Folder Archive" : "Share / Export", systemImage: "square.and.arrow.up") }
 			Button(role: .destructive, action: delete) { Label("Delete", systemImage: "trash") }
@@ -2346,6 +2418,25 @@ private struct ActivityShareSheet: UIViewControllerRepresentable {
 	}
 
 	func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
+}
+
+
+private struct WorkspaceListBackground: View {
+	let tint: Color
+
+	var body: some View {
+		RoundedRectangle(cornerRadius: 22, style: .continuous)
+			.fill(Color(uiColor: .secondarySystemGroupedBackground).opacity(0.92))
+			.overlay(
+				RoundedRectangle(cornerRadius: 22, style: .continuous)
+					.strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.8)
+			)
+			.overlay(
+				RoundedRectangle(cornerRadius: 22, style: .continuous)
+					.fill(LinearGradient(colors: [tint.opacity(0.08), .clear], startPoint: .topLeading, endPoint: .bottomTrailing))
+			)
+			.shadow(color: tint.opacity(0.08), radius: 16, x: 0, y: 8)
+	}
 }
 
 private struct WorkspaceCardBackground: View {
