@@ -99,3 +99,5 @@ This audit covers the whole checked-in repo, not only the new SwiftUI workspace.
 - Podfile post-install settings now explicitly normalize old vendored frameworks to iOS 18, Swift 5, no bitcode, and full archive architectures while legacy framework removal continues module by module.
 
 - TabView vendored sources have also been patched from pre-Swift-4 UIKit child-controller/deceleration APIs to modern Swift 5 UIKit names so old framework modernization is enforced by CI instead of hidden by old Swift settings.
+
+- InputAssistant vendored sources have been patched to modern Swift 5 UIKit collection-view sizing constants.
