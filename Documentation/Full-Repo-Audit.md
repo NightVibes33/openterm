@@ -83,7 +83,7 @@ This audit covers the whole checked-in repo, not only the new SwiftUI workspace.
 - Add SSH monitor preflight command that checks `ssh`, auth type, `top`, `awk`, `df`, `uptime`, and `/proc/meminfo` before creating monitor expectations.
 
 ## Current Findings
-- Expanded SSH Runtime Kit and runtime audit coverage for Python, Node, Go, Rust/Cargo, Ruby, PHP, Java/JDK, Perl, Lua, C/C++ build tools, CMake, SQLite, Docker, htop, nano, vim, and tmux across Linux package managers and Windows winget.
+- Expanded SSH Full Runtime Kit and runtime audit coverage for Git, Python, Node/npm/Yarn/pnpm/TypeScript, Deno, Bun, Go, Rust/Cargo, Ruby, PHP, Java/JDK, Perl, Lua, .NET, C/C++ build tools, CMake, SQLite, Docker, Maven, Gradle, Kotlin, Scala, Erlang/Elixir, Haskell, Zig, Dart, Julia, R, Swift where available, htop, nano, vim, and tmux across Linux package managers and Windows winget. Optional packages are installed best-effort and audited after installation.
 - Added SSH host OS selection with Windows 11/Windows Server audit and monitor command paths using PowerShell/CIM instead of Linux-only `/proc` commands.
 - Added SSH password profile input backed by Keychain; connect copies the saved password for the interactive SSH prompt rather than pretending background password auth is possible.
 - Updated terminal defaults to a modern high-contrast text/background palette and subtle terminal border while preserving user-selected colors.

@@ -1553,9 +1553,9 @@ private struct SSHProfileCard: View {
 					Button("Debian / Ubuntu") { installDevStack("Debian/Ubuntu") }
 					Button("Alpine") { installDevStack("Alpine") }
 					Button("Fedora / RHEL") { installDevStack("Fedora/RHEL") }
-					Button("Windows Runtime Kit") { installDevStack("Windows") }
+					Button("Windows Full Runtime Kit") { installDevStack("Windows") }
 				} label: {
-					Label("Runtime Kit", systemImage: "shippingbox.and.arrow.backward")
+					Label("Full Runtime Kit", systemImage: "shippingbox.and.arrow.backward")
 						.font(.system(.headline, design: .default, weight: .semibold))
 						.frame(maxWidth: .infinity)
 				}
