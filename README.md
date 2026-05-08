@@ -104,7 +104,7 @@ Donations support development only: the app is currently free, and Buy Me a Coff
 - No device serial-number scheme should be used for entitlement checks. Future verification should be account-based and privacy-preserving.
 
 ## Dependency modernization note
-- Legacy Pods are still present because the terminal, scripts, input assistant, and Cub editor paths still depend on them. The Podfile now normalizes vendored Pods to the iOS 18 floor, Swift 5, no bitcode, and non-active-arch-only builds. The immediate modernization path is to keep the working terminal stack compiling, replace visible legacy UI with SwiftUI/native screens, then delete Pods one by one only after their imports are gone.
+- Legacy Pods are still present because the terminal, scripts, input assistant, and Cub editor paths still depend on them. The Podfile now normalizes vendored Pods to the iOS 18 floor, Swift 5, no bitcode, and non-active-arch-only builds. TabView vendored sources have also been patched from pre-Swift-4 UIKit child-controller/deceleration APIs to modern Swift 5 UIKit names so old framework modernization is enforced by CI instead of hidden by old Swift settings. The immediate modernization path is to keep the working terminal stack compiling, replace visible legacy UI with SwiftUI/native screens, then delete Pods one by one only after their imports are gone.
 
 ## Runtime And Sandbox Reality
 - Sideloading does not automatically remove the iOS app sandbox. Without jailbreak-level changes or private Apple entitlements, OpenTerm still cannot behave like an unrestricted local Linux machine.
