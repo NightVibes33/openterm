@@ -1410,26 +1410,34 @@ final class WorkspaceStore: ObservableObject {
 	func queueRemoteToolAudit(on profile: SSHProfileSummary) {
 		let script: String
 		if profile.platform == .windows {
-			script = #"powershell -NoProfile -Command "Write-Host 'OpenTerm Windows SSH audit'; Get-ComputerInfo -Property OsName,OsVersion,CsName; Write-Host ''; Write-Host 'Developer tools:'; foreach ($tool in 'git','python','py','node','npm','docker','winget','powershell') { $cmd = Get-Command $tool -ErrorAction SilentlyContinue; if ($cmd) { Write-Host ($tool + ': ' + $cmd.Source) } else { Write-Host ($tool + ': missing') } }""#
+			script = #"powershell -NoProfile -Command "Write-Host 'OpenTerm Windows SSH audit'; Get-ComputerInfo -Property OsName,OsVersion,CsName; Write-Host ''; Write-Host 'Developer tools:'; foreach ($tool in 'git','python','py','node','npm','go','rustc','cargo','ruby','php','java','javac','perl','lua','dotnet','docker','winget','powershell') { $cmd = Get-Command $tool -ErrorAction SilentlyContinue; if ($cmd) { Write-Host ($tool + ': ' + $cmd.Source) } else { Write-Host ($tool + ': missing') } }""#
 		} else {
-			script = #"printf 'OpenTerm remote tool audit\n'; uname -a 2>/dev/null; printf '\nPackage managers:\n'; for tool in apt apt-get apk dnf yum brew pkg; do command -v $tool >/dev/null 2>&1 && echo "$tool: $(command -v $tool)"; done; printf '\nDeveloper tools:\n'; for tool in git python3 pip3 node npm htop nano vim tmux docker; do if command -v $tool >/dev/null 2>&1; then printf '%s: ' $tool; $tool --version 2>&1 | head -n 1; else echo "$tool: missing"; fi; done"#
+			script = #"printf 'OpenTerm remote runtime audit\n'; uname -a 2>/dev/null; printf '\nPackage managers:\n'; for tool in apt apt-get apk dnf yum brew pkg pacman zypper; do command -v $tool >/dev/null 2>&1 && echo "$tool: $(command -v $tool)"; done; printf '\nDeveloper runtimes/tools:\n'; for tool in git python3 pip3 node npm go rustc cargo ruby php java javac perl lua gcc g++ clang make cmake sqlite3 docker htop nano vim tmux; do if command -v $tool >/dev/null 2>&1; then printf '%s: ' $tool; $tool --version 2>&1 | head -n 1; else echo "$tool: missing"; fi; done"#
 		}
 		openTerminal(command: sshCommand(for: profile, remoteCommand: script, batchMode: false), executeNow: true)
 		touchProfile(profile.id)
-		statusMessage = "Queued remote tool audit for \(profile.label)"
+		statusMessage = "Queued remote runtime audit for \(profile.label)"
 	}
 
 	private func remoteDevStackScript(for flavor: String) -> String {
-		let verify = "printf '\\nInstalled versions:\\n' ; git --version 2>/dev/null ; python3 --version 2>/dev/null ; node --version 2>/dev/null ; npm --version 2>/dev/null ; tmux -V 2>/dev/null"
+		let verifyLinux = """
+		printf '\nInstalled runtime versions:\n' ; for tool in git python3 pip3 node npm go rustc cargo ruby php java javac perl lua gcc g++ clang make cmake sqlite3 docker htop nano vim tmux; do if command -v $tool >/dev/null 2>&1; then printf '%s: ' $tool; $tool --version 2>&1 | head -n 1; else echo "$tool: missing"; fi; done
+		"""
+		let verifyWindows = #"Write-Host ''; Write-Host 'Installed runtime versions:'; foreach ($tool in 'git','python','node','npm','go','rustc','cargo','ruby','php','java','javac','perl','dotnet','docker') { $cmd = Get-Command $tool -ErrorAction SilentlyContinue; if ($cmd) { Write-Host ($tool + ': ' + $cmd.Source) } else { Write-Host ($tool + ': missing') } }"#
+
 		switch flavor {
 		case "Debian/Ubuntu":
-			return "set -e; sudo apt update; sudo apt install -y git python3 python3-pip nodejs npm htop nano vim tmux; \(verify)"
+			return "set -e; sudo apt update; sudo apt install -y git python3 python3-pip nodejs npm golang rustc cargo ruby-full php-cli default-jdk perl lua5.4 build-essential clang cmake sqlite3 docker.io htop nano vim tmux; \(verifyLinux)"
 		case "Alpine":
-			return "set -e; sudo apk add --no-cache git python3 py3-pip nodejs npm htop nano vim tmux; \(verify)"
+			return "set -e; sudo apk add --no-cache git python3 py3-pip nodejs npm go rust cargo ruby php php-cli openjdk17 perl lua5.4 build-base clang cmake sqlite docker htop nano vim tmux; \(verifyLinux)"
 		case "Fedora/RHEL":
-			return "set -e; if command -v dnf >/dev/null 2>&1; then sudo dnf install -y git python3 python3-pip nodejs npm htop nano vim tmux; else sudo yum install -y git python3 python3-pip nodejs npm htop nano vim tmux; fi; \(verify)"
+			return "set -e; if command -v dnf >/dev/null 2>&1; then sudo dnf install -y git python3 python3-pip nodejs npm golang rust cargo ruby php-cli java-17-openjdk-devel perl lua gcc gcc-c++ clang make cmake sqlite docker htop nano vim tmux; else sudo yum install -y git python3 python3-pip nodejs npm golang rust cargo ruby php-cli java-17-openjdk-devel perl lua gcc gcc-c++ clang make cmake sqlite docker htop nano vim tmux; fi; \(verifyLinux)"
+		case "Windows":
+			return """
+			powershell -NoProfile -ExecutionPolicy Bypass -Command "if (-not (Get-Command winget -ErrorAction SilentlyContinue)) { Write-Error 'winget is required for Windows runtime install'; exit 1 }; winget install --accept-source-agreements --accept-package-agreements --silent Git.Git Python.Python.3.12 OpenJS.NodeJS GoLang.Go Rustlang.Rustup RubyInstallerTeam.Ruby PHP.PHP EclipseAdoptium.Temurin.21.JDK StrawberryPerl.StrawberryPerl Microsoft.DotNet.SDK.8 Docker.DockerDesktop; \(verifyWindows)"
+			"""
 		default:
-			return "set -e; if command -v apt-get >/dev/null 2>&1; then sudo apt update && sudo apt install -y git python3 python3-pip nodejs npm htop nano vim tmux; elif command -v apk >/dev/null 2>&1; then sudo apk add --no-cache git python3 py3-pip nodejs npm htop nano vim tmux; elif command -v dnf >/dev/null 2>&1; then sudo dnf install -y git python3 python3-pip nodejs npm htop nano vim tmux; elif command -v yum >/dev/null 2>&1; then sudo yum install -y git python3 python3-pip nodejs npm htop nano vim tmux; else echo 'No supported package manager found. Install git python3 pip node npm htop nano vim tmux manually.'; exit 1; fi; \(verify)"
+			return "set -e; if command -v apt-get >/dev/null 2>&1; then sudo apt update && sudo apt install -y git python3 python3-pip nodejs npm golang rustc cargo ruby-full php-cli default-jdk perl lua5.4 build-essential clang cmake sqlite3 docker.io htop nano vim tmux; elif command -v apk >/dev/null 2>&1; then sudo apk add --no-cache git python3 py3-pip nodejs npm go rust cargo ruby php php-cli openjdk17 perl lua5.4 build-base clang cmake sqlite docker htop nano vim tmux; elif command -v dnf >/dev/null 2>&1; then sudo dnf install -y git python3 python3-pip nodejs npm golang rust cargo ruby php-cli java-17-openjdk-devel perl lua gcc gcc-c++ clang make cmake sqlite docker htop nano vim tmux; elif command -v yum >/dev/null 2>&1; then sudo yum install -y git python3 python3-pip nodejs npm golang rust cargo ruby php-cli java-17-openjdk-devel perl lua gcc gcc-c++ clang make cmake sqlite docker htop nano vim tmux; else echo 'No supported package manager found. Use a Linux distro with apt/apk/dnf/yum or run the Windows kit on a winget-enabled host.'; exit 1; fi; \(verifyLinux)"
 		}
 	}
 
